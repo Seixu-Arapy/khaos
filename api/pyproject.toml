@@ -1,0 +1,47 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "anthropic==0.109.1",
+    "fastapi==0.136.3",
+    "google-genai>=2.8.0",
+    "openai==2.41.1",
+    "postgrest==2.31.0",
+    "protobuf==7.35.0",
+    "pydantic==2.13.4",
+    "python-dotenv==1.2.2",
+    "requests==2.34.2",
+    "supabase==2.31.0",
+    "uvicorn>=0.49.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.17",
+]
+
+[tool.ruff]
+line-length = 88
+preview = true
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle - Erros de estilo padrão PEP 8
+    "W",    # pycodestyle - Avisos de estilo padrão PEP 8
+    "F",    # Pyflakes - Erros de lógica evidentes e variáveis não usadas
+    "I",    # isort - Organização e ordenação de imports
+    "B",    # flake8-bugbear - Encontra bugs comuns e armadilhas de design
+    "UP",   # pyupgrade - Sugere automaticamente sintaxes mais modernas do Python
+    "S",    # flake8-bandit - Varredura de segurança contra falhas e vulnerabilidades
+    "SIM",  # flake8-simplify - Sugere simplificações para códigos muito verbosos
+    "C4",   # flake8-comprehensions - Otimiza o uso de list/dict comprehensions
+    "N",    # pep8-naming - Garante letras maiúsculas/minúsculas corretas em classes e funções
+]
+ignore = ["E501"]
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "double"
