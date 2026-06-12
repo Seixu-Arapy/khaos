@@ -1,12 +1,14 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import config
+from app.auth import verify_api_key
 from app.exceptions import register_exception_handlers
 from app.routers import (
     chat,
     events,
     fields,
+    health,
     moments,
     projects,
     sections,
@@ -43,18 +45,20 @@ register_exception_handlers(app)
 # ============================================================
 
 
-@app.get("/")
-def read_root():
-    return {"status": "healthy", "message": "Khaos is here."}
+protected_routers = [
+    chat.router,
+    fields.router,
+    projects.router,
+    sections.router,
+    tasks.router,
+    sequences.router,
+    events.router,
+    moments.router,
+    tags.router,
+    time_entries.router,
+]
 
+for r in protected_routers:
+    app.include_router(r, dependencies=[Depends(verify_api_key)])
 
-app.include_router(chat.router)
-app.include_router(fields.router)
-app.include_router(projects.router)
-app.include_router(sections.router)
-app.include_router(tasks.router)
-app.include_router(events.router)
-app.include_router(moments.router)
-app.include_router(sequences.router)
-app.include_router(tags.router)
-app.include_router(time_entries.router)
+app.include_router(health.router)
