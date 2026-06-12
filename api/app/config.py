@@ -11,11 +11,11 @@ load_dotenv(dotenv_path=ENV_PATH)
 
 ENVIRONMENT = os.getenv("ENVIROMENT", "staging")
 
-API_HOST = os.getenv("API_HOST", "127.0.0.1")
-API_PORT = int(os.getenv("API_PORT", "8000"))
-API_URL = os.getenv("API_URL", f"http://{API_HOST}:{API_PORT}")
+API_HOST = os.getenv("KHAOS_API_HOST", "127.0.0.1")
+API_PORT = int(os.getenv("KHAOS_API_PORT", "8000"))
+API_URL = os.getenv("KHAOS_API_URL", f"http://{API_HOST}:{API_PORT}")
 
-API_KEY = os.environ.get("API_KEY", secrets.token_hex(32))
+API_KEY = os.environ.get("KHAOS_API_KEY", secrets.token_hex(32))
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
