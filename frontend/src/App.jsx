@@ -8,7 +8,7 @@ import api from "./services/api"
 async function fetchActiveTimerData() {
   try {
     const response = await api.get("/time-entries?active=true&expand=true")
-    return response.data // O Axios já entrega o JSON mastigado em .data
+    return response.data || null
   } catch (error) {
     console.error("Erro ao buscar timer ativo:", error)
     return null
@@ -37,19 +37,29 @@ export default function App() {
     }
   }, [])
 
-  const syncTimerAndContext = useCallback(async () => {
-    const data = await fetchActiveTimerData()
-    setActiveTimer(data)
-
-    const projectId = data?.tasks?.sections?.projects?.id
-    if (projectId) fetchContext(projectId)
-  }, [fetchContext])
-
   useEffect(() => {
-    ;(async () => {
-      await syncTimerAndContext()
-    })()
-  }, [syncTimerAndContext])
+    let isMounted = true
+
+    const syncTimerAndContext = async () => {
+      const data = await fetchActiveTimerData()
+
+      if (!isMounted) return
+      setActiveTimer(data)
+
+      const projectId = data?.tasks?.sections?.projects?.id
+      if (projectId) {
+        fetchContext(projectId)
+      } else {
+        setActiveContext(null)
+      }
+    }
+
+    syncTimerAndContext()
+
+    return () => {
+      isMounted = false
+    }
+  }, [refreshTrigger, fetchContext])
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-app-bg text-gray-100">
@@ -66,7 +76,7 @@ export default function App() {
           onContextDetected={fetchContext}
           onTimerTrigger={() => setRefreshTrigger(prev => prev + 1)}
           onSidebarOpen={setIsSidebarOpen}
-          onTimerChange={syncTimerAndContext}
+          onTimerChange={() => setRefreshTrigger(prev => prev + 1)}
           onLoadingChange={setIsChatLoading}
         />
 

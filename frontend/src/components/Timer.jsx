@@ -21,11 +21,11 @@ function getElapsedSeconds(startedAt) {
 
 export default function Timer({ activeTimer }) {
   const [seconds, setSeconds] = useState(() =>
-    getElapsedSeconds(activeTimer[0]?.started_at)
+    getElapsedSeconds(activeTimer?.started_at)
   )
 
   useEffect(() => {
-    if (!activeTimer[0]?.started_at) return
+    if (!activeTimer?.started_at) return
 
     const startTime = new Date(activeTimer[0].started_at).getTime()
 
@@ -38,7 +38,7 @@ export default function Timer({ activeTimer }) {
     return () => clearInterval(interval)
   }, [activeTimer])
 
-  if (!activeTimer[0]) {
+  if (!activeTimer) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-app-border bg-app-surface/50 px-3 py-1.5 text-xs whitespace-nowrap text-app-muted">
         <span className="text-[8px]">
@@ -49,7 +49,7 @@ export default function Timer({ activeTimer }) {
     )
   }
 
-  const task = activeTimer?.[0]?.tasks
+  const task = activeTimer?.tasks
   const project = task?.sections?.projects
 
   return (
