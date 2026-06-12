@@ -1,129 +1,75 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 
 from app.database import supabase
-from app.moments import register_moment
+from app.schemas import EventCreate, EventUpdate
+from app.services.events import get_events, get_full_event
+from app.services.moments import register_moment
 
 router = APIRouter(prefix="/events", tags=["Events"])
-
-EVENT_SELECT = (
-    "*, tasks(id, name), projects(id, name, fields(id, name)), fields(id, name)"
-)
-
-
-def get_full_event(event_id: int):
-    return (
-        supabase
-        .table("events")
-        .select(EVENT_SELECT)
-        .eq("id", event_id)
-        .single()
-        .execute()
-        .data
-    )
 
 
 @router.get("")
 def list_events(
     field_id: int | None = None,
     project_id: int | None = None,
-    type: str | None = None,
+    type_str: str | None = None,
 ):
-    query = supabase.table("events").select(EVENT_SELECT)
-    if field_id:
-        query = query.eq("field_id", field_id)
-    if project_id:
-        query = query.eq("project_id", project_id)
-    if type:
-        query = query.eq("type", type)
-    return query.execute().data
+    """
+    Retrieve calendar schedule blocks.
+    """
+    return get_events(field_id=field_id, project_id=project_id, type_str=type_str)
 
 
-@router.post("")
-def create_event(
-    title: str,
-    type: str,
-    start_at: str,
-    end_at: str,
-    task_id: int | None = None,
-    project_id: int | None = None,
-    field_id: int | None = None,
-    recurrent: bool = False,
-    moment_note: str | None = None,
-):
-    result = (
-        supabase
-        .table("events")
-        .insert({
-            "title": title,
-            "type": type,
-            "start_at": start_at,
-            "end_at": end_at,
-            "task_id": task_id,
-            "project_id": project_id,
-            "field_id": field_id,
-            "recurrent": recurrent,
-        })
-        .execute()
-        .data
-    )
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_event(event_data: EventCreate):
+    """
+    Schedule a new time block allocation.
+    """
+    payload = event_data.model_dump(exclude={"moment_note"})
+    result = supabase.table("events").insert(payload).execute().data
     if result:
         event_id = result[0]["id"]
-        register_moment(
-            "event", event_id, "created", value=title, moment_note=moment_note
-        )
-        if task_id and type == "plan":
+        if event_data.task_id and event_data.type == "plan":
             register_moment(
                 "task",
-                task_id,
+                event_data.task_id,
                 "scheduled",
-                value=f"{start_at} → {end_at}",
-                moment_note=moment_note,
+                value=f"{event_data.start_at} → {event_data.end_at}",
+                moment_note=event_data.moment_note,
             )
         return get_full_event(event_id)
-    return result
+    raise HTTPException(status_code=400, detail="Failed to create event")
 
 
 @router.patch("/{event_id}")
-def update_event(
-    event_id: int,
-    title: str | None = None,
-    start_at: str | None = None,
-    end_at: str | None = None,
-    recurrent: bool | None = None,
-    moment_note: str | None = None,
-):
-    data = {}
-    if title:
-        data["title"] = title
-    if start_at:
-        data["start_at"] = start_at
-    if end_at:
-        data["end_at"] = end_at
-    if recurrent is not None:
-        data["recurrent"] = recurrent
+def update_event(event_id: int, event_data: EventUpdate):
+    """
+    Reschedule or edit event details.
+    """
+    data = event_data.model_dump(exclude={"moment_note"}, exclude_none=True)
     result = supabase.table("events").update(data).eq("id", event_id).execute().data
-    if result and (start_at or end_at):
+
+    if result and (event_data.start_at or event_data.end_at):
         event = supabase.table("events").select("*").eq("id", event_id).execute().data
         if event and event[0].get("task_id") and event[0].get("type") == "plan":
+            start = event_data.start_at or event[0]["start_at"]
+            end = event_data.end_at or event[0]["end_at"]
             register_moment(
                 "task",
                 event[0]["task_id"],
                 "scheduled",
-                value=f"{start_at} → {end_at}",
-                moment_note=moment_note,
+                value=f"{start} → {end}",
+                moment_note=event_data.moment_note,
             )
         else:
+            start = event_data.start_at or event[0]["start_at"]
+            end = event_data.end_at or event[0]["end_at"]
             register_moment(
                 "event",
                 event_id,
                 "scheduled",
-                value=f"{start_at} → {end_at}",
-                moment_note=moment_note,
+                value=f"{start} → {end}",
+                moment_note=event_data.moment_note,
             )
         return get_full_event(event_id)
-    return result
-
-
-@router.delete("/{event_id}")
-def delete_event(event_id: int):
-    return supabase.table("events").delete().eq("id", event_id).execute().data
+    raise HTTPException(status_code=404, detail="Event not found")

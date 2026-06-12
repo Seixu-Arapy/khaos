@@ -1,24 +1,29 @@
 from fastapi import APIRouter
 
-from app.models import ChatRequest
-from app.providers.claude import chat as chat_claude
-from app.providers.deepseek import chat as chat_deepseek
-from app.providers.gemini import chat as chat_gemini
+from app.providers.claude import claude
+from app.providers.deepseek import deepseek
+from app.providers.gemini import gemini
+from app.schemas import ChatRequest, ChatResponse
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-def parse_messages(request: ChatRequest):
+def parse_messages(request: ChatRequest) -> list[dict]:
     return [{"role": m.role, "content": m.content} for m in request.messages]
 
 
-@router.post("")
-def chat_endpoint(request: ChatRequest):
+@router.post("", response_model=ChatResponse)
+def chat_endpoint(request: ChatRequest) -> dict:
+    """
+    Dispatches conversation historical payloads to the selected agent core service instance.
+    """
     messages = parse_messages(request)
+
     if request.model == "claude":
-        response = chat_claude(messages)
-    elif request.model == "gemini":
-        response = chat_gemini(messages)
+        response = claude(messages)
     elif request.model == "deepseek":
-        response = chat_deepseek(messages)
+        response = deepseek(messages)
+    else:
+        response = gemini(messages)
+
     return {"model": request.model, "response": response}

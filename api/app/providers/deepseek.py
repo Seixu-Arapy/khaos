@@ -9,7 +9,7 @@ from app.tools import TOOLS_SCHEMA, execute_tool
 client = OpenAI(api_key=config.OPENAI_API_KEY, base_url="https://api.deepseek.com")
 
 
-def convert_tools():
+def convert_tools() -> list:
     tools = []
     for t in TOOLS_SCHEMA:
         properties = {}
@@ -36,7 +36,10 @@ def convert_tools():
     return tools
 
 
-def chat(messages: list) -> str:
+def deepseek(messages: list) -> str:
+    """
+    Executes a tool-enabled conversational session against the DeepSeek LLM engine.
+    """
     tools = convert_tools()
     all_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages
 

@@ -36,7 +36,10 @@ def convert_tools():
     return [types.Tool(function_declarations=declarations)]
 
 
-def chat(messages: list) -> str:
+def gemini(messages: list) -> str:
+    """
+    Executes a tool-enabled conversational session against the Gemini LLM engine.
+    """
     tools = convert_tools()
     history = []
     for m in messages[:-1]:

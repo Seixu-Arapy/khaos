@@ -1,16 +1,13 @@
-from anthropic import Anthropic
-from dotenv import load_dotenv
+import anthropic
 
 from app import config
 from app.prompt import SYSTEM_PROMPT
 from app.tools import TOOLS_SCHEMA, execute_tool
 
-load_dotenv()
-
-client = Anthropic(api_key=config.ANTHROPIC_API_KEY)
+client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
 
-def convert_tools():
+def convert_tools() -> list:
     tools = []
     for t in TOOLS_SCHEMA:
         properties = {}
@@ -34,7 +31,10 @@ def convert_tools():
     return tools
 
 
-def chat(messages: list) -> str:
+def claude(messages: list) -> str:
+    """
+    Executes a tool-enabled conversational session against the Claude LLM engine.
+    """
     tools = convert_tools()
 
     response = client.messages.create(
@@ -70,4 +70,4 @@ def chat(messages: list) -> str:
             messages=messages,
         )
 
-    return next(b.text for b in response.content if hasattr(b, "text"))
+    return response.content[0].text

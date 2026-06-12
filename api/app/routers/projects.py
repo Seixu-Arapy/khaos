@@ -1,185 +1,128 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, status
 
 from app.database import supabase
-from app.models import PriorityEnum, StatusEnum
-from app.moments import register_moment
-from app.utils import enrich_task
+from app.enums import PriorityEnum, StatusEnum
+from app.schemas import ProjectCreate, ProjectExpanded, ProjectUpdate
+from app.services.moments import register_moment
+from app.services.projects import get_full_project, get_projects
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
-PROJECT_SELECT = "*, fields(*)"
 
-
-def get_full_project(project_id: int):
-    return (
-        supabase
-        .table("projects")
-        .select(PROJECT_SELECT)
-        .eq("id", project_id)
-        .single()
-        .execute()
-        .data
-    )
-
-
-@router.get("")
+@router.get("", response_model=list[ProjectExpanded])
 def list_projects(
     field_id: int | None = None,
     status: StatusEnum | None = None,
     priority: PriorityEnum | None = None,
     due: str | None = None,
 ):
-    query = supabase.table("projects").select(PROJECT_SELECT)
-    if field_id:
-        query = query.eq("field_id", field_id)
-    if status:
-        query = query.eq("status", status.value)
-    if priority:
-        query = query.eq("priority", priority.value)
-    if due:
-        query = query.eq("due", due)
-    return query.execute().data
+    """
+    List and filter projects with nested fields.
+    """
+    return get_projects(field_id=field_id, status=status, priority=priority, due=due)
 
 
-@router.get("/search")
+@router.get("/search", response_model=list[ProjectExpanded])
 def search_projects(query: str, status: StatusEnum | None = None):
+    """
+    Search projects by name.
+    """
     db_query = (
-        supabase.table("projects").select(PROJECT_SELECT).ilike("name", f"%{query}%")
+        supabase.table("projects").select("*, fields(*)").ilike("name", f"%{query}%")
     )
     if status:
         db_query = db_query.eq("status", status.value)
     return db_query.execute().data
 
 
-@router.get("/{project_id}")
-def get_project(project_id: int, expand: bool = False):
-    project = get_full_project(project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Projeto não encontrado")
+@router.post("", response_model=ProjectExpanded, status_code=status.HTTP_201_CREATED)
+def create_project(project_data: ProjectCreate):
+    """
+    Create a new project workspace.
+    """
+    payload = project_data.model_dump(exclude={"moment_note"})
+    payload["status"] = payload["status"].value
+    if payload.get("priority"):
+        payload["priority"] = payload["priority"].value
 
-    if expand:
-        sections = (
-            supabase
-            .table("sections")
-            .select("*")
-            .eq("project_id", project_id)
-            .execute()
-            .data
-        )
-        for section in sections:
-            tasks = (
-                supabase
-                .table("tasks")
-                .select("*")
-                .eq("section_id", section["id"])
-                .execute()
-                .data
-            )
-            section["tasks"] = [enrich_task(t) for t in tasks]
-        project["sections"] = sections
-
-    return project
-
-
-@router.post("")
-def create_project(
-    name: str,
-    field_id: int,
-    status: StatusEnum = StatusEnum.planning,
-    due: str | None = None,
-    priority: PriorityEnum | None = None,
-    doc_reference: str | None = None,
-    moment_note: str | None = None,
-):
-    result = (
-        supabase
-        .table("projects")
-        .insert({
-            "name": name,
-            "field_id": field_id,
-            "status": status.value,
-            "due": due,
-            "priority": priority.value if priority else None,
-            "doc_reference": doc_reference,
-        })
-        .execute()
-        .data
-    )
+    result = supabase.table("projects").insert(payload).execute().data
     if result:
         project_id = result[0]["id"]
         register_moment(
-            "project", project_id, "created", value=name, moment_note=moment_note
+            "project",
+            project_id,
+            "created",
+            value=project_data.status.value,
+            moment_note=project_data.moment_note,
         )
-        if due:
-            register_moment("project", project_id, "due", value=due)
-        if priority:
-            register_moment("project", project_id, "priority", value=priority.value)
-        register_moment("project", project_id, "status", value=status.value)
         return get_full_project(project_id)
-    return result
+    raise HTTPException(status_code=400, detail="Failed to create project")
 
 
-@router.patch("/{project_id}")
-def update_project(
-    project_id: int,
-    name: str | None = None,
-    due: str | None = None,
-    field_id: int | None = None,
-    priority: PriorityEnum | None = None,
-    doc_reference: str | None = None,
-    moment_note: str | None = None,
-):
-    data = {}
-    if name:
-        data["name"] = name
-    if due:
-        data["due"] = due
-    if field_id:
-        data["field_id"] = field_id
-    if priority:
-        data["priority"] = priority.value
-    if doc_reference:
-        data["doc_reference"] = doc_reference
+@router.patch("/{project_id}", response_model=ProjectExpanded)
+def update_project(project_id: int, project_data: ProjectUpdate):
+    """
+    Modify core project details.
+    """
+    data = project_data.model_dump(exclude={"moment_note"}, exclude_none=True)
+    if "priority" in data and data["priority"]:
+        data["priority"] = data["priority"].value
+
     result = supabase.table("projects").update(data).eq("id", project_id).execute().data
     if result:
-        if due:
+        if project_data.due:
             register_moment(
-                "project", project_id, "due", value=due, moment_note=moment_note
+                "project",
+                project_id,
+                "due",
+                value=project_data.due,
+                moment_note=project_data.moment_note,
             )
-        if priority:
+        if project_data.priority:
             register_moment(
                 "project",
                 project_id,
                 "priority",
-                value=priority.value,
-                moment_note=moment_note,
+                value=project_data.priority.value,
+                moment_note=project_data.moment_note,
             )
         return get_full_project(project_id)
-    return result
+    raise HTTPException(status_code=404, detail="Project not found or no changes made")
 
 
-@router.patch("/{project_id}/status")
+@router.patch("/{project_id}/status", response_model=ProjectExpanded)
 def update_project_status(
     project_id: int,
-    status: StatusEnum,
+    status_enum: StatusEnum,
     moment_note: str | None = None,
 ):
+    """
+    Transition a project's life cycle status.
+    """
     result = (
         supabase
         .table("projects")
-        .update({"status": status.value})
+        .update({"status": status_enum.value})
         .eq("id", project_id)
         .execute()
         .data
     )
     if result:
         register_moment(
-            "project", project_id, "status", value=status.value, moment_note=moment_note
+            "project",
+            project_id,
+            "status",
+            value=status_enum.value,
+            moment_note=moment_note,
         )
         return get_full_project(project_id)
-    return result
+    raise HTTPException(status_code=404, detail="Project not found")
 
 
-@router.delete("/{project_id}")
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(project_id: int):
-    return supabase.table("projects").delete().eq("id", project_id).execute().data
+    """
+    Permanently delete a project record.
+    """
+    supabase.table("projects").delete().eq("id", project_id).execute()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
