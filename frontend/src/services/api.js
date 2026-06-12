@@ -1,13 +1,27 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_KHAOS_API_URL
+  baseURL: import.meta.env.VITE_KHAOS_API_URL,
+  withCredentials: true,
+  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json"
+  }
 })
 
-api.interceptors.request.use(config => {
-  config.headers["X-API-Key"] = import.meta.env.VITE_KHAOS_API_KEY
+api.interceptors.request.use(
+  config => {
+    const token = import.meta.env.VITE_KHAOS_API_KEY
 
-  return config
-})
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
+    return config
+  },
+  error => {
+    return Promise.reject(error)
+  }
+)
 
 export default api
