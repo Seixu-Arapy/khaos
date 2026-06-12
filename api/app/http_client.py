@@ -1,16 +1,20 @@
+from typing import Any
+
 import requests
 
 
 class TimeoutSession(requests.Session):
-    def __init__(self, default_timeout=5):
+    """
+    Custom HTTP request wrapper injecting non-blocking execution timeout fallback constraints.
+    """
+
+    def __init__(self, default_timeout: int = 5) -> None:
         super().__init__()
         self.default_timeout = default_timeout
 
-    def request(self, method, url, **kwargs):
-        # Define o timeout padrão se ele não for passado manualmente na chamada
+    def request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
         kwargs.setdefault("timeout", self.default_timeout)
-        return super().request(method, url, **kwargs)
+        return super().request(method=method, url=url, **kwargs)
 
 
-# Instancia o cliente que você usará no projeto
 client = TimeoutSession(default_timeout=5)

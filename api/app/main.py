@@ -20,30 +20,17 @@ from app.routers import (
 
 app = FastAPI(title="Khaos API")
 
-# ============================================================
-# MIDDLEWARE
-# ============================================================
-
 allowed_origins = [origin.strip() for origin in config.ALLOWED_ORIGINS.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
-# ============================================================
-# EXCEPTION HANDLERS
-# ============================================================
-
 register_exception_handlers(app)
-
-# ============================================================
-# ROUTERS
-# ============================================================
-
 
 protected_routers = [
     chat.router,
