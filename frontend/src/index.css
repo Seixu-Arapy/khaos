@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@import "@fontsource-variable/roboto-flex/full.css";
+@import "@fontsource-variable/roboto-mono/wght.css";
+@import "@fontsource-variable/roboto-slab/wght.css";
+
+@source "../src/config/fields.config.js";
+
+@theme {
+  --font-sans: "Roboto Flex Variable", "Roboto", sans-serif;
+  --font-serif: "Roboto Slab Variable", serif;
+  --font-mono: "Roboto Mono Variable", monospace;
+
+  /* Cores de estrutura (Canvas / Painéis) */
+  --color-app-bg: #030712; /* gray-950 */
+  --color-app-surface: #111827; /* gray-900 */
+  --color-app-card: #161e2e; /* gray-850 */
+  --color-app-border: #1f2937; /* gray-800 */
+  --color-app-muted: #64748b; /* gray-500 */
+  --color-app-text: #e5e7eb; /* gray-200 */
+
+  /* Identidade visual e estados */
+  --color-brand-primary: #818cf8; /* indigo-400 */
+  --color-brand-accent: #f59e0b; /* amber-500 */
+  --color-brand-success: #10b981; /* emerald-500 */
+  --color-brand-danger: #f87171; /* red-400 */
+
+  --animate-bounce-lr: bounce_lr 1.8s ease-in-out infinite;
+  --animate-wiggle: wiggle 1.2s ease-in-out infinite;
+}
+
+@keyframes shift {
+  0% {
+    --pos: 20% 30%;
+  }
+  15% {
+    --pos: 75% 20%;
+  }
+  32% {
+    --pos: 40% 85%;
+  }
+  48% {
+    --pos: 85% 70%;
+  }
+  65% {
+    --pos: 15% 80%;
+  }
+  80% {
+    --pos: 60% 40%;
+  }
+  100% {
+    --pos: 20% 30%;
+  }
+}
+
+@keyframes bell {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(15deg);
+  }
+  30% {
+    transform: rotate(-15deg);
+  }
+  45% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+  85% {
+    transform: rotate(-4deg);
+  }
+  92% {
+    transform: rotate(0deg);
+  }
+}
+
+@property --pos {
+  syntax: "<percentage>+";
+  inherits: false;
+  initial-value: 20% 30%;
+}
