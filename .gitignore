@@ -1,0 +1,39 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Common IDE / Editor folders
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Environments and secret files
+.env
+.env.local
+.env.*.local
+*.env
+config.json
+secrets.json
+
+# Private keys and certificates
+*.pem
+*.key
+*.pub
+*.pkcs12
+*.pfx
+*.crt
+*.csr
+
+# Cloud provider credentials
+.aws/
+.gcloud/
+.azure/
