@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown"
 
 import AppIcon from "../AppIcon"
 import ChaoticText from "../ChaoticText"
+import api from "../services/api"
 import PriorityBadge from "./badges/PriorityBadge"
 import StatusBadge from "./badges/StatusBadge"
 import Field from "./entities/Field"
@@ -11,7 +12,6 @@ import Project from "./entities/Project"
 import Section from "./entities/Section"
 import Task from "./entities/Task"
 
-const API_BASE_URL = "http://127.0.0.1:8000"
 const MODELS = ["claude", "gemini", "deepseek"]
 const CONTEXT_PROJECT_REGEX = /\[CONTEXT_PROJECT_ID:\s*(\d+)\]/
 
@@ -26,19 +26,19 @@ function parseContextFromContent(content) {
 }
 
 async function postChat({ model, messages }) {
-  const response = await fetch(`${API_BASE_URL}/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, messages })
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(JSON.stringify(error))
+  try {
+    const response = await api.post("/chat", { model, messages })
+    return response.data.response
+  } catch (error) {
+    if (error.response && error.response.data) {
+      const mensagemErro =
+        typeof error.response.data === "object"
+          ? JSON.stringify(error.response.data)
+          : error.response.data
+      throw new Error(mensagemErro, { cause: error })
+    }
+    throw new Error(error.message, { cause: error })
   }
-
-  const data = await response.json()
-  return data.response
 }
 
 export default function Chat({

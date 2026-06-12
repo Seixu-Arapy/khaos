@@ -3,16 +3,12 @@ import { useCallback, useEffect, useState } from "react"
 import Chat from "./components/Chat"
 import Header from "./components/Header"
 import Sidebar from "./components/Sidebar"
-
-const API_BASE_URL = "http://127.0.0.1:8000"
+import api from "./services/api"
 
 async function fetchActiveTimerData() {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/time-entries?active=true&expand=true`
-    )
-    if (!response.ok) return null
-    return await response.json()
+    const response = await api.get("/time-entries?active=true&expand=true")
+    return response.data // O Axios já entrega o JSON mastigado em .data
   } catch (error) {
     console.error("Erro ao buscar timer ativo:", error)
     return null
@@ -32,13 +28,8 @@ export default function App() {
     setIsContextLoading(true)
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/projects/${projectId}?expand=true`
-      )
-      if (response.ok) {
-        const data = await response.json()
-        setActiveContext(data)
-      }
+      const response = await api.get(`/projects/${projectId}?expand=true`)
+      setActiveContext(response.data)
     } catch (error) {
       console.error("Erro ao buscar contexto do projeto:", error)
     } finally {
