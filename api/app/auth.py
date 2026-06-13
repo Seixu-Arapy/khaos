@@ -1,14 +1,29 @@
-from fastapi import Header, HTTPException, Request
+from typing import Annotated
+
+from fastapi import Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app import config
 
+security_scheme = HTTPBearer(auto_error=False)
 
-def verify_api_key(request: Request, x_api_key: str | None = Header(None)) -> None:
+
+def verify_bearer_token(
+    request: Request,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(security_scheme)
+    ],
+):
     """
-    Enforces perimeter security validation by evaluating incoming master header credentials.
+    Enforces perimeter security validation by evaluating incoming official
+    Authorization: Bearer <token> credentials.
     """
     if request.method == "OPTIONS":
         return
 
-    if not x_api_key or x_api_key != config.API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+    if not credentials or not credentials.credentials:
+        raise HTTPException(status_code=401, detail="Invalid or missing access token")
+
+    token = credentials.credentials
+    if token != config.API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing access token")

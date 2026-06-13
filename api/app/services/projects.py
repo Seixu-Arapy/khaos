@@ -1,31 +1,92 @@
+from typing import Any, cast
+
 from app.database import supabase
 
-PROJECT_SELECT = "*, fields(*)"
+
+def get_projects() -> list[dict[str, Any]]:
+    """
+    List all projects from the database.
+
+    Returns:
+        list[dict[str, Any]]: A list of project objects.
+    """
+    data = supabase.table("projects").select("*").execute().data
+
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+
+    return []
 
 
-def get_full_project(project_id: int) -> dict:
+def get_project(project_id: int) -> dict[str, Any]:
     """
-    Queries the database for a single project record, injecting its
-    associated operational field relation.
+    Get a single project by its unique ID.
+
+    Args:
+        project_id (int): The primary key database identifier of the project.
+
+    Returns:
+        dict[str, Any]: The project object, or an empty dict if not found.
     """
+    data = supabase.table("projects").select("*").eq("id", project_id).execute().data
+
+    if isinstance(data, list) and len(data) > 0:
+        # Pegamos o primeiro item da lista e garantimos que o Pylance o veja como dict[str, Any]
+        return cast(dict[str, Any], data[0])
+
+    return {}
+
+
+def create_project(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Insert a new project record into the database.
+
+    Args:
+        payload (dict[str, Any]): The key-value attributes to create the project.
+
+    Returns:
+        dict[str, Any]: The newly created project row data.
+    """
+    data = supabase.table("projects").insert(payload).select().execute().data
     return (
-        supabase
-        .table("projects")
-        .select(PROJECT_SELECT)
-        .eq("id", project_id)
-        .single()
-        .execute()
-        .data
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
     )
 
 
-def get_projects(field_id: int | None = None, status: str | None = None) -> list[dict]:
+def update_project(project_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     """
-    Queries the database for multiple project records based on optional filters.
+    Update attributes of an existing project row.
+
+    Args:
+        project_id (int): The primary key database identifier of the project.
+        payload (dict[str, Any]): The fields and new values to update.
+
+    Returns:
+        dict[str, Any]: The updated state of the modified project row.
     """
-    query = supabase.table("projects").select(PROJECT_SELECT)
-    if field_id:
-        query = query.eq("field_id", field_id)
-    if status:
-        query = query.eq("status", status)
-    return query.execute().data
+    data = (
+        supabase
+        .table("projects")
+        .update(payload)
+        .eq("id", project_id)
+        .select()
+        .execute()
+        .data
+    )
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )
+
+
+def delete_project(project_id: int) -> bool:
+    """
+    Delete a project row from the database by its ID.
+
+    Args:
+        project_id (int): The unique identity key of the target project.
+
+    Returns:
+        bool: True if rows were deleted, False otherwise.
+    """
+    data = supabase.table("projects").delete().eq("id", project_id).execute().data
+    return bool(data)

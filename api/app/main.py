@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import config
-from app.auth import verify_api_key
+from app.auth import verify_bearer_token
 from app.exceptions import register_exception_handlers
 from app.routers import (
     chat,
@@ -18,7 +18,11 @@ from app.routers import (
     time_entries,
 )
 
-app = FastAPI(title="Khaos API")
+app = FastAPI(
+    title="Khaos API",
+    description="Comprehensive automated workflow, audit ledger, and language engine management gateway.",
+    version="1.0.0",
+)
 
 allowed_origins = [origin.strip() for origin in config.ALLOWED_ORIGINS.split(",")]
 
@@ -34,18 +38,18 @@ register_exception_handlers(app)
 
 protected_routers = [
     chat.router,
+    events.router,
     fields.router,
+    moments.router,
     projects.router,
     sections.router,
-    tasks.router,
     sequences.router,
-    events.router,
-    moments.router,
     tags.router,
+    tasks.router,
     time_entries.router,
 ]
 
-for r in protected_routers:
-    app.include_router(r, dependencies=[Depends(verify_api_key)])
-
 app.include_router(health.router)
+
+for r in protected_routers:
+    app.include_router(r, dependencies=[Depends(verify_bearer_token)])

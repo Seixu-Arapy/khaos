@@ -1,43 +1,30 @@
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, status
 
-from app.database import supabase
-from app.schemas import Moment, MomentCreate
-from app.services.moments import register_moment
+from app.schemas.moments import MomentCreate
+from app.services import moments as moment_service
 
 router = APIRouter(prefix="/moments", tags=["Moments"])
 
 
-@router.post("", response_model=Moment, status_code=status.HTTP_201_CREATED)
-def create_moment(moment_data: MomentCreate):
+@router.get("", response_model=list[dict[str, Any]], status_code=status.HTTP_200_OK)
+def list_moments():
     """
-    Explicitly insert a state machine transition audit track.
+    Fetch transactional footprint historical ledger entries capturing atomic state machine transition matrices mutations.
     """
-    result = register_moment(
-        entity_type=moment_data.entity_type,
-        entity_id=moment_data.entity_id,
-        event_type=moment_data.event_type,
-        value=moment_data.value,
-        moment_note=moment_data.moment_note,
-    )
-
-    if not result.data:
-        raise HTTPException(status_code=400, detail="Failed to register history moment")
-
-    return result.data[0]
+    return moment_service.get_moments()
 
 
-@router.get("/{entity_type}/{entity_id}", response_model=list[Moment])
-def get_moments(entity_type: str, entity_id: int):
+@router.post("", response_model=dict[str, Any], status_code=status.HTTP_201_CREATED)
+def create_moment(payload: MomentCreate):
     """
-    Acquire structural logs tracking history of an object.
+    Explicitly record and append a new structured lifecycle audit trail footprint into the tracking engine database ledger.
     """
-    return (
-        supabase
-        .table("moments")
-        .select("*")
-        .eq("entity_type", entity_type)
-        .eq("entity_id", entity_id)
-        .order("time")
-        .execute()
-        .data
-    )
+    moment = moment_service.create_moment(payload.model_dump())
+    if not moment:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to create moment log",
+        )
+    return moment

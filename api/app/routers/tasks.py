@@ -1,169 +1,189 @@
-from fastapi import APIRouter, HTTPException, Response, status
+from typing import Any, cast
+
+from fastapi import APIRouter, HTTPException, status
 
 from app.database import supabase
-from app.enums import PriorityEnum, StatusEnum
-from app.schemas import TaskCreate, TaskSequenced, TaskUpdate
-from app.services.moments import register_moment
-from app.services.tasks import get_full_task, get_tasks
-from app.services.time_entries import start_time_entry, stop_time_entry
+from app.schemas.tasks import TaskCreate, TaskUpdate
+from app.services.tasks import (
+    create_task,
+    delete_task,
+    get_task,
+    get_tasks,
+    update_task,
+)
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
-@router.get("", response_model=list[TaskSequenced])
-def list_tasks(
-    section_id: int,
-    status_enum: StatusEnum | None = None,
-    priority: PriorityEnum | None = None,
-    due: str | None = None,
-):
+@router.get("", response_model=list[dict[str, Any]], status_code=status.HTTP_200_OK)
+def list_tasks():
     """
-    List action items under a section.
+    Retrieve all tasks stored across the system.
     """
-    return get_tasks(
-        section_id=section_id, status_enum=status_enum, priority=priority, due=due
-    )
+    return get_tasks()
 
 
-@router.get("/search", response_model=list[TaskSequenced])
-def search_tasks(
-    query: str,
-    status_enum: StatusEnum | None = None,
-    priority: PriorityEnum | None = None,
-):
+@router.get("/{task_id}", response_model=dict[str, Any], status_code=status.HTTP_200_OK)
+def get_task_by_id(task_id: int):
     """
-    Global search for task strings.
+    Retrieve attributes for a single active execution task unit matching the ID.
     """
-    db_query = (
-        supabase
-        .table("tasks")
-        .select(
-            "*, sections(id, name, project_id, projects(id, name, field_id, fields(id, name)))"
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task with ID {task_id} not found.",
         )
-        .ilike("name", f"%{query}%")
-    )
-    if status_enum:
-        db_query = db_query.eq("status", status_enum.value)
-    if priority:
-        db_query = db_query.eq("priority", priority.value)
-
-    from app.services.sequences import inject_task_sequences
-
-    return [inject_task_sequences(t) for t in db_query.execute().data]
+    return task
 
 
-@router.post("", response_model=TaskSequenced, status_code=status.HTTP_201_CREATED)
-def create_task(task_data: TaskCreate):
+@router.post("", response_model=dict[str, Any], status_code=status.HTTP_201_CREATED)
+def create_task_endpoint(payload: TaskCreate):
     """
-    Register a standalone executable task.
+    Commit a new active execution token entry row and log its initial moment.
     """
-    payload = task_data.model_dump(exclude={"moment_note"})
-    payload["status"] = payload["status"].value
-    if payload.get("priority"):
-        payload["priority"] = payload["priority"].value
+    from app.services.moments import create_moment
 
-    result = supabase.table("tasks").insert(payload).execute().data
-    if result:
-        task_id = result[0]["id"]
-        register_moment(
-            "task",
-            task_id,
-            "created",
-            value=task_data.status.value,
-            moment_note=task_data.moment_note,
-        )
-        return get_full_task(task_id)
+    data = payload.model_dump(exclude={"moment_note"})
+    result = create_task(data)
+
+    if result and isinstance(result, dict):
+        task_id = result["id"]
+        moment_payload = {
+            "entity_type": "task",
+            "entity_id": task_id,
+            "event_type": "created",
+            "value": payload.status,
+            "moment_note": payload.moment_note,
+        }
+        create_moment(moment_payload)
+        return result
+
     raise HTTPException(status_code=400, detail="Failed to create task")
 
 
-@router.patch("/{task_id}", response_model=TaskSequenced)
-def update_task(task_id: int, task_data: TaskUpdate):
+@router.patch(
+    "/{task_id}", response_model=dict[str, Any], status_code=status.HTTP_200_OK
+)
+def update_task_endpoint(task_id: int, payload: TaskUpdate):
     """
-    Update target parameters of an active task.
+    Apply selective parameter updates over a targeted task and track state change.
     """
-    data = task_data.model_dump(exclude={"moment_note"}, exclude_none=True)
-    if "priority" in data and data["priority"]:
-        data["priority"] = data["priority"].value
+    from app.services.moments import create_moment
 
-    result = supabase.table("tasks").update(data).eq("id", task_id).execute().data
-    if result:
-        if task_data.due:
-            register_moment(
-                "task",
-                task_id,
-                "due",
-                value=task_data.due,
-                moment_note=task_data.moment_note,
-            )
-        if task_data.priority:
-            register_moment(
-                "task",
-                task_id,
-                "priority",
-                value=task_data.priority.value,
-                moment_note=task_data.moment_note,
-            )
-        if task_data.estimate is not None:
-            register_moment(
-                "task",
-                task_id,
-                "estimate",
-                value=str(task_data.estimate),
-                moment_note=task_data.moment_note,
-            )
-        return get_full_task(task_id)
-    raise HTTPException(status_code=404, detail="Task not found")
+    task_before = get_task(task_id)
+    if not task_before:
+        raise HTTPException(status_code=404, detail="Task not found")
 
+    data = payload.model_dump(exclude={"moment_note"}, exclude_none=True)
+    result = update_task(task_id, data)
 
-@router.patch("/{task_id}/status", response_model=TaskSequenced)
-def update_task_status(
-    task_id: int,
-    status_enum: StatusEnum,
-    moment_note: str | None = None,
-):
-    """
-    Advance task progression phases.
-    """
-    result = (
-        supabase
-        .table("tasks")
-        .update({"status": status_enum.value})
-        .eq("id", task_id)
-        .execute()
-        .data
-    )
-    if result:
-        register_moment(
-            "task",
-            task_id,
-            "status",
-            value=status_enum.value,
-            moment_note=moment_note,
-        )
-        return get_full_task(task_id)
-    raise HTTPException(status_code=404, detail="Task not found")
+    if result and isinstance(result, dict):
+        if "status" in data and data["status"] != task_before.get("status"):
+            moment_payload = {
+                "entity_type": "task",
+                "entity_id": task_id,
+                "event_type": "status_changed",
+                "value": f"{task_before.get('status')} → {data['status']}",
+                "moment_note": payload.moment_note,
+            }
+            create_moment(moment_payload)
+        elif payload.moment_note:
+            moment_payload = {
+                "entity_type": "task",
+                "entity_id": task_id,
+                "event_type": "updated",
+                "value": None,
+                "moment_note": payload.moment_note,
+            }
+            create_moment(moment_payload)
+        return result
+
+    raise HTTPException(status_code=400, detail="Task update failed")
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id: int):
+def delete_task_endpoint(task_id: int):
     """
-    Delete a specific task database object.
+    Delete a task row reference from the core workflow pipeline matrix.
     """
-    supabase.table("tasks").delete().eq("id", task_id).execute()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    if not delete_task(task_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task with ID {task_id} not found or could not be deleted.",
+        )
 
 
-@router.post("/{task_id}/start")
-def start_task_timer(task_id: int, moment_note: str | None = None):
+@router.post(
+    "/{task_id}/start", response_model=dict[str, Any], status_code=status.HTTP_200_OK
+)
+def start_task(task_id: int):
     """
-    Trigger a runtime tracker session.
+    Initialize a structural workflow time log registration chunk for tracking operational effort.
     """
-    return start_time_entry(task_id=task_id, moment_note=moment_note)
+    from datetime import datetime
+
+    from app.services.time_entries import create_time_entry
+
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    task_check = get_task(task_id)
+    if not task_check:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
+
+    active_entry = (
+        supabase
+        .table("time_entries")
+        .select("*")
+        .eq("task_id", task_id)
+        .is_("ended_at", "null")
+        .execute()
+        .data
+    )
+    if isinstance(active_entry, list) and active_entry:
+        return cast(dict[str, Any], active_entry[0])
+
+    entry_payload = {"task_id": task_id, "started_at": now_iso, "ended_at": None}
+    return cast(dict[str, Any], create_time_entry(entry_payload))
 
 
-@router.patch("/{task_id}/stop")
-def stop_task_timer(task_id: int, moment_note: str | None = None):
+@router.post(
+    "/{task_id}/stop", response_model=dict[str, Any], status_code=status.HTTP_200_OK
+)
+def stop_task(task_id: int):
     """
-    Halt an ongoing time tracking counter.
+    Close active work timing logging slots matching the targeted functional token link.
     """
-    return stop_time_entry(task_id=task_id, moment_note=moment_note)
+    from datetime import datetime
+
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    active_entries = (
+        supabase
+        .table("time_entries")
+        .select("*")
+        .eq("task_id", task_id)
+        .is_("ended_at", "null")
+        .execute()
+        .data
+    )
+    if not (isinstance(active_entries, list) and active_entries):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active running timer entries found for task",
+        )
+
+    first_entry = cast(dict[str, Any], active_entries[0])
+    entry_id = first_entry["id"]
+    result = (
+        supabase
+        .table("time_entries")
+        .update({"ended_at": now_iso})
+        .eq("id", entry_id)
+        .select()
+        .execute()
+        .data
+    )
+    if isinstance(result, list) and result:
+        return cast(dict[str, Any], result[0])
+    return {}

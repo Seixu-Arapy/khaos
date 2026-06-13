@@ -1,39 +1,50 @@
+from typing import Any
+
 from app.database import supabase
 
-EVENT_SELECT = (
-    "*, tasks(id, name), projects(id, name, fields(id, name)), fields(id, name)"
-)
+
+def get_events() -> list[dict[str, Any]]:
+    """
+    List all recorded workflow events from the database.
+
+    Returns:
+        list[dict[str, Any]]: A list of event logs.
+    """
+    data = supabase.table("events").select("*").execute().data
+
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+
+    return []
 
 
-def get_full_event(event_id: int) -> dict:
+def get_full_event(event_id: int) -> dict[str, Any]:
     """
-    Queries a single calendar event block by its unique identifier,
-    expanding nested tasks, projects, and domain fields.
+    Get a single recorded workflow event by its unique ID.
+
+    Args:
+        event_id (int): The primary key database identifier of the event.
+
+    Returns:
+        dict[str, Any]: The complete event record details, or an empty dict if not found.
     """
+    data = supabase.table("events").select("*").eq("id", event_id).execute().data
     return (
-        supabase
-        .table("events")
-        .select(EVENT_SELECT)
-        .eq("id", event_id)
-        .single()
-        .execute()
-        .data
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
     )
 
 
-def get_events(
-    field_id: int | None = None,
-    project_id: int | None = None,
-    type_str: str | None = None,
-) -> list[dict]:
+def create_event(payload: dict[str, Any]) -> dict[str, Any]:
     """
-    Queries database logs for calendar events matching optional layout filters.
+    Insert a new event log row into the database tracker.
+
+    Args:
+        payload (dict[str, Any]): Attributes explaining the event contextual metrics.
+
+    Returns:
+        dict[str, Any]: The newly inserted event database entity.
     """
-    query = supabase.table("events").select(EVENT_SELECT)
-    if field_id:
-        query = query.eq("field_id", field_id)
-    if project_id:
-        query = query.eq("project_id", project_id)
-    if type_str:
-        query = query.eq("type", type_str)
-    return query.execute().data
+    data = supabase.table("events").insert(payload).select().execute().data
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )

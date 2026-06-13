@@ -1,90 +1,74 @@
-from fastapi import APIRouter, HTTPException, Response, status
+from typing import Any, cast
 
-from app.database import supabase
-from app.schemas import SectionSequence, TaskSequence
+from fastapi import APIRouter, HTTPException, status
 
-router = APIRouter(tags=["Sequences"])
+from app.services.sequences import (
+    create_task_sequence,
+    delete_section_sequence,
+    get_tasks_sequences,
+    upsert_section_sequence,
+    upsert_task_sequence,
+)
+
+router = APIRouter(prefix="/sequences", tags=["Sequences"])
 
 
-@router.post("/tasks-sequence", status_code=status.HTTP_201_CREATED)
-def create_task_sequence(sequence: TaskSequence):
+@router.get(
+    "/tasks", response_model=list[dict[str, Any]], status_code=status.HTTP_200_OK
+)
+def list_tasks_sequences():
     """
-    Establish a neutral chronological sequence link between two tasks.
+    Fetch structural continuity matrices binding sequential predecessor and successor execution items.
     """
-    return supabase.table("tasks_sequence").insert(sequence.model_dump()).execute().data
+    return get_tasks_sequences()
 
 
-@router.patch("/tasks-sequence", status_code=status.HTTP_200_OK)
-def update_task_sequence(old_sequence: TaskSequence, new_sequence: TaskSequence):
+@router.post(
+    "/tasks", response_model=dict[str, Any], status_code=status.HTTP_201_CREATED
+)
+def bind_task_sequence(payload: dict[str, Any]):
     """
-    Modify an existing timeline sequence layout, mapping alternative tracking nodes.
+    Commit an immutable explicit execution priority ordering constraint link between two tasks.
     """
-    result = (
-        supabase
-        .table("tasks_sequence")
-        .update(new_sequence.model_dump())
-        .eq("task_previous", old_sequence.task_previous)
-        .eq("task_next", old_sequence.task_next)
-        .execute()
-        .data
-    )
-    if not result:
+    if "task_previous" not in payload or "task_next" not in payload:
         raise HTTPException(
-            status_code=404, detail="Target sequence map link not found"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing required task bounds keys",
         )
-    return result
+    return cast(dict[str, Any], create_task_sequence(payload))
 
 
-@router.delete("/tasks-sequence", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task_sequence(sequence: TaskSequence):
+@router.put("/tasks", response_model=dict[str, Any], status_code=status.HTTP_200_OK)
+def overwrite_task_sequence(payload: dict[str, Any]):
     """
-    Break a sequence timeline pairing link between two tasks.
+    Force update or append structural relational execution sequencing paths parameters across active items.
     """
-    supabase.table("tasks_sequence").delete().eq(
-        "task_previous", sequence.task_previous
-    ).eq("task_next", sequence.task_next).execute()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return cast(dict[str, Any], upsert_task_sequence(payload))
 
 
-@router.post("/sections-sequence", status_code=status.HTTP_201_CREATED)
-def create_section_sequence(sequence: SectionSequence):
+@router.put("/sections", response_model=dict[str, Any], status_code=status.HTTP_200_OK)
+def overwrite_section_sequence(payload: dict[str, Any]):
     """
-    Map downstream milestone tracks across board section layout elements.
+    Configure or reshape relational layout continuity mappings separating active milestone tracking columns.
     """
-    return (
-        supabase.table("sections_sequence").insert(sequence.model_dump()).execute().data
-    )
-
-
-@router.patch("/sections-sequence", status_code=status.HTTP_200_OK)
-def update_section_sequence(
-    old_sequence: SectionSequence, new_sequence: SectionSequence
-):
-    """
-    Modify an existing timeline sequence layout, mapping alternative tracking nodes.
-    """
-    result = (
-        supabase
-        .table("sections_sequence")
-        .update(new_sequence.model_dump())
-        .eq("section_previous", old_sequence.section_previous)
-        .eq("section_next", old_sequence.section_next)
-        .execute()
-        .data
-    )
-    if not result:
+    if "section_previous" not in payload or "section_next" not in payload:
         raise HTTPException(
-            status_code=404, detail="Target sequence map link not found"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing required section bounds keys",
         )
-    return result
+    return cast(dict[str, Any], upsert_section_sequence(payload))
 
 
-@router.delete("/sections-sequence", status_code=status.HTTP_204_NO_CONTENT)
-def delete_section_sequence(sequence: SectionSequence):
+@router.delete(
+    "/sections/{section_previous}/{section_next}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def break_section_sequence(section_previous: int, section_next: int):
     """
-    Deconstruct timeline continuation elements mapping across structural sections.
+    Delete structural tracking constraints separating adjacent layout board section columns elements.
     """
-    supabase.table("sections_sequence").delete().eq(
-        "section_previous", sequence.section_previous
-    ).eq("section_next", sequence.section_next).execute()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    if not delete_section_sequence(section_previous, section_next):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Target sequencing connection link path missing",
+        )

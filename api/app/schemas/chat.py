@@ -1,43 +1,68 @@
-from typing import Literal
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class ChatMessage(BaseModel):
+class ResponseBlock(BaseModel):
     """
-    Represents a single granular message log structure within a conversation thread.
+    Represents an individual content block within the chat engine response stream.
+
+    This model unifies various output fragments produced by different LLM engines
+    (Claude, DeepSeek, Gemini) and local execution runtimes, enabling the React
+    frontend to dynamically render polymorphic UI components.
     """
 
-    role: str = Field(
-        description="The author role identifier of this communication block (e.g., 'user', 'assistant', 'system')"
+    type: str = Field(
+        ...,
+        description=(
+            "The block architectural type identifier. Determines the rendering strategy "
+            "on the client side. Common values include: 'text', 'thinking', 'tool_use', and 'terminal'."
+        ),
     )
-    content: str = Field(
-        description="The raw textual payload dialogue markdown content processed inside the transmission step"
+    content: str | None = Field(
+        None,
+        description=(
+            "The raw text payload associated with the block. Populated for standard text "
+            "generation ('text'), chain-of-thought steps ('thinking'), or automation execution outputs ('terminal')."
+        ),
     )
-
-
-class ChatRequest(BaseModel):
-    """
-    Payload structure required to initiate or continue an asynchronous LLM model conversation streaming request.
-    """
-
-    model: Literal["claude", "gemini", "deepseek"] = Field(
-        default="gemini",
-        description="The targeted external core language engine identifier chosen to evaluate and process the conversational context prompt execution",
+    name: str | None = Field(
+        None,
+        description=(
+            "The identifier of the invoked tool/automation. "
+            "This field is required only when the 'type' evaluates to 'tool_use'."
+        ),
     )
-    messages: list[ChatMessage] = Field(
-        description="The complete sequential chat context history array listing records generated across the current thread session"
+    args: dict[str, Any] | None = Field(
+        None,
+        description=(
+            "The structured key-value arguments mapped to the tool execution signature. "
+            "This field is required only when the 'type' evaluates to 'tool_use'."
+        ),
     )
 
 
 class ChatResponse(BaseModel):
     """
-    Structured model holding the final evaluated context response from the core language engine.
+    Unified execution response model encapsulating the final evaluated context
+    returned by any core language engine integration.
     """
 
     model: str = Field(
-        description="The core language engine instance that processed the execution context prompt"
+        ...,
+        description="The unique identifier of the language engine instance that processed the execution context prompt.",
     )
-    response: str = Field(
-        description="The generated raw text or response block output resolved by the provider"
+    blocks: list[ResponseBlock] = Field(
+        ...,
+        description="The chronological sequence of structured rich content blocks making up the complete assistant answer.",
     )
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    model: str
+    messages: list[ChatMessage]

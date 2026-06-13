@@ -1,74 +1,141 @@
-# app/services/sequences.py
+from typing import Any
+
 from app.database import supabase
 
 
-def inject_task_sequences(task: dict) -> dict:
+def get_tasks_sequences() -> list[dict[str, Any]]:
     """
-    Fetches and injects chronological predecessor and successor task dependencies
-    directly into a raw task data dictionary.
-
-    Args:
-        task (dict): The raw task dictionary fetched from the database.
+    List all task dependency links from the database.
 
     Returns:
-        dict: The mutated task dictionary containing 'previous_task' and 'next_task' nodes.
+        list[dict[str, Any]]: List of links matching predecessor and successor task IDs.
     """
-    if not task or "id" not in task:
-        return task
+    data = supabase.table("tasks_sequence").select("*").execute().data
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
 
-    previous_query = (
-        supabase
-        .table("tasks_sequence")
-        .select("task_previous, tasks!task_previous(id, name)")
-        .eq("task_next", task["id"])
-        .execute()
-        .data
-    )
-
-    next_query = (
-        supabase
-        .table("tasks_sequence")
-        .select("task_next, tasks!task_next(id, name)")
-        .eq("task_previous", task["id"])
-        .execute()
-        .data
-    )
-
-    task["task_previous"] = previous_query[0]["tasks"] if previous_query else None
-    task["task_next"] = next_query[0]["tasks"] if next_query else None
-    return task
+    return []
 
 
-def inject_sections_sequences(section: dict) -> dict:
+def create_task_sequence(payload: dict[str, Any]) -> dict[str, Any]:
     """
-    Fetches and injects upstream and downstream sequence flow dependencies
-    directly into a raw section data dictionary.
+    Create a dependency link where one task must precede another.
 
     Args:
-        section (dict): The raw section dictionary fetched from the database.
+        payload (dict[str, Any]): Dict containing 'task_previous' and 'task_next' keys.
 
     Returns:
-        dict: The mutated section dictionary containing 'previous_section' and 'next_section' nodes.
+        dict[str, Any]: The created task sequence record.
     """
-    if not section or "id" not in section:
-        return section
+    data = supabase.table("tasks_sequence").insert(payload).select().execute().data
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )
 
-    previous = (
+
+def upsert_task_sequence(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Create or update a dependency link between a predecessor and a successor task.
+
+    Args:
+        payload (dict[str, Any]): Dict containing 'task_previous' and 'task_next' keys.
+
+    Returns:
+        dict[str, Any]: The upserted task sequence record.
+    """
+    data = supabase.table("tasks_sequence").upsert(payload).select().execute().data
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )
+
+
+def delete_task_sequence(task_previous: int, task_next: int) -> bool:
+    """
+    Delete the dependency link between two tasks.
+
+    Args:
+        task_previous (int): The ID of the predecessor task.
+        task_next (int): The ID of the successor task.
+
+    Returns:
+        bool: True if the link was deleted, False otherwise.
+    """
+    data = (
         supabase
-        .table("sections_sequence")
-        .select("section_previous, sections!section_previous(id, name)")
-        .eq("section_next", section["id"])
+        .table("tasks_sequence")
+        .delete()
+        .eq("task_previous", task_previous)
+        .eq("task_next", task_next)
         .execute()
         .data
     )
-    next_ = (
+    return bool(data)
+
+
+def get_sections_sequences() -> list[dict[str, Any]]:
+    """
+    List all ordering constraints between layout sections.
+
+    Returns:
+        list[dict[str, Any]]: List of sequence links matching section IDs.
+    """
+    data = supabase.table("sections_sequence").select("*").execute().data
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+
+    return []
+
+
+def create_section_sequence(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Create a directional sequence flow between two section containers.
+
+    Args:
+        payload (dict[str, Any]): Dict containing 'section_previous' and 'section_next' keys.
+
+    Returns:
+        dict[str, Any]: The created section sequence record.
+    """
+    data = supabase.table("sections_sequence").insert(payload).select().execute().data
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )
+
+
+def upsert_section_sequence(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Create or update an ordering constraint between two section containers.
+
+    Args:
+        payload (dict[str, Any]): Dict containing 'section_previous' and 'section_next' keys.
+
+    Returns:
+        dict[str, Any]: The upserted section sequence record.
+    """
+    data = supabase.table("sections_sequence").upsert(payload).select().execute().data
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )
+
+
+def delete_section_sequence(section_previous: int, section_next: int) -> bool:
+    """
+    Delete the sequence configuration between two layout sections.
+
+    Args:
+        section_previous (int): The ID of the preceding section.
+        section_next (int): The ID of the succeeding section.
+
+    Returns:
+        bool: True if the constraint was deleted, False otherwise.
+    """
+    data = (
         supabase
         .table("sections_sequence")
-        .select("section_next, sections!section_next(id, name)")
-        .eq("section_previous", section["id"])
+        .delete()
+        .eq("section_previous", section_previous)
+        .eq("section_next", section_next)
         .execute()
         .data
     )
-    section["previous_section"] = previous[0]["sections"] if previous else None
-    section["next_section"] = next_[0]["sections"] if next_ else None
-    return section
+    return bool(data)

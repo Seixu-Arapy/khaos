@@ -1,3 +1,5 @@
+from typing import NamedTuple
+
 from pydantic import BaseModel, Field
 
 from app.enums import PriorityEnum, StatusEnum
@@ -84,4 +86,37 @@ class SectionUpdate(BaseModel):
     moment_note: str | None = Field(
         None,
         description="Optional history tracking trace annotation summary for schema edits",
+    )
+
+
+class SectionSequence(NamedTuple):
+    """
+    Defines a structural layout sequence link between two workflow sections.
+
+    This model governs the architectural continuity of the board, establishing
+    which phase or structural container directly precedes another in the workflow pipeline.
+    """
+
+    SectionPrevious: int = Field(
+        ...,
+        description="The predecessor workflow step structural section identifier link.",
+    )
+    SectionNext: int = Field(
+        ...,
+        description="The layout continuation element sequence section identifier link that follows immediately after.",
+    )
+
+
+class SectionSequenced(SectionExpanded):
+    """
+    Extends the hierarchically expanded section model to include neutral horizontal sequence links matching the database structure exactly.
+    """
+
+    SectionPrevious: Section | None = Field(
+        None,
+        description="The structural section node positioned immediately before this element in the sequence timeline",
+    )
+    SectionNext: Section | None = Field(
+        None,
+        description="The structural section node positioned immediately after this element in the sequence timeline",
     )

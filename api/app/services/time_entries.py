@@ -1,107 +1,87 @@
-from datetime import UTC, datetime
-
-from fastapi import HTTPException
+from typing import Any
 
 from app.database import supabase
-from app.services.moments import register_moment
-
-TIME_ENTRY_SELECT_BASIC = "*"
-TIME_ENTRY_SELECT_EXPANDED = "*, tasks(id, name, status, priority, sections(id, name, projects(id, name, fields(id, name))))"
 
 
-def get_full_time_entry(entry_id: int, expand: bool = False) -> dict:
+def get_time_entries() -> list[dict[str, Any]]:
     """
-    Locates an exact time tracking session segment row by identity lookup index,
-    optionally nesting complete task, section, and project lineage trees.
+    List all time logging entries from the database.
+
+    Returns:
+        list[dict[str, Any]]: A list of time entry objects.
     """
-    select = TIME_ENTRY_SELECT_EXPANDED if expand else TIME_ENTRY_SELECT_BASIC
+    data = supabase.table("time_entries").select("*").execute().data
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+    return []
+
+
+def get_time_entry(entry_id: int) -> dict[str, Any]:
+    """
+    Get a single time logging entry by its unique ID.
+
+    Args:
+        entry_id (int): The primary key database identifier of the time entry.
+
+    Returns:
+        dict[str, Any]: The time entry object, or an empty dict if not found.
+    """
+    data = supabase.table("time_entries").select("*").eq("id", entry_id).execute().data
     return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )
+
+
+def create_time_entry(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Insert a new time logging entry record into the database.
+
+    Args:
+        payload (dict[str, Any]): The key-value attributes to create the time entry.
+
+    Returns:
+        dict[str, Any]: The newly created time entry row data.
+    """
+    data = supabase.table("time_entries").insert(payload).select().execute().data
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
+    )
+
+
+def update_time_entry(entry_id: int, payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Update attributes of an existing time logging entry row.
+
+    Args:
+        entry_id (int): The primary key database identifier of the time entry.
+        payload (dict[str, Any]): The fields and new values to update.
+
+    Returns:
+        dict[str, Any]: The updated state of the modified time entry row.
+    """
+    data = (
         supabase
         .table("time_entries")
-        .select(select)
+        .update(payload)
         .eq("id", entry_id)
-        .single()
+        .select()
         .execute()
         .data
     )
-
-
-def get_time_entries(
-    active: bool | None = None, expand: bool = False
-) -> list[dict] | dict | None:
-    """
-    Queries logged effort durations datasets or active running timers from database records.
-    """
-    select = TIME_ENTRY_SELECT_EXPANDED if expand else TIME_ENTRY_SELECT_BASIC
-    query = supabase.table("time_entries").select(select)
-
-    if active is True:
-        result = query.is_("ended_at", None).execute().data
-        return result[0] if result and len(result) > 0 else None
-
-    return query.execute().data
-
-
-def start_time_entry(task_id: int, moment_note: str | None = None) -> list[dict]:
-    """
-    Validates and triggers a new runtime tracker session database record for a task.
-    """
-    any_active = (
-        supabase
-        .table("time_entries")
-        .select("*")
-        .eq("task_id", task_id)
-        .is_("ended_at", "null")
-        .execute()
-        .data
+    return (
+        data[0] if isinstance(data, list) and data and isinstance(data[0], dict) else {}
     )
-    if any_active:
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot start a new timer while another one is currently active. Stop the current timer first.",
-        )
-
-    now = datetime.now(UTC).isoformat()
-    result = (
-        supabase
-        .table("time_entries")
-        .insert({"task_id": task_id, "started_at": now})
-        .execute()
-        .data
-    )
-    if result:
-        register_moment("task", task_id, "started", value=now, moment_note=moment_note)
-    return result
 
 
-def stop_time_entry(task_id: int, moment_note: str | None = None) -> list[dict]:
+def delete_time_entry(entry_id: int) -> bool:
     """
-    Halts an ongoing time tracking counter session row ledger.
-    """
-    active = (
-        supabase
-        .table("time_entries")
-        .select("*")
-        .eq("task_id", task_id)
-        .is_("ended_at", "null")
-        .execute()
-        .data
-    )
-    if not active:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No active timer found for task {task_id}.",
-        )
+    Delete a time logging entry row from the database by its ID.
 
-    now = datetime.now(UTC).isoformat()
-    result = (
-        supabase
-        .table("time_entries")
-        .update({"ended_at": now})
-        .eq("id", active[0]["id"])
-        .execute()
-        .data
-    )
-    if result:
-        register_moment("task", task_id, "stopped", value=now, moment_note=moment_note)
-    return result
+    Args:
+        entry_id (int): The unique identity key of the target time entry.
+
+    Returns:
+        bool: True if rows were deleted, False otherwise.
+    """
+    data = supabase.table("time_entries").delete().eq("id", entry_id).execute().data
+    return bool(data)

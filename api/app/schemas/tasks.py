@@ -1,3 +1,5 @@
+from typing import NamedTuple
+
 from pydantic import BaseModel, Field
 
 from app.enums import PriorityEnum, StatusEnum
@@ -47,16 +49,21 @@ class TaskExpanded(Task):
     )
 
 
-class SequencedTask(BaseModel):
+class TaskSequence(NamedTuple):
     """
-    A lightweight, neutral representation of a task positioned within a sequence pipeline.
+    Defines a directed dependency link between two individual task units.
+
+    This structural model enforces execution order within workflows, mapping
+    a predecessor requirement to its downstream consumer target.
     """
 
-    id: int = Field(
-        description="The unique record primary key tracking identifier of the sequenced task item"
+    TaskPrevious: int = Field(
+        ...,
+        description="The dependency predecessor task unit key ID. This task must be completed before the next can begin.",
     )
-    name: str = Field(
-        description="The descriptive title summary assigned to the referenced sequenced task"
+    TaskNext: int = Field(
+        ...,
+        description="The downstream block dependent consumer successor task target ID. Locked until the predecessor task finishes.",
     )
 
 
@@ -65,11 +72,11 @@ class TaskSequenced(TaskExpanded):
     Extends the hierarchically expanded task model to include neutral horizontal sequence links matching the database structure exactly.
     """
 
-    task_previous: SequencedTask | None = Field(
+    TaskPrevious: Task | None = Field(
         None,
         description="The structural task node positioned immediately before this element in the sequence timeline",
     )
-    task_next: SequencedTask | None = Field(
+    TaskNext: Task | None = Field(
         None,
         description="The structural task node positioned immediately after this element in the sequence timeline",
     )
