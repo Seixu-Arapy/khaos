@@ -121,3 +121,23 @@ class TaskUpdate(BaseModel):
         None,
         description="Audit evaluation log annotation tracking patches updates context values",
     )
+
+
+class TaskStatusUpdate(BaseModel):
+    """
+    Data validation schema for updating a task's operational status.
+    """
+
+    status: StatusEnum = Field(
+        ..., description="The strict operational execution phase to apply."
+    )
+
+
+class TaskPriorityUpdate(BaseModel):
+    """
+    Data validation schema for updating a task's triage urgency level.
+    """
+
+    priority: PriorityEnum = Field(
+        ..., description="The strict urgency profile triage level to apply."
+    )

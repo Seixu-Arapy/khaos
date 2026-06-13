@@ -3,13 +3,20 @@ from typing import Any, cast
 from fastapi import APIRouter, HTTPException, status
 
 from app.database import supabase
-from app.schemas.tasks import TaskCreate, TaskUpdate
+from app.schemas.tasks import (
+    TaskCreate,
+    TaskPriorityUpdate,
+    TaskStatusUpdate,
+    TaskUpdate,
+)
 from app.services.tasks import (
     create_task,
     delete_task,
     get_task,
     get_tasks,
     update_task,
+    update_task_status,
+    uppdate_task_priority,
 )
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -100,6 +107,50 @@ def update_task_endpoint(task_id: int, payload: TaskUpdate):
         return result
 
     raise HTTPException(status_code=400, detail="Task update failed")
+
+
+@router.patch("/{task_id}/status", status_code=status.HTTP_200_OK)
+def update_task_status_endpoint(task_id: int, payload: TaskStatusUpdate):
+    """
+    Update a task's status.
+    """
+    if task_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The task identifier must be a positive integer.",
+        )
+
+    result = update_task_status(task_id=task_id, new_status=payload.status)
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task with ID {task_id} not found.",
+        )
+
+    return result
+
+
+@router.patch("/{task_id}/priority", status_code=status.HTTP_200_OK)
+def update_task_priority_endpoint(task_id: int, payload: TaskPriorityUpdate):
+    """
+    Update a task's priority.
+    """
+    if task_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The task identifier must be a positive integer.",
+        )
+
+    result = uppdate_task_priority(task_id=task_id, new_priority=payload.priority)
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task with ID {task_id} not found.",
+        )
+
+    return result
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)

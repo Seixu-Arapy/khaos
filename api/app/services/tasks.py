@@ -1,6 +1,7 @@
 from typing import Any
 
 from app.database import supabase
+from app.enums import PriorityEnum, StatusEnum
 
 
 def get_tasks() -> list[dict[str, Any]]:
@@ -86,3 +87,78 @@ def delete_task(task_id: int) -> bool:
     """
     data = supabase.table("tasks").delete().eq("id", task_id).execute().data
     return bool(data)
+
+
+def update_task_status(task_id: int, new_status: StatusEnum) -> dict[str, Any] | None:
+    """
+    Update a task's status.
+
+    Args:
+        task_id (int): ID of the task to update.
+        new_status (StatusEnum): New status to apply.
+
+    Raises:
+        HTTPException: 500 if database update fails.
+
+    Returns:
+        Optional[Dict[str, Any]]: Updated row data, or None if task not found.
+    """
+    status_value = new_status.value
+
+    response = (
+        supabase
+        .table("tasks")
+        .update({"status": status_value})
+        .eq("id", task_id)
+        .execute()
+    )
+
+    if not response.data:
+        return {}
+
+    return {
+        "success": True,
+        "task_id": task_id,
+        "field": "status",
+        "updated_value": status_value,
+        "data": response.data[0] if isinstance(response.data, list) else response.data,
+    }
+
+
+def uppdate_task_priority(
+    task_id: int, new_priority: PriorityEnum
+) -> dict[str, Any] | None:
+    """
+    Update a task's priority.
+
+    Args:
+        task_id (int): ID of the task to update.
+        new_priority (PriorityEnum): New priority to apply.
+
+    Raises:
+        HTTPException: 500 if database update fails.
+
+    Returns:
+        Optional[Dict[str, Any]]: Updated row data, or None if task not found.
+    """
+
+    priority_value = new_priority.value
+
+    response = (
+        supabase
+        .table("tasks")
+        .update({"priority": priority_value})
+        .eq("id", task_id)
+        .execute()
+    )
+
+    if not response.data:
+        return {}
+
+    return {
+        "success": True,
+        "task_id": task_id,
+        "field": "priority",
+        "updated_value": priority_value,
+        "data": response.data[0] if isinstance(response.data, list) else response.data,
+    }
