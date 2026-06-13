@@ -5,6 +5,7 @@ import Project from "./entities/Project"
 import Task from "./entities/Task"
 
 function formatTime(totalSeconds) {
+  if (isNaN(totalSeconds) || totalSeconds < 0) return "00:00:00"
   const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, "0")
   const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0")
   const secs = String(totalSeconds % 60).padStart(2, "0")
@@ -13,21 +14,25 @@ function formatTime(totalSeconds) {
 
 function getElapsedSeconds(startedAt) {
   if (!startedAt) return 0
-  return Math.max(
-    0,
-    Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)
-  )
+  const startTime = new Date(startedAt).getTime()
+  if (isNaN(startTime)) return 0
+  return Math.max(0, Math.floor((Date.now() - startTime) / 1000))
 }
 
 export default function Timer({ activeTimer }) {
+  const currentEntry =
+    Array.isArray(activeTimer) && activeTimer.length > 0 ? activeTimer[0] : null
+
   const [seconds, setSeconds] = useState(() =>
-    getElapsedSeconds(activeTimer?.started_at)
+    getElapsedSeconds(currentEntry?.started_at)
   )
 
   useEffect(() => {
-    if (!activeTimer?.started_at) return
+    const timestamp = currentEntry?.started_at
+    if (!timestamp) return
 
-    const startTime = new Date(activeTimer[0].started_at).getTime()
+    const startTime = new Date(timestamp).getTime()
+    if (isNaN(startTime)) return
 
     const tick = () => {
       setSeconds(Math.max(0, Math.floor((Date.now() - startTime) / 1000)))
@@ -36,9 +41,10 @@ export default function Timer({ activeTimer }) {
     tick()
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
-  }, [activeTimer])
+  }, [currentEntry])
 
-  if (!activeTimer) {
+  // Strict check matching the array-bound contract layer
+  if (!currentEntry) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-app-border bg-app-surface/50 px-3 py-1.5 text-xs whitespace-nowrap text-app-muted">
         <span className="text-[8px]">
@@ -49,8 +55,8 @@ export default function Timer({ activeTimer }) {
     )
   }
 
-  const task = activeTimer?.tasks
-  const project = task?.sections?.projects
+  const task = currentEntry?.tasks || null
+  const project = task?.sections?.projects || task?.projects || null
 
   return (
     <div className="flex scrollbar-none items-center gap-3 overflow-x-auto rounded-lg border border-app-border bg-app-surface px-3 py-1.5 whitespace-nowrap shadow-inner">
@@ -63,14 +69,20 @@ export default function Timer({ activeTimer }) {
         </span>
       </div>
       <div className="flex items-center gap-2 border-l border-app-border pl-3">
-        <Project
-          id={project?.id}
-          name={project?.name}
-          project={project}
-          variant="inline"
-        />
-        <span className="shrink-0 text-xs text-app-muted select-none">›</span>
-        <Task id={task?.id} name={task?.name} task={task} variant="inline" />
+        {project && (
+          <Project
+            id={project.id}
+            name={project.name}
+            project={project}
+            variant="inline"
+          />
+        )}
+        {project && task && (
+          <span className="shrink-0 text-xs text-app-muted select-none">›</span>
+        )}
+        {task && (
+          <Task id={task.id} name={task.name} task={task} variant="inline" />
+        )}
       </div>
     </div>
   )

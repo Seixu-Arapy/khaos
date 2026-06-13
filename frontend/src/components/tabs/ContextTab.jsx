@@ -30,17 +30,18 @@ export default function ContextTab({ activeContext }) {
       </div>
 
       <div className="space-y-4">
-        {activeContext.sections?.length > 0 ? (
+        {Array.isArray(activeContext.sections) &&
+        activeContext.sections.length > 0 ? (
           activeContext.sections.map(section => (
             <Section
-              key={section.id}
+              key={section?.id}
               section={section}
               variant="list"
               showIcon
             />
           ))
         ) : (
-          <p className="text-xs text-app-muted italic">
+          <p className="px-1 text-xs text-app-muted italic">
             Este projeto não possui seções cadastradas.
           </p>
         )}

@@ -8,10 +8,11 @@ import api from "./services/api"
 async function fetchActiveTimerData() {
   try {
     const response = await api.get("/time-entries?active=true&expand=true")
-    return response.data || null
+    // Enforces the array contract boundary conditions safely
+    return Array.isArray(response.data) ? response.data : []
   } catch (error) {
     console.error("Erro ao buscar timer ativo:", error)
-    return null
+    return []
   }
 }
 
@@ -21,7 +22,7 @@ export default function App() {
   const [isContextLoading, setIsContextLoading] = useState(false)
   const [isChatLoading, setIsChatLoading] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [activeTimer, setActiveTimer] = useState(null)
+  const [activeTimer, setActiveTimer] = useState([])
 
   const fetchContext = useCallback(async projectId => {
     if (!projectId) return
@@ -46,7 +47,12 @@ export default function App() {
       if (!isMounted) return
       setActiveTimer(data)
 
-      const projectId = data?.tasks?.sections?.projects?.id
+      // Safe evaluation reading from the first array element block index
+      const currentEntry = data.length > 0 ? data[0] : null
+      const taskNode = currentEntry?.tasks || null
+      const projectId =
+        taskNode?.sections?.projects?.id || taskNode?.projects?.id || null
+
       if (projectId) {
         fetchContext(projectId)
       } else {

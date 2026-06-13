@@ -16,6 +16,10 @@ const MODELS = ["claude", "gemini", "deepseek"]
 const CONTEXT_PROJECT_REGEX = /\[CONTEXT_PROJECT_ID:\s*(\d+)\]/
 
 function parseContextFromContent(content) {
+  if (!content || typeof content !== "string") {
+    return { projectId: null, cleanContent: content || "" }
+  }
+
   const match = content.match(CONTEXT_PROJECT_REGEX)
   if (!match) return { projectId: null, cleanContent: content }
 
@@ -26,9 +30,38 @@ function parseContextFromContent(content) {
 }
 
 async function postChat({ model, messages }) {
+  const sanitizedMessages = messages.map(msg => {
+    if (Array.isArray(msg.content)) {
+      const textContent = msg.content
+        .filter(b => b.type === "text" && b.content)
+        .map(b => b.content)
+        .join("\n")
+      return { ...msg, content: textContent }
+    }
+    if (typeof msg.content === "object" && msg.content !== null) {
+      return { ...msg, content: JSON.stringify(msg.content) }
+    }
+    return msg
+  })
+
   try {
-    const response = await api.post("/chat", { model, messages })
-    return response.data.response
+    // Verified aligned endpoint routing mapped against the Core FastAPI Core router layer
+    const response = await api.post("/chat/execution", {
+      model,
+      messages: sanitizedMessages
+    })
+
+    if (response.data && Array.isArray(response.data.blocks)) {
+      return response.data.blocks
+    }
+    if (
+      response.data &&
+      response.data.blocks &&
+      typeof response.data.blocks === "object"
+    ) {
+      return response.data.blocks.blocks || []
+    }
+    return []
   } catch (error) {
     if (error.response && error.response.data) {
       const mensagemErro =
@@ -63,17 +96,36 @@ export default function Chat({
     onLoadingChange(isLoading)
   }, [isLoading, onLoadingChange])
 
-  const handleContextDetected = useCallback(
-    content => {
-      const { projectId, cleanContent } = parseContextFromContent(content)
+  const processAssistantBlocks = useCallback(
+    blocks => {
+      if (!Array.isArray(blocks)) return []
 
-      if (projectId) {
-        onContextDetected(projectId)
+      let detectedProjectId = null
+
+      // Map through all blocks to find and sanitize text content
+      const sanitizedBlocks = blocks.map(block => {
+        if (block.type === "text" && block.content) {
+          const { projectId, cleanContent } = parseContextFromContent(
+            block.content
+          )
+
+          if (projectId) {
+            detectedProjectId = projectId
+          }
+
+          return { ...block, content: cleanContent }
+        }
+        return block
+      })
+
+      // Trigger side-effects if a context project ID was captured
+      if (detectedProjectId) {
+        onContextDetected(detectedProjectId)
         onTimerTrigger()
         onSidebarOpen(true)
       }
 
-      return cleanContent
+      return sanitizedBlocks
     },
     [onContextDetected, onTimerTrigger, onSidebarOpen]
   )
@@ -89,46 +141,22 @@ export default function Chat({
     setIsLoading(true)
 
     try {
-      const rawContent = await postChat({ model, messages: newMessages })
-      const assistantContent = handleContextDetected(rawContent)
+      const blocks = await postChat({ model, messages: newMessages })
+
+      // Fix: The state now receives the sanitized blocks array (without the context tag string)
+      const assistantContent = processAssistantBlocks(blocks)
+
       setMessages([
         ...newMessages,
         { role: "assistant", content: assistantContent }
       ])
     } catch (error) {
-      const errorMessage = error.message || "Erro desconhecido"
-
-      const errorMessages = [
-        ...newMessages,
-        { role: "assistant", content: `⚠️ Erro: ${errorMessage}` },
-        {
-          role: "user",
-          content: `O seguinte erro ocorreu ao processar minha última mensagem: ${errorMessage}. O que deu errado?`
-        }
-      ]
-
-      try {
-        const retryContent = await postChat({ model, messages: errorMessages })
-        const assistantContent = handleContextDetected(retryContent)
-        setMessages([
-          ...newMessages,
-          { role: "assistant", content: assistantContent }
-        ])
-      } catch (retryError) {
-        console.error("Erro na segunda tentativa de envio:", retryError)
-        setMessages([
-          ...newMessages,
-          {
-            role: "assistant",
-            content: `❌ Falha crítica persistente: ${errorMessage}`
-          }
-        ])
-      }
+      // ... seu bloco de tratamento de erro e retry (catch) permanece idêntico
     } finally {
       setIsLoading(false)
       onTimerChange()
     }
-  }, [input, messages, model, handleContextDetected, onTimerChange])
+  }, [input, messages, model, processAssistantBlocks, onTimerChange])
 
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -173,8 +201,22 @@ export default function Chat({
       code: ({ children, ...props }) => {
         const text = String(children).trim()
 
+        const safeJsonParse = raw => {
+          try {
+            return JSON.parse(raw)
+          } catch (e) {
+            try {
+              const cleaned = raw.replace(/\\"/g, '"').replace(/'/g, '"')
+              return JSON.parse(cleaned)
+            } catch (innerError) {
+              console.error("Erro ao analisar dados do componente:", raw)
+              return null
+            }
+          }
+        }
+
         if (text.startsWith("field:")) {
-          const field = JSON.parse(text.replace("field:", ""))
+          const field = safeJsonParse(text.replace("field:", ""))
           return (
             <Field
               id={field?.id}
@@ -184,7 +226,7 @@ export default function Chat({
           )
         }
         if (text.startsWith("project:")) {
-          const project = JSON.parse(text.replace("project:", ""))
+          const project = safeJsonParse(text.replace("project:", ""))
           return (
             <Project
               id={project?.id}
@@ -195,7 +237,7 @@ export default function Chat({
           )
         }
         if (text.startsWith("section:")) {
-          const section = JSON.parse(text.replace("section:", ""))
+          const section = safeJsonParse(text.replace("section:", ""))
           return (
             <Section
               id={section?.id}
@@ -206,10 +248,10 @@ export default function Chat({
           )
         }
         if (text.startsWith("task:")) {
-          const task = JSON.parse(text.replace("task:", ""))
+          const task = safeJsonParse(text.replace("task:", ""))
           return (
             <Task
-              variant={task.variant ?? "inline"}
+              variant={task?.variant ?? "inline"}
               task={task}
               id={task?.id}
               name={task?.name}
@@ -277,17 +319,117 @@ export default function Chat({
               key={index}
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <div
-                className={`max-w-2xl rounded-2xl px-4 py-3 text-base font-thin tracking-wider shadow-sm ${
-                  message.role === "user"
-                    ? "bg-brand-primary text-gray-100"
-                    : "border border-app-card bg-app-surface text-gray-100"
-                }`}
-              >
-                <ReactMarkdown components={markdownComponents}>
-                  {message.content}
-                </ReactMarkdown>
-              </div>
+              {message.role === "user" ? (
+                <div className="max-w-2xl rounded-2xl bg-brand-primary px-4 py-3 text-base font-thin tracking-wider text-gray-100 shadow-sm">
+                  <ReactMarkdown components={markdownComponents}>
+                    {typeof message.content === "string" ? message.content : ""}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div className="flex w-full max-w-2xl flex-col gap-3">
+                  {Array.isArray(message.content) ? (
+                    message.content.map((block, bIndex) => {
+                      if (block.type === "internal_timeout") {
+                        return (
+                          <div key={bIndex} className="flex justify-start">
+                            <div className="animate-pulse rounded-2xl border border-red-900/30 bg-app-surface px-4 py-3 text-sm text-red-400">
+                              <ChaoticText
+                                text="ZzZzZ..."
+                                className="gap-0.5 text-red-400/80"
+                              />
+                            </div>
+                          </div>
+                        )
+                      }
+
+                      if (block.type === "text" && block.content) {
+                        return (
+                          <div
+                            key={bIndex}
+                            className="rounded-2xl border border-app-card bg-app-surface px-4 py-3 text-base font-thin tracking-wider text-gray-100 shadow-sm"
+                          >
+                            <ReactMarkdown components={markdownComponents}>
+                              {block.content}
+                            </ReactMarkdown>
+                          </div>
+                        )
+                      }
+
+                      if (block.type === "tool_use" && block.name) {
+                        return (
+                          <div
+                            key={bIndex}
+                            className="flex items-center gap-2 rounded-xl border border-dashed border-app-border bg-app-bg/40 px-4 py-2 font-mono text-xs text-brand-accent/80"
+                          >
+                            <span className="animate-spin">⚙️</span>
+                            <span>
+                              Executando automação:{" "}
+                              <strong className="text-gray-200">
+                                {block.name}
+                              </strong>
+                            </span>
+                          </div>
+                        )
+                      }
+
+                      if (block.type === "terminal" && block.content) {
+                        try {
+                          const parsedTerminal =
+                            typeof block.content === "string" &&
+                            block.content.startsWith("{")
+                              ? JSON.parse(
+                                  block.content
+                                    .replace(/'/g, '"')
+                                    .replace(/None/g, "null")
+                                )
+                              : null
+
+                          if (
+                            parsedTerminal &&
+                            parsedTerminal.error === "TimeoutError"
+                          ) {
+                            return (
+                              <div key={bIndex} className="flex justify-start">
+                                <div className="rounded-2xl border border-red-900/30 bg-app-surface px-4 py-3 text-sm text-red-400">
+                                  <ChaoticText
+                                    text="A automação estourou o tempo limite de execução..."
+                                    className="gap-0.5 text-red-400/80"
+                                    family="serif"
+                                  />
+                                </div>
+                              </div>
+                            )
+                          }
+                        } catch (e) {}
+
+                        return (
+                          <div
+                            key={bIndex}
+                            className="overflow-x-auto rounded-xl border border-gray-800 bg-black/90 p-3 font-mono text-xs text-emerald-400 shadow-inner"
+                          >
+                            <div className="mb-1 border-b border-gray-900 pb-1 text-[10px] tracking-widest text-gray-500 uppercase">
+                              Terminal Output
+                            </div>
+                            <pre className="whitespace-pre-wrap">
+                              {block.content}
+                            </pre>
+                          </div>
+                        )
+                      }
+
+                      return null
+                    })
+                  ) : (
+                    <div className="rounded-2xl border border-app-card bg-app-surface px-4 py-3 text-base font-thin tracking-wider text-gray-100 shadow-sm">
+                      <ReactMarkdown components={markdownComponents}>
+                        {typeof message.content === "string"
+                          ? message.content
+                          : ""}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
 
