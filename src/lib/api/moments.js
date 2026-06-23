@@ -1,8 +1,8 @@
-import { supabase } from '../supabaseClient'
+import { supabase } from '../supabaseClient';
 
 function unwrap({ data, error }) {
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
 export const momentsApi = {
@@ -18,10 +18,15 @@ export const momentsApi = {
   addNote: (entityType, entityId, note) =>
     supabase
       .from('moments')
-      .insert({ entity_type: entityType, entity_id: entityId, moment_type: 'note', moment_note: note })
+      .insert({
+        entity_type: entityType,
+        entity_id: entityId,
+        moment_type: 'note',
+        moment_note: note,
+      })
       .select()
       .single()
       .then(unwrap),
 
   remove: (id) => supabase.from('moments').delete().eq('id', id).then(unwrap),
-}
+};

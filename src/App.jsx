@@ -1,12 +1,12 @@
-import { Routes, Route } from 'react-router-dom'
-import AppShell from './components/layout/AppShell'
-import DashboardPage from './pages/DashboardPage'
-import TasksPage from './pages/TasksPage'
-import ProjectsPage from './pages/ProjectsPage'
-import ProjectDetailPage from './pages/ProjectDetailPage'
-import CalendarPage from './pages/CalendarPage'
-import TagsPage from './pages/TagsPage'
-import AssistantPage from './pages/AssistantPage'
+import { Routes, Route } from 'react-router-dom';
+import AppShell from './components/layout/AppShell';
+import DashboardPage from './pages/DashboardPage';
+import TasksPage from './pages/TasksPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
+import CalendarPage from './pages/CalendarPage';
+import TagsPage from './pages/TagsPage';
+import AssistantPage from './pages/AssistantPage';
 
 export default function App() {
   return (
@@ -21,5 +21,5 @@ export default function App() {
         <Route path="/assistant" element={<AssistantPage />} />
       </Route>
     </Routes>
-  )
+  );
 }

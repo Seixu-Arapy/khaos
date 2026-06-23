@@ -1,13 +1,24 @@
-import { supabase } from '../supabaseClient'
+import { supabase } from '../supabaseClient';
 
 function unwrap({ data, error }) {
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
 export const tagsApi = {
-  list: () => supabase.from('work_tags').select('*').order('name', { ascending: true }).then(unwrap),
-  create: (name) => supabase.from('work_tags').insert({ name, synonyms: [] }).select().single().then(unwrap),
+  list: () =>
+    supabase
+      .from('work_tags')
+      .select('*')
+      .order('name', { ascending: true })
+      .then(unwrap),
+  create: (name) =>
+    supabase
+      .from('work_tags')
+      .insert({ name, synonyms: [] })
+      .select()
+      .single()
+      .then(unwrap),
   remove: (id) => supabase.from('work_tags').delete().eq('id', id).then(unwrap),
 
   listLinks: () => supabase.from('work_tag_entities').select('*').then(unwrap),
@@ -23,7 +34,11 @@ export const tagsApi = {
   attach: (tagId, entityType, entityId) =>
     supabase
       .from('work_tag_entities')
-      .insert({ work_tag_id: tagId, entity_type: entityType, entity_id: entityId })
+      .insert({
+        work_tag_id: tagId,
+        entity_type: entityType,
+        entity_id: entityId,
+      })
       .then(unwrap),
 
   detach: (tagId, entityType, entityId) =>
@@ -34,4 +49,4 @@ export const tagsApi = {
       .eq('entity_type', entityType)
       .eq('entity_id', entityId)
       .then(unwrap),
-}
+};

@@ -1,26 +1,26 @@
-import { useState } from "react";
-import { X, MessageSquarePlus, Target, BookOpen } from "lucide-react";
-import clsx from "clsx";
-import { momentsApi } from "../../lib/api/moments";
-import { supabase } from "../../lib/supabaseClient";
+import { useState } from 'react';
+import { X, MessageSquarePlus, Target, BookOpen } from 'lucide-react';
+import clsx from 'clsx';
+import { momentsApi } from '../../lib/api/moments';
+import { supabase } from '../../lib/supabaseClient';
 
 const EXTRA_MOMENT_TYPES = [
   {
-    type: "target",
-    label: "Set a target",
+    type: 'target',
+    label: 'Set a target',
     icon: Target,
     description:
-      "Your personal goal date — when you want it done, not when it must be done.",
-    inputType: "date",
+      'Your personal goal date — when you want it done, not when it must be done.',
+    inputType: 'date',
     placeholder: null,
   },
   {
-    type: "definition",
-    label: "Define the work",
+    type: 'definition',
+    label: 'Define the work',
     icon: BookOpen,
     description:
       'What kind of work is this? What does "done" mean conceptually? (Used for future analysis, not day-to-day tracking.)',
-    inputType: "textarea",
+    inputType: 'textarea',
     placeholder:
       'e.g. "Creative research — done when the hypothesis is validated, not when a deliverable ships."',
   },
@@ -28,7 +28,7 @@ const EXTRA_MOMENT_TYPES = [
 
 function ChangeChip({ change }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-ink-700 px-2 py-0.5 text-xs text-ink-300">
+    <span className="bg-ink-700 text-ink-300 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs">
       <span className="text-ink-500">{change.label}</span>
       {change.from != null && (
         <>
@@ -38,15 +38,15 @@ function ChangeChip({ change }) {
           <span className="text-ink-600">→</span>
         </>
       )}
-      <span className="font-medium text-ink-100">{String(change.to)}</span>
+      <span className="text-ink-100 font-medium">{String(change.to)}</span>
     </span>
   );
 }
 
 export default function MomentPrompt({ prompt, onDismiss }) {
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState('');
   const [extraType, setExtraType] = useState(null);
-  const [extraValue, setExtraValue] = useState("");
+  const [extraValue, setExtraValue] = useState('');
   const [saving, setSaving] = useState(false);
 
   if (!prompt) return null;
@@ -59,21 +59,21 @@ export default function MomentPrompt({ prompt, onDismiss }) {
       // Save the annotation note on the most relevant change moment
       if (note.trim()) {
         saves.push(
-          momentsApi.addNote(prompt.entityType, prompt.entityId, note.trim()),
+          momentsApi.addNote(prompt.entityType, prompt.entityId, note.trim())
         );
       }
 
       // Save any extra moment (target or definition)
       if (extraType && extraValue.trim()) {
         saves.push(
-          supabase.from("moments").insert({
+          supabase.from('moments').insert({
             entity_type: prompt.entityType,
             entity_id: prompt.entityId,
             moment_type: extraType,
             // target → store the date in value; definition → store text in moment_note
-            value: extraType === "target" ? extraValue : null,
-            moment_note: extraType === "definition" ? extraValue.trim() : null,
-          }),
+            value: extraType === 'target' ? extraValue : null,
+            moment_note: extraType === 'definition' ? extraValue.trim() : null,
+          })
         );
       }
 
@@ -87,11 +87,11 @@ export default function MomentPrompt({ prompt, onDismiss }) {
   const activeMeta = EXTRA_MOMENT_TYPES.find((m) => m.type === extraType);
 
   return (
-    <div className="fixed bottom-20 right-3 z-50 w-[calc(100vw-1.5rem)] max-w-xs rounded-lg border border-ink-600 bg-ink-800 shadow-panel sm:bottom-5 sm:right-5 sm:w-80">
+    <div className="border-ink-600 bg-ink-800 shadow-panel fixed right-3 bottom-20 z-50 w-[calc(100vw-1.5rem)] max-w-xs rounded-lg border sm:right-5 sm:bottom-5 sm:w-80">
       {/* Header */}
-      <div className="flex items-start justify-between gap-2 border-b border-ink-700 px-3.5 py-3">
+      <div className="border-ink-700 flex items-start justify-between gap-2 border-b px-3.5 py-3">
         <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-200">
+          <p className="text-ink-200 flex items-center gap-1.5 text-xs font-semibold">
             <MessageSquarePlus size={13} className="text-copper-400 shrink-0" />
             {prompt.entityName}
           </p>
@@ -103,7 +103,7 @@ export default function MomentPrompt({ prompt, onDismiss }) {
         </div>
         <button
           onClick={onDismiss}
-          className="shrink-0 text-ink-500 hover:text-ink-200"
+          className="text-ink-500 hover:text-ink-200 shrink-0"
         >
           <X size={14} />
         </button>
@@ -117,7 +117,7 @@ export default function MomentPrompt({ prompt, onDismiss }) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="Why did this change? (optional)"
           rows={2}
-          className="w-full resize-none rounded border border-ink-600 bg-ink-900 px-2.5 py-2 text-sm text-ink-100 placeholder:text-ink-600 focus:border-copper-400 focus:outline-none"
+          className="border-ink-600 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-400 w-full resize-none rounded border px-2.5 py-2 text-sm focus:outline-hidden"
         />
       </div>
 
@@ -128,10 +128,10 @@ export default function MomentPrompt({ prompt, onDismiss }) {
             key={m.type}
             onClick={() => setExtraType(extraType === m.type ? null : m.type)}
             className={clsx(
-              "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors",
+              'flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors',
               extraType === m.type
-                ? "border-copper-500/50 bg-copper-500/10 text-copper-400"
-                : "border-ink-600 text-ink-500 hover:border-ink-500 hover:text-ink-300",
+                ? 'border-copper-500/50 bg-copper-500/10 text-copper-400'
+                : 'border-ink-600 text-ink-500 hover:border-ink-500 hover:text-ink-300'
             )}
           >
             <m.icon size={10} />
@@ -142,17 +142,17 @@ export default function MomentPrompt({ prompt, onDismiss }) {
 
       {/* Expanded extra input */}
       {activeMeta && (
-        <div className="px-3.5 pt-2 space-y-1.5">
-          <p className="text-[11px] text-ink-500 leading-relaxed">
+        <div className="space-y-1.5 px-3.5 pt-2">
+          <p className="text-ink-500 text-[11px] leading-relaxed">
             {activeMeta.description}
           </p>
-          {activeMeta.inputType === "date" ? (
+          {activeMeta.inputType === 'date' ? (
             <input
               type="date"
               autoFocus
               value={extraValue}
               onChange={(e) => setExtraValue(e.target.value)}
-              className="w-full rounded border border-ink-600 bg-ink-900 px-2.5 py-2 text-sm text-ink-100 focus:border-copper-400 focus:outline-none"
+              className="border-ink-600 bg-ink-900 text-ink-100 focus:border-copper-400 w-full rounded border px-2.5 py-2 text-sm focus:outline-hidden"
             />
           ) : (
             <textarea
@@ -161,7 +161,7 @@ export default function MomentPrompt({ prompt, onDismiss }) {
               onChange={(e) => setExtraValue(e.target.value)}
               placeholder={activeMeta.placeholder}
               rows={3}
-              className="w-full resize-none rounded border border-ink-600 bg-ink-900 px-2.5 py-2 text-sm text-ink-100 placeholder:text-ink-600 focus:border-copper-400 focus:outline-none"
+              className="border-ink-600 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-400 w-full resize-none rounded border px-2.5 py-2 text-sm focus:outline-hidden"
             />
           )}
         </div>
@@ -171,16 +171,16 @@ export default function MomentPrompt({ prompt, onDismiss }) {
       <div className="flex justify-end gap-2 px-3.5 py-3">
         <button
           onClick={onDismiss}
-          className="text-xs text-ink-500 hover:text-ink-300"
+          className="text-ink-500 hover:text-ink-300 text-xs"
         >
           Skip
         </button>
         <button
           onClick={handleSave}
           disabled={saving || (!note.trim() && !extraValue.trim())}
-          className="rounded-md bg-copper-500 px-3 py-1.5 text-xs font-medium text-ink-900 hover:bg-copper-400 disabled:opacity-40"
+          className="bg-copper-500 text-ink-900 hover:bg-copper-400 rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40"
         >
-          {saving ? "Saving…" : "Save"}
+          {saving ? 'Saving…' : 'Save'}
         </button>
       </div>
     </div>

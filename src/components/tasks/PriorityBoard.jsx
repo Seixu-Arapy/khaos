@@ -1,11 +1,21 @@
-import { DndContext, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { PRIORITIES, PRIORITY_META } from '../../lib/constants'
-import { StatusBadge } from '../common/ui'
-import { useTaskMutations } from '../../hooks/useHierarchy'
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { PRIORITIES, PRIORITY_META } from '../../lib/constants';
+import { StatusBadge } from '../common/ui';
+import { useTaskMutations } from '../../hooks/useHierarchy';
 
 function Card({ task, onOpen }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task.id })
-  const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 10 } : undefined
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: task.id });
+  const style = transform
+    ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 10 }
+    : undefined;
   return (
     <div
       ref={setNodeRef}
@@ -13,25 +23,29 @@ function Card({ task, onOpen }) {
       {...listeners}
       {...attributes}
       onClick={() => !isDragging && onOpen(task)}
-      className="cursor-grab rounded-md border border-ink-700 bg-ink-800 p-2.5 text-sm text-ink-100 shadow-card active:cursor-grabbing"
+      className="border-ink-700 bg-ink-800 text-ink-100 shadow-card cursor-grab rounded-md border p-2.5 text-sm active:cursor-grabbing"
     >
       <p className="mb-1.5 leading-snug">{task.name}</p>
       <StatusBadge status={task.status} />
     </div>
-  )
+  );
 }
 
 function Column({ priority, tasks, onOpen }) {
-  const { setNodeRef, isOver } = useDroppable({ id: priority })
-  const meta = PRIORITY_META[priority]
+  const { setNodeRef, isOver } = useDroppable({ id: priority });
+  const meta = PRIORITY_META[priority];
   return (
     <div
       ref={setNodeRef}
       className={`flex w-64 shrink-0 flex-col rounded-lg border ${isOver ? 'border-copper-400' : 'border-ink-700'} bg-ink-900`}
     >
-      <div className="flex items-center gap-1.5 border-b border-ink-700 px-3 py-2">
-        <span className={`text-xs font-semibold uppercase tracking-wide ${meta.text}`}>{meta.label}</span>
-        <span className="ml-auto text-xs text-ink-600">{tasks.length}</span>
+      <div className="border-ink-700 flex items-center gap-1.5 border-b px-3 py-2">
+        <span
+          className={`text-xs font-semibold tracking-wide uppercase ${meta.text}`}
+        >
+          {meta.label}
+        </span>
+        <span className="text-ink-600 ml-auto text-xs">{tasks.length}</span>
       </div>
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
         {tasks.map((task) => (
@@ -39,19 +53,21 @@ function Column({ priority, tasks, onOpen }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export default function PriorityBoard({ tasks, onOpenTask }) {
-  const { update } = useTaskMutations()
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const { update } = useTaskMutations();
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  );
 
   function handleDragEnd(e) {
-    const { active, over } = e
-    if (!over) return
-    const task = tasks.find((t) => t.id === active.id)
+    const { active, over } = e;
+    if (!over) return;
+    const task = tasks.find((t) => t.id === active.id);
     if (task && task.priority !== over.id) {
-      update.mutate({ id: active.id, patch: { priority: over.id } })
+      update.mutate({ id: active.id, patch: { priority: over.id } });
     }
   }
 
@@ -68,5 +84,5 @@ export default function PriorityBoard({ tasks, onOpenTask }) {
         ))}
       </div>
     </DndContext>
-  )
+  );
 }

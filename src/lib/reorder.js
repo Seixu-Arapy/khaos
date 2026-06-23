@@ -8,37 +8,37 @@
  * @returns {number[]} ids in order
  */
 export function orderFromEdges(ids, edges) {
-  const idSet = new Set(ids)
-  const nextOf = new Map()
-  const hasIncoming = new Set()
+  const idSet = new Set(ids);
+  const nextOf = new Map();
+  const hasIncoming = new Set();
 
   edges.forEach(({ prev, next }) => {
     if (idSet.has(prev) && idSet.has(next)) {
-      nextOf.set(prev, next)
-      hasIncoming.add(next)
+      nextOf.set(prev, next);
+      hasIncoming.add(next);
     }
-  })
+  });
 
-  let head = ids.find((id) => !hasIncoming.has(id))
-  if (head === undefined) head = ids[0]
+  let head = ids.find((id) => !hasIncoming.has(id));
+  if (head === undefined) head = ids[0];
 
-  const ordered = []
-  const seen = new Set()
-  let current = head
+  const ordered = [];
+  const seen = new Set();
+  let current = head;
 
   while (current !== undefined && current !== null && !seen.has(current)) {
-    ordered.push(current)
-    seen.add(current)
-    current = nextOf.get(current)
+    ordered.push(current);
+    seen.add(current);
+    current = nextOf.get(current);
   }
 
   // Anything not reached (e.g. brand new items with no sequence row yet)
   // gets appended at the end, in their original relative order.
   ids.forEach((id) => {
-    if (!seen.has(id)) ordered.push(id)
-  })
+    if (!seen.has(id)) ordered.push(id);
+  });
 
-  return ordered
+  return ordered;
 }
 
 /**
@@ -46,10 +46,10 @@ export function orderFromEdges(ids, edges) {
  * a new ordered array. Does not touch the database.
  */
 export function moveInOrder(orderedIds, movedId, targetIndex) {
-  const withoutMoved = orderedIds.filter((id) => id !== movedId)
-  const clampedIndex = Math.max(0, Math.min(targetIndex, withoutMoved.length))
-  withoutMoved.splice(clampedIndex, 0, movedId)
-  return withoutMoved
+  const withoutMoved = orderedIds.filter((id) => id !== movedId);
+  const clampedIndex = Math.max(0, Math.min(targetIndex, withoutMoved.length));
+  withoutMoved.splice(clampedIndex, 0, movedId);
+  return withoutMoved;
 }
 
 /**
@@ -57,9 +57,9 @@ export function moveInOrder(orderedIds, movedId, targetIndex) {
  * [{ task_previous: 1, task_next: 2 }, { task_previous: 2, task_next: 3 }]
  */
 export function edgesFromOrder(orderedIds, prevKey, nextKey) {
-  const rows = []
+  const rows = [];
   for (let i = 0; i < orderedIds.length - 1; i++) {
-    rows.push({ [prevKey]: orderedIds[i], [nextKey]: orderedIds[i + 1] })
+    rows.push({ [prevKey]: orderedIds[i], [nextKey]: orderedIds[i + 1] });
   }
-  return rows
+  return rows;
 }

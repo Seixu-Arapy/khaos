@@ -1,83 +1,143 @@
-import { useState } from 'react'
-import { GripVertical, Plus, MoreVertical, Trash2 } from 'lucide-react'
-import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { StatusBadge, PriorityBadge, Select } from '../common/ui'
-import { STATUS_META } from '../../lib/constants'
-import { formatDue, isOverdue } from '../../lib/dateUtils'
-import { useTaskMutations, useSectionMutations } from '../../hooks/useHierarchy'
+import { useState } from 'react';
+import { GripVertical, Plus, MoreVertical, Trash2 } from 'lucide-react';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { StatusBadge, PriorityBadge, Select } from '../common/ui';
+import { STATUS_META } from '../../lib/constants';
+import { formatDue, isOverdue } from '../../lib/dateUtils';
+import {
+  useTaskMutations,
+  useSectionMutations,
+} from '../../hooks/useHierarchy';
 
 function TaskRow({ task, onOpen }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
-  }
-  const overdue = isOverdue(task.due, task.status)
+  };
+  const overdue = isOverdue(task.due, task.status);
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-2 rounded-md border border-transparent px-2 py-1.5 hover:border-ink-700 hover:bg-ink-900"
+      className="group hover:border-ink-700 hover:bg-ink-900 flex items-center gap-2 rounded-md border border-transparent px-2 py-1.5"
     >
-      <span {...attributes} {...listeners} className="cursor-grab text-ink-700 hover:text-ink-400 active:cursor-grabbing">
+      <span
+        {...attributes}
+        {...listeners}
+        className="text-ink-700 hover:text-ink-400 cursor-grab active:cursor-grabbing"
+      >
         <GripVertical size={13} />
       </span>
-      <button onClick={() => onOpen(task)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
-        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_META[task.status]?.dot}`} />
-        <span className="truncate text-sm text-ink-100">{task.name}</span>
+      <button
+        onClick={() => onOpen(task)}
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+      >
+        <span
+          className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_META[task.status]?.dot}`}
+        />
+        <span className="text-ink-100 truncate text-sm">{task.name}</span>
       </button>
       <PriorityBadge priority={task.priority} />
       {task.due && (
-        <span className={overdue ? 'shrink-0 text-xs font-medium text-rust-500' : 'shrink-0 text-xs text-ink-500'}>
+        <span
+          className={
+            overdue
+              ? 'text-rust-500 shrink-0 text-xs font-medium'
+              : 'text-ink-500 shrink-0 text-xs'
+          }
+        >
           {formatDue(task.due)}
         </span>
       )}
     </div>
-  )
+  );
 }
 
-export default function SectionColumn({ section, orderedTasks, onOpenTask, dragHandleProps }) {
-  const { create: createTask, reorder: reorderTasks } = useTaskMutations()
-  const { update: updateSection, remove: removeSection } = useSectionMutations()
-  const [newTaskName, setNewTaskName] = useState('')
-  const [menuOpen, setMenuOpen] = useState(false)
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
+export default function SectionColumn({
+  section,
+  orderedTasks,
+  onOpenTask,
+  dragHandleProps,
+}) {
+  const { create: createTask, reorder: reorderTasks } = useTaskMutations();
+  const { update: updateSection, remove: removeSection } =
+    useSectionMutations();
+  const [newTaskName, setNewTaskName] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+  );
 
   function handleDragEnd(e) {
-    const { active, over } = e
-    if (!over || active.id === over.id) return
-    const ids = orderedTasks.map((t) => t.id)
-    const oldIndex = ids.indexOf(active.id)
-    const newIndex = ids.indexOf(over.id)
-    reorderTasks.mutate({ orderedIds: arrayMove(ids, oldIndex, newIndex) })
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const ids = orderedTasks.map((t) => t.id);
+    const oldIndex = ids.indexOf(active.id);
+    const newIndex = ids.indexOf(over.id);
+    reorderTasks.mutate({ orderedIds: arrayMove(ids, oldIndex, newIndex) });
   }
 
   function addTask(e) {
-    e.preventDefault()
-    if (!newTaskName.trim()) return
-    createTask.mutate({ section_id: section.id, name: newTaskName.trim(), status: 'todo' })
-    setNewTaskName('')
+    e.preventDefault();
+    if (!newTaskName.trim()) return;
+    createTask.mutate({
+      section_id: section.id,
+      name: newTaskName.trim(),
+      status: 'todo',
+    });
+    setNewTaskName('');
   }
 
   return (
-    <div className="rounded-lg border border-ink-700 bg-ink-800/40">
-      <div className="flex items-center gap-2 border-b border-ink-700 px-3 py-2.5">
-        <span {...dragHandleProps} className="cursor-grab text-ink-600 hover:text-ink-300 active:cursor-grabbing">
+    <div className="border-ink-700 bg-ink-800/40 rounded-lg border">
+      <div className="border-ink-700 flex items-center gap-2 border-b px-3 py-2.5">
+        <span
+          {...dragHandleProps}
+          className="text-ink-600 hover:text-ink-300 cursor-grab active:cursor-grabbing"
+        >
           <GripVertical size={14} />
         </span>
         <input
           value={section.name}
-          onChange={(e) => updateSection.update.mutate({ id: section.id, patch: { name: e.target.value } })}
-          className="flex-1 bg-transparent text-sm font-medium text-ink-100 focus:outline-none"
+          onChange={(e) =>
+            updateSection.update.mutate({
+              id: section.id,
+              patch: { name: e.target.value },
+            })
+          }
+          className="text-ink-100 flex-1 bg-transparent text-sm font-medium focus:outline-hidden"
         />
         <Select
           value={section.status}
-          onChange={(e) => updateSection.update.mutate({ id: section.id, patch: { status: e.target.value } })}
-          className="!py-1 !text-xs"
+          onChange={(e) =>
+            updateSection.update.mutate({
+              id: section.id,
+              patch: { status: e.target.value },
+            })
+          }
+          className="py-1! text-xs!"
         >
           {Object.keys(STATUS_META).map((s) => (
             <option key={s} value={s}>
@@ -86,19 +146,26 @@ export default function SectionColumn({ section, orderedTasks, onOpenTask, dragH
           ))}
         </Select>
         <div className="relative">
-          <button onClick={() => setMenuOpen((o) => !o)} className="text-ink-500 hover:text-ink-200">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="text-ink-500 hover:text-ink-200"
+          >
             <MoreVertical size={15} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 z-10 mt-1 w-36 rounded-md border border-ink-700 bg-ink-800 py-1 shadow-panel">
+            <div className="border-ink-700 bg-ink-800 shadow-panel absolute right-0 z-10 mt-1 w-36 rounded-md border py-1">
               <button
                 onClick={() => {
-                  if (window.confirm(`Delete section "${section.name}" and all its tasks?`)) {
-                    removeSection.mutate(section.id)
+                  if (
+                    window.confirm(
+                      `Delete section "${section.name}" and all its tasks?`
+                    )
+                  ) {
+                    removeSection.mutate(section.id);
                   }
-                  setMenuOpen(false)
+                  setMenuOpen(false);
                 }}
-                className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs text-rust-500 hover:bg-ink-700"
+                className="text-rust-500 hover:bg-ink-700 flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs"
               >
                 <Trash2 size={12} /> Delete section
               </button>
@@ -109,7 +176,10 @@ export default function SectionColumn({ section, orderedTasks, onOpenTask, dragH
 
       <div className="p-2">
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <SortableContext items={orderedTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={orderedTasks.map((t) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
             <div className="space-y-0.5">
               {orderedTasks.map((task) => (
                 <TaskRow key={task.id} task={task} onOpen={onOpenTask} />
@@ -118,26 +188,40 @@ export default function SectionColumn({ section, orderedTasks, onOpenTask, dragH
           </SortableContext>
         </DndContext>
 
-        <form onSubmit={addTask} className="mt-1 flex items-center gap-1.5 px-2 py-1">
+        <form
+          onSubmit={addTask}
+          className="mt-1 flex items-center gap-1.5 px-2 py-1"
+        >
           <Plus size={13} className="text-ink-600" />
           <input
             value={newTaskName}
             onChange={(e) => setNewTaskName(e.target.value)}
             placeholder="Add a task…"
-            className="flex-1 bg-transparent py-0.5 text-sm text-ink-300 placeholder:text-ink-600 focus:outline-none"
+            className="text-ink-300 placeholder:text-ink-600 flex-1 bg-transparent py-0.5 text-sm focus:outline-hidden"
           />
         </form>
       </div>
     </div>
-  )
+  );
 }
 
 export function SortableSectionWrapper({ id, children }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
   return (
     <div ref={setNodeRef} style={style}>
       {children({ ...attributes, ...listeners })}
     </div>
-  )
+  );
 }

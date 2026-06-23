@@ -4,12 +4,12 @@
 // Defaults to the browser's own IANA timezone (usually correct).
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = "logbook.timezone";
+const STORAGE_KEY = 'logbook.timezone';
 
 export function getTimezone() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && Intl.supportedValuesOf("timeZone").includes(stored))
+    if (stored && Intl.supportedValuesOf('timeZone').includes(stored))
       return stored;
   } catch {
     // localStorage unavailable
@@ -38,9 +38,9 @@ export function parseMomentTime(timeStr) {
   if (!timeStr) return null;
   const s = String(timeStr).trim();
   // Already has a timezone marker — parse as-is.
-  if (s.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(s)) return new Date(s);
+  if (s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s)) return new Date(s);
   // No marker → assume UTC (Supabase server default).
-  return new Date(s + "Z");
+  return new Date(s + 'Z');
 }
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ export function parseMomentTime(timeStr) {
 // ---------------------------------------------------------------------------
 
 function fmt(date, options, tz) {
-  return new Intl.DateTimeFormat("default", {
+  return new Intl.DateTimeFormat('default', {
     ...options,
     timeZone: tz || getTimezone(),
   }).format(new Date(date));
@@ -58,29 +58,29 @@ function fmt(date, options, tz) {
 export function formatInTz(
   dateInput,
   { weekday, year, month, day, hour, minute } = {},
-  tz,
+  tz
 ) {
-  if (!dateInput) return "";
+  if (!dateInput) return '';
   return fmt(dateInput, { weekday, year, month, day, hour, minute }, tz);
 }
 
 // Returns the HH:mm string in the user's timezone
 export function formatTime(dateInput, tz) {
-  if (!dateInput) return "";
+  if (!dateInput) return '';
   return fmt(
     dateInput,
-    { hour: "2-digit", minute: "2-digit", hour12: false },
-    tz,
+    { hour: '2-digit', minute: '2-digit', hour12: false },
+    tz
   );
 }
 
 // Returns "d MMM yyyy" in the user's timezone
 export function formatDate(dateInput, tz) {
-  if (!dateInput) return "";
+  if (!dateInput) return '';
   return fmt(
     dateInput,
-    { day: "numeric", month: "short", year: "numeric" },
-    tz,
+    { day: 'numeric', month: 'short', year: 'numeric' },
+    tz
   );
 }
 
@@ -102,14 +102,14 @@ export function formatDueInTz(dateInput, tz) {
   if (diffDays === 1) return `Tomorrow, ${time}`;
   if (diffDays === -1) return `Yesterday, ${time}`;
   if (diffDays > 1 && diffDays < 7)
-    return `${fmt(d, { weekday: "long" }, zone)}, ${time}`;
+    return `${fmt(d, { weekday: 'long' }, zone)}, ${time}`;
   return `${formatDate(d, zone)}, ${time}`;
 }
 
 // Checks whether a date is overdue in the user's timezone
 export function isOverdueInTz(dateInput, status, tz) {
   if (!dateInput) return false;
-  if (status === "done" || status === "cancelled") return false;
+  if (status === 'done' || status === 'cancelled') return false;
   return new Date(dateInput) < new Date();
 }
 
@@ -125,11 +125,11 @@ export function isTodayInTz(dateInput, tz) {
 // Converts a UTC Date to the value an <input type="datetime-local"> expects,
 // expressed in the user's timezone (not the system locale).
 export function toDatetimeLocalInTz(dateInput, tz) {
-  if (!dateInput) return "";
+  if (!dateInput) return '';
   const zone = tz || getTimezone();
   const d = new Date(dateInput);
   const p = partsInTz(d, zone);
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad = (n) => String(n).padStart(2, '0');
   return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`;
 }
 
@@ -139,9 +139,9 @@ export function fromDatetimeLocalInTz(localStr, tz) {
   if (!localStr) return null;
   const zone = tz || getTimezone();
   // e.g. "2024-06-21T14:30"
-  const [datePart, timePart = "00:00"] = localStr.split("T");
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
+  const [datePart, timePart = '00:00'] = localStr.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = timePart.split(':').map(Number);
 
   // Use Intl to find the UTC offset at this wall-clock time in this timezone.
   // We construct an approximate UTC timestamp, then measure the offset, then correct.
@@ -155,25 +155,25 @@ export function fromDatetimeLocalInTz(localStr, tz) {
 // ---------------------------------------------------------------------------
 
 function partsInTz(date, tz) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
     hour12: false,
   }).formatToParts(date);
 
   const get = (type) => Number(parts.find((p) => p.type === type)?.value ?? 0);
   return {
-    year: get("year"),
-    month: get("month"),
-    day: get("day"),
-    hour: get("hour") % 24, // Intl returns 24 for midnight in some locales
-    minute: get("minute"),
-    second: get("second"),
+    year: get('year'),
+    month: get('month'),
+    day: get('day'),
+    hour: get('hour') % 24, // Intl returns 24 for midnight in some locales
+    minute: get('minute'),
+    second: get('second'),
   };
 }
 
@@ -186,7 +186,7 @@ function getUtcOffsetMs(date, tz) {
     p.day,
     p.hour,
     p.minute,
-    p.second,
+    p.second
   );
   return wallAsUtc - date.getTime();
 }
@@ -201,21 +201,21 @@ function julianDay(y, m, d) {
 // All IANA timezone names available in this browser — used by the picker.
 export function getAllTimezones() {
   try {
-    return Intl.supportedValuesOf("timeZone");
+    return Intl.supportedValuesOf('timeZone');
   } catch {
     // Fallback for older browsers
     return [
-      "UTC",
-      "America/Sao_Paulo",
-      "America/New_York",
-      "America/Chicago",
-      "America/Los_Angeles",
-      "Europe/London",
-      "Europe/Paris",
-      "Europe/Berlin",
-      "Asia/Tokyo",
-      "Asia/Shanghai",
-      "Australia/Sydney",
+      'UTC',
+      'America/Sao_Paulo',
+      'America/New_York',
+      'America/Chicago',
+      'America/Los_Angeles',
+      'Europe/London',
+      'Europe/Paris',
+      'Europe/Berlin',
+      'Asia/Tokyo',
+      'Asia/Shanghai',
+      'Australia/Sydney',
     ];
   }
 }

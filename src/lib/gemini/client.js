@@ -1,13 +1,12 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from '@google/genai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 export const GEMINI_MODEL =
-  import.meta.env.VITE_GEMINI_MODEL || "gemini-1.5-flash";
+  import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash';
 
 if (!apiKey) {
-  // eslint-disable-next-line no-console
   console.error(
-    "Missing VITE_GEMINI_API_KEY — the assistant chat will not work until it is set in .env",
+    'Missing VITE_GEMINI_API_KEY — the assistant chat will not work until it is set in .env'
   );
 }
 

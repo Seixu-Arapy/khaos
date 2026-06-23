@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Columns whose changes we surface to the user for optional annotation.
 // The trigger already auto-inserts the raw moment; this is about letting the
@@ -9,21 +9,22 @@ const WATCHED_FIELDS = {
   tasks: ['status', 'due', 'estimate', 'priority'],
   projects: ['status', 'due', 'priority'],
   sections: ['status', 'due'],
-}
+};
 
 const FIELD_LABEL = {
   status: 'status',
   due: 'due date',
   estimate: 'estimate',
   priority: 'priority',
-}
+};
 
 function buildPrompt(table, oldRow, newRow) {
-  const watched = WATCHED_FIELDS[table] || []
-  const changes = watched.filter((col) => oldRow[col] !== newRow[col])
-  if (!changes.length) return null
+  const watched = WATCHED_FIELDS[table] || [];
+  const changes = watched.filter((col) => oldRow[col] !== newRow[col]);
+  if (!changes.length) return null;
 
-  const entityType = table === 'tasks' ? 'task' : table === 'projects' ? 'project' : 'section'
+  const entityType =
+    table === 'tasks' ? 'task' : table === 'projects' ? 'project' : 'section';
 
   return {
     id: `${table}-${newRow.id}-${Date.now()}`,
@@ -36,51 +37,62 @@ function buildPrompt(table, oldRow, newRow) {
       from: oldRow[col],
       to: newRow[col],
     })),
-  }
+  };
 }
 
 export function useMomentDetector() {
-  const [queue, setQueue] = useState([]) // pending prompts
-  const [current, setCurrent] = useState(null)
-  const qc = useQueryClient()
-  const prevRows = useRef({}) // table:id → last known row
+  const [queue, setQueue] = useState([]); // pending prompts
+  const [current, setCurrent] = useState(null);
+  const qc = useQueryClient();
+  const prevRows = useRef({}); // table:id → last known row
 
   // When a new prompt lands, surface it if nothing is showing
   useEffect(() => {
     if (!current && queue.length) {
-      setCurrent(queue[0])
-      setQueue((q) => q.slice(1))
+      setCurrent(queue[0]);
+      setQueue((q) => q.slice(1));
     }
-  }, [queue, current])
+  }, [queue, current]);
 
-  const dismiss = useCallback(() => setCurrent(null), [])
+  const dismiss = useCallback(() => setCurrent(null), []);
 
   const enqueue = useCallback((prompt) => {
-    setQueue((q) => [...q, prompt])
-  }, [])
+    setQueue((q) => [...q, prompt]);
+  }, []);
 
   useEffect(() => {
     const channels = Object.keys(WATCHED_FIELDS).map((table) => {
       return supabase
         .channel(`moment-detector-${table}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table }, (payload) => {
-          const { old: oldRow, new: newRow } = payload
-          const prompt = buildPrompt(table, oldRow, newRow)
-          if (prompt) enqueue(prompt)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table },
+          (payload) => {
+            const { old: oldRow, new: newRow } = payload;
+            const prompt = buildPrompt(table, oldRow, newRow);
+            if (prompt) enqueue(prompt); // Safe to call here
 
-          // Also tell React Query the data is stale so the UI refreshes
-          qc.invalidateQueries({ queryKey: [table === 'tasks' ? 'tasks' : table] })
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table }, () => {
-          qc.invalidateQueries({ queryKey: [table === 'tasks' ? 'tasks' : table] })
-        })
-        .subscribe()
-    })
+            qc.invalidateQueries({
+              queryKey: [table === 'tasks' ? 'tasks' : table],
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table },
+          () => {
+            qc.invalidateQueries({
+              queryKey: [table === 'tasks' ? 'tasks' : table],
+            });
+          }
+        )
+        .subscribe();
+    });
 
     return () => {
-      channels.forEach((ch) => supabase.removeChannel(ch))
-    }
-  }, [enqueue, qc])
+      channels.forEach((ch) => supabase.removeChannel(ch));
+    };
+  }, [enqueue, qc]);
 
-  return { current, dismiss, pendingCount: queue.length }
+  return { current, dismiss, pendingCount: queue.length };
 }

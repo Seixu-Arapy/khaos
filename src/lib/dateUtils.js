@@ -1,4 +1,4 @@
-import { formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNowStrict } from 'date-fns';
 import {
   formatDueInTz,
   isOverdueInTz,
@@ -7,7 +7,7 @@ import {
   fromDatetimeLocalInTz,
   formatTime,
   parseMomentTime,
-} from "./timezone";
+} from './timezone';
 
 export { parseMomentTime };
 
@@ -24,7 +24,7 @@ export function isToday(dateInput) {
 }
 
 export function minutesToHuman(mins) {
-  if (!mins || mins <= 0) return "0m";
+  if (!mins || mins <= 0) return '0m';
   const h = Math.floor(mins / 60);
   const m = Math.round(mins % 60);
   if (h === 0) return `${m}m`;
@@ -33,7 +33,7 @@ export function minutesToHuman(mins) {
 }
 
 export function elapsedSince(dateInput) {
-  if (!dateInput) return "";
+  if (!dateInput) return '';
   return formatDistanceToNowStrict(new Date(dateInput));
 }
 
@@ -44,7 +44,7 @@ export function liveStopwatch(startDate, nowDate = new Date()) {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad = (n) => String(n).padStart(2, '0');
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 

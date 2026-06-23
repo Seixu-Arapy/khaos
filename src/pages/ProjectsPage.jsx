@@ -1,55 +1,79 @@
-import { useMemo, useState } from 'react'
-import { Plus, FolderKanban } from 'lucide-react'
-import { useFields, useProjects, useSections, useTasks, useFieldMutations, useProjectMutations } from '../hooks/useHierarchy'
-import { EmptyState, TextInput, Button, Modal, Select } from '../components/common/ui'
-import ProjectCard from '../components/projects/ProjectCard'
+import { useMemo, useState } from 'react';
+import { Plus, FolderKanban } from 'lucide-react';
+import {
+  useFields,
+  useProjects,
+  useSections,
+  useTasks,
+  useFieldMutations,
+  useProjectMutations,
+} from '../hooks/useHierarchy';
+import {
+  EmptyState,
+  TextInput,
+  Button,
+  Modal,
+  Select,
+} from '../components/common/ui';
+import ProjectCard from '../components/projects/ProjectCard';
 
 export default function ProjectsPage() {
-  const { data: fields = [] } = useFields()
-  const { data: projects = [] } = useProjects()
-  const { data: sections = [] } = useSections()
-  const { data: tasks = [] } = useTasks()
-  const { create: createField } = useFieldMutations()
-  const { create: createProject } = useProjectMutations()
+  const { data: fields = [] } = useFields();
+  const { data: projects = [] } = useProjects();
+  const { data: sections = [] } = useSections();
+  const { data: tasks = [] } = useTasks();
+  const { create: createField } = useFieldMutations();
+  const { create: createProject } = useProjectMutations();
 
-  const [newProjectOpen, setNewProjectOpen] = useState(false)
-  const [draft, setDraft] = useState({ name: '', fieldId: '' })
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [draft, setDraft] = useState({ name: '', fieldId: '' });
 
   const stats = useMemo(() => {
-    const map = new Map()
+    const map = new Map();
     for (const project of projects) {
-      const projectSections = sections.filter((s) => s.project_id === project.id)
-      const projectTasks = tasks.filter((t) => projectSections.some((s) => s.id === t.section_id))
+      const projectSections = sections.filter(
+        (s) => s.project_id === project.id
+      );
+      const projectTasks = tasks.filter((t) =>
+        projectSections.some((s) => s.id === t.section_id)
+      );
       map.set(project.id, {
         sectionCount: projectSections.length,
         taskCount: projectTasks.length,
         doneCount: projectTasks.filter((t) => t.status === 'done').length,
-      })
+      });
     }
-    return map
-  }, [projects, sections, tasks])
+    return map;
+  }, [projects, sections, tasks]);
 
   function submitProject(e) {
-    e.preventDefault()
-    if (!draft.name.trim()) return
+    e.preventDefault();
+    if (!draft.name.trim()) return;
     createProject.mutate(
-      { name: draft.name.trim(), field_id: draft.fieldId ? Number(draft.fieldId) : null, status: 'planning' },
+      {
+        name: draft.name.trim(),
+        field_id: draft.fieldId ? Number(draft.fieldId) : null,
+        status: 'planning',
+      },
       { onSuccess: () => setNewProjectOpen(false) }
-    )
-    setDraft({ name: '', fieldId: '' })
+    );
+    setDraft({ name: '', fieldId: '' });
   }
 
   function addField() {
-    const name = window.prompt('New field name (a life area, e.g. "Work" or "Health")')
-    if (name?.trim()) createField.mutate({ name: name.trim(), order: fields.length })
+    const name = window.prompt(
+      'New field name (a life area, e.g. "Work" or "Health")'
+    );
+    if (name?.trim())
+      createField.mutate({ name: name.trim(), order: fields.length });
   }
 
-  const unassigned = projects.filter((p) => !p.field_id)
+  const unassigned = projects.filter((p) => !p.field_id);
 
   return (
     <div className="px-6 py-5">
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-ink-100">Projects</h1>
+        <h1 className="font-display text-ink-100 text-2xl">Projects</h1>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={addField}>
             New field
@@ -61,28 +85,36 @@ export default function ProjectsPage() {
       </div>
 
       {!projects.length && (
-        <EmptyState icon={FolderKanban} title="No projects yet" hint='Click "New project" to create your first one.' />
+        <EmptyState
+          icon={FolderKanban}
+          title="No projects yet"
+          hint='Click "New project" to create your first one.'
+        />
       )}
 
       <div className="space-y-7">
         {fields.map((field) => {
-          const fieldProjects = projects.filter((p) => p.field_id === field.id)
-          if (!fieldProjects.length) return null
+          const fieldProjects = projects.filter((p) => p.field_id === field.id);
+          if (!fieldProjects.length) return null;
           return (
             <div key={field.id}>
-              <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-500">{field.name}</h2>
+              <h2 className="text-ink-500 mb-2.5 text-xs font-semibold tracking-wide uppercase">
+                {field.name}
+              </h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {fieldProjects.map((p) => (
                   <ProjectCard key={p.id} project={p} {...stats.get(p.id)} />
                 ))}
               </div>
             </div>
-          )
+          );
         })}
 
         {Boolean(unassigned.length) && (
           <div>
-            <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-500">Unsorted</h2>
+            <h2 className="text-ink-500 mb-2.5 text-xs font-semibold tracking-wide uppercase">
+              Unsorted
+            </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {unassigned.map((p) => (
                 <ProjectCard key={p.id} project={p} {...stats.get(p.id)} />
@@ -107,12 +139,24 @@ export default function ProjectsPage() {
       >
         <form onSubmit={submitProject} className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink-400">Name</label>
-            <TextInput value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} autoFocus />
+            <label className="text-ink-400 mb-1 block text-xs font-medium">
+              Name
+            </label>
+            <TextInput
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              autoFocus
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink-400">Field (optional)</label>
-            <Select value={draft.fieldId} onChange={(e) => setDraft({ ...draft, fieldId: e.target.value })} className="w-full">
+            <label className="text-ink-400 mb-1 block text-xs font-medium">
+              Field (optional)
+            </label>
+            <Select
+              value={draft.fieldId}
+              onChange={(e) => setDraft({ ...draft, fieldId: e.target.value })}
+              className="w-full"
+            >
               <option value="">No field</option>
               {fields.map((f) => (
                 <option key={f.id} value={f.id}>
@@ -124,5 +168,5 @@ export default function ProjectsPage() {
         </form>
       </Modal>
     </div>
-  )
+  );
 }

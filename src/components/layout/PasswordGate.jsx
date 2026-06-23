@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useState } from 'react';
+import { KhaosTitle } from '../common/KhaosLogo';
 
 const HASH = import.meta.env.VITE_APP_PASSWORD_HASH;
-const SESSION_KEY = "khaos.auth.v1";
+const SESSION_KEY = 'khaos.auth.v1';
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(str),
+    'SHA-256',
+    new TextEncoder().encode(str)
   );
   return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 function isAuthenticated() {
@@ -24,7 +25,7 @@ function isAuthenticated() {
 // If no password hash is configured (dev mode), skip the gate entirely.
 export function PasswordGate({ children }) {
   const [authed, setAuthed] = useState(() => !HASH || isAuthenticated());
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
   const [error, setError] = useState(false);
   const [checking, setChecking] = useState(false);
 
@@ -43,18 +44,16 @@ export function PasswordGate({ children }) {
       setAuthed(true);
     } else {
       setError(true);
-      setValue("");
+      setValue('');
     }
     setChecking(false);
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col items-center justify-center bg-ink-900 px-4">
+    <div className="bg-ink-900 flex h-dvh flex-col items-center justify-center px-4">
       <div className="mb-8 flex flex-col items-center gap-2 select-none">
-        <span className="text-5xl text-copper-400 animate-spin-slow">✷</span>
-        <span className="font-display text-2xl font-semibold tracking-tight text-ink-100">
-          Khaos
-        </span>
+        <span className="animate-spin-slow text-copper-400 text-5xl">✷</span>
+        <KhaosTitle className="text-2xl" />
       </div>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-3">
@@ -67,31 +66,27 @@ export function PasswordGate({ children }) {
             setError(false);
           }}
           placeholder="Password"
-          className={`w-full rounded-lg border bg-ink-800 px-4 py-3 text-center text-sm text-ink-100 placeholder:text-ink-500 focus:outline-none transition-colors ${
+          className={`bg-ink-800 text-ink-100 placeholder:text-ink-500 w-full rounded-lg border px-4 py-3 text-center text-sm transition-colors focus:outline-hidden ${
             error
-              ? "border-rust-500 focus:border-rust-500"
-              : "border-ink-600 focus:border-copper-400"
+              ? 'border-rust-500 focus:border-rust-500'
+              : 'border-ink-600 focus:border-copper-400'
           }`}
         />
         {error && (
-          <p className="text-center text-xs text-rust-500">
+          <p className="text-rust-500 text-center text-xs">
             Incorrect password
           </p>
         )}
         <button
           type="submit"
           disabled={checking || !value.trim()}
-          className="w-full rounded-lg bg-copper-500 py-3 text-sm font-medium text-ink-900 hover:bg-copper-400 disabled:opacity-40 transition-colors"
+          className="bg-copper-500 text-ink-900 hover:bg-copper-400 w-full rounded-lg py-3 text-sm font-medium transition-colors disabled:opacity-40"
         >
-          {checking ? "Checking…" : "Enter"}
+          {checking ? 'Checking…' : 'Enter'}
         </button>
       </form>
 
-      <p className="mt-8 max-w-xs text-center text-xs text-ink-600">
-        Set <code className="text-ink-500">VITE_APP_PASSWORD_HASH</code> in your
-        .env to enable this gate. Generate a hash with:{" "}
-        <code className="text-ink-500">echo -n "yourpassword" | sha256sum</code>
-      </p>
+      <p className="text-ink-600 mt-8 text-xs">Ordo ab chao</p>
     </div>
   );
 }
