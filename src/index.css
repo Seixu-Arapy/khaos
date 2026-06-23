@@ -1,76 +1,53 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-@layer base {
-  html {
-    color-scheme: dark;
-  }
+@import '@fontsource-variable/roboto-flex/full.css';
+@import '@fontsource-variable/roboto-mono/wght.css';
+@import '@fontsource-variable/roboto-slab/wght.css';
 
-  body {
-    @apply bg-ink-900 text-ink-100 font-body antialiased;
-  }
+@theme {
+  --font-sans: 'Roboto Flex Variable', 'Roboto', sans-serif;
+  --font-serif: 'Roboto Slab Variable', serif;
+  --font-mono: 'Roboto Mono Variable', monospace;
 
-  * {
-    @apply border-ink-700;
-  }
+  --color-ink-100: #e9ecf1;
+  --color-ink-200: #d2d7e0;
+  --color-ink-300: #aeb6c4;
+  --color-ink-400: #828da0;
+  --color-ink-500: #5b6577;
+  --color-ink-600: #3d4759;
+  --color-ink-700: #2b3340;
+  --color-ink-800: #1f2530;
+  --color-ink-900: #161b22;
 
-  ::selection {
-    @apply bg-copper-500/30 text-ink-100;
-  }
+  --color-fog-50: #fafaf8;
+  --color-fog-100: #f1f2f0;
+  --color-fog-200: #e7e9e6;
 
-  /* Visible keyboard focus everywhere */
-  :focus-visible {
-    outline: 2px solid theme('colors.copper.400');
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
+  --color-copper-50: #fbf1e7;
+  --color-copper-100: #f5e1c8;
+  --color-copper-400: #d08f4e;
+  --color-copper-500: #c0793d;
+  --color-copper-600: #a6612c;
+  --color-copper: #c0793d;
 
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: theme('colors.ink.600');
-    border-radius: 99px;
-    border: 2px solid theme('colors.ink.900');
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: theme('colors.ink.500');
-  }
+  --color-teal-50: #eaf3f2;
+  --color-teal-400: #4d928e;
+  --color-teal-500: #3a7d7a;
+  --color-teal-600: #2c615f;
+  --color-teal: #3a7d7a;
 
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
-}
+  --color-sage-50: #eef4ed;
+  --color-sage-500: #5b8c5a;
+  --color-sage-600: #477047;
+  --color-sage: #5b8c5a;
 
-@layer utilities {
-  .tabular {
-    font-variant-numeric: tabular-nums;
-  }
-}
+  --color-rust-50: #fbeae8;
+  --color-rust-500: #b5483d;
+  --color-rust-600: #963830;
+  --color-rust: #b5483d;
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-.animate-pulse-dot {
-  animation: pulse-dot 1.8s ease-in-out infinite;
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-.animate-spin-slow {
-  animation: spin-slow 1.4s linear infinite;
-  display: inline-block;
+  --font-display: 'Roboto Flex';
+  --font-serif: 'Roboto Slab';
+  --font-body: 'Inter';
+  --font-mono: 'Roboto Mono';
 }

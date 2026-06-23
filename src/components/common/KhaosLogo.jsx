@@ -9,7 +9,7 @@ export function KhaosLogo({ spinning }) {
       >
         ✷
       </span>
-      <KhaosTitle className="text-5xl" />
+      <KhaosTitle className="text-base" />
     </div>
   );
 }
@@ -18,8 +18,7 @@ export function KhaosTitle({ className }) {
   return (
     <ChaoticText
       text="Khaos"
-      family="serif"
-      className={`${className} text-ink-100 tracking-widest`}
+      className={`${className} text-ink-100 tracking-widest capitalize`}
     />
   );
 }

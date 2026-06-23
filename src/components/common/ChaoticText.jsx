@@ -61,7 +61,6 @@ export default function ChaoticText({
 
   return (
     <span className={`select-none ${className}`}>
-      <span className="extra-expanded black font-serif">TESTE</span>
       {text.split('').map((char, index) => {
         if (char === ' ') return <span key={index}>&nbsp;</span>;
 
