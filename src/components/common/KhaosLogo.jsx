@@ -4,7 +4,7 @@ export function KhaosLogo({ spinning }) {
   return (
     <div className="flex items-center gap-2">
       <span
-        className={`text-copper-400 text-xl leading-none select-none ${spinning ? 'animate-spin-slow' : ''}`}
+        className={`text-copper-400 text-xl leading-none select-none ${spinning ? 'animate-slow' : ''}`}
         aria-hidden="true"
       >
         ✷

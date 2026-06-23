@@ -117,7 +117,7 @@ export default function MomentPrompt({ prompt, onDismiss }) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="Why did this change? (optional)"
           rows={2}
-          className="border-ink-600 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-400 w-full resize-none rounded border px-2.5 py-2 text-sm focus:outline-hidden"
+          className="border-ink-600 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-400 w-full resize-none rounded border px-2.5 py-2 text-sm focus:outline-none"
         />
       </div>
 
@@ -128,7 +128,7 @@ export default function MomentPrompt({ prompt, onDismiss }) {
             key={m.type}
             onClick={() => setExtraType(extraType === m.type ? null : m.type)}
             className={clsx(
-              'flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors',
+              'border-ink-600 flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors',
               extraType === m.type
                 ? 'border-copper-500/50 bg-copper-500/10 text-copper-400'
                 : 'border-ink-600 text-ink-500 hover:border-ink-500 hover:text-ink-300'
@@ -152,7 +152,7 @@ export default function MomentPrompt({ prompt, onDismiss }) {
               autoFocus
               value={extraValue}
               onChange={(e) => setExtraValue(e.target.value)}
-              className="border-ink-600 bg-ink-900 text-ink-100 focus:border-copper-400 w-full rounded border px-2.5 py-2 text-sm focus:outline-hidden"
+              className="border-ink-600 bg-ink-900 text-ink-100 focus:border-copper-400 w-full rounded border px-2.5 py-2 text-sm focus:outline-none"
             />
           ) : (
             <textarea
@@ -161,7 +161,7 @@ export default function MomentPrompt({ prompt, onDismiss }) {
               onChange={(e) => setExtraValue(e.target.value)}
               placeholder={activeMeta.placeholder}
               rows={3}
-              className="border-ink-600 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-400 w-full resize-none rounded border px-2.5 py-2 text-sm focus:outline-hidden"
+              className="border-ink-600 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-400 w-full resize-none rounded border px-2.5 py-2 text-sm focus:outline-none"
             />
           )}
         </div>

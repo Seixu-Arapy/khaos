@@ -37,7 +37,7 @@ export default function ActiveTimerWidget() {
       className="group border-copper-500/40 bg-copper-500/10 hover:bg-copper-500/15 flex items-center gap-2.5 rounded-full border py-1.5 pr-1.5 pl-3 text-xs transition-colors"
       title="Go to running task"
     >
-      <span className="animate-pulse-dot bg-copper-500 h-1.5 w-1.5 rounded-full" />
+      <span className="bg-copper-500 h-1.5 w-1.5 animate-pulse rounded-full" />
       <span className="text-ink-100 max-w-56 truncate font-medium">
         {task?.name || 'Untitled task'}
       </span>

@@ -4,50 +4,121 @@
 @import '@fontsource-variable/roboto-mono/wght.css';
 @import '@fontsource-variable/roboto-slab/wght.css';
 
+/* ── Design tokens ─────────────────────────────────────────────────────── */
 @theme {
-  --font-sans: 'Roboto Flex Variable', 'Roboto', sans-serif;
-  --font-serif: 'Roboto Slab Variable', serif;
-  --font-mono: 'Roboto Mono Variable', monospace;
-
-  --color-ink-100: #e9ecf1;
-  --color-ink-200: #d2d7e0;
-  --color-ink-300: #aeb6c4;
-  --color-ink-400: #828da0;
-  --color-ink-500: #5b6577;
-  --color-ink-600: #3d4759;
-  --color-ink-700: #2b3340;
-  --color-ink-800: #1f2530;
+  /* Colors */
   --color-ink-900: #161b22;
+  --color-ink-800: #1f2530;
+  --color-ink-700: #2b3340;
+  --color-ink-600: #3d4759;
+  --color-ink-500: #5b6577;
+  --color-ink-400: #828da0;
+  --color-ink-300: #aeb6c4;
+  --color-ink-200: #d2d7e0;
+  --color-ink-100: #e9ecf1;
 
   --color-fog-50: #fafaf8;
   --color-fog-100: #f1f2f0;
   --color-fog-200: #e7e9e6;
 
+  --color-copper: #c0793d;
   --color-copper-50: #fbf1e7;
   --color-copper-100: #f5e1c8;
   --color-copper-400: #d08f4e;
   --color-copper-500: #c0793d;
   --color-copper-600: #a6612c;
-  --color-copper: #c0793d;
 
+  --color-teal: #3a7d7a;
   --color-teal-50: #eaf3f2;
   --color-teal-400: #4d928e;
   --color-teal-500: #3a7d7a;
   --color-teal-600: #2c615f;
-  --color-teal: #3a7d7a;
 
+  --color-sage: #5b8c5a;
   --color-sage-50: #eef4ed;
   --color-sage-500: #5b8c5a;
   --color-sage-600: #477047;
-  --color-sage: #5b8c5a;
 
+  --color-rust: #b5483d;
   --color-rust-50: #fbeae8;
   --color-rust-500: #b5483d;
   --color-rust-600: #963830;
-  --color-rust: #b5483d;
 
-  --font-display: 'Roboto Flex';
-  --font-serif: 'Roboto Slab';
-  --font-body: 'Inter';
-  --font-mono: 'Roboto Mono';
+  /* Fonts */
+  --font-display: 'Roboto Flex', system-ui, sans-serif;
+  --font-serif: 'Roboto Serif', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+
+  /* Shadows */
+  --shadow-card:
+    0 1px 2px rgba(22, 27, 34, 0.04), 0 1px 1px rgba(22, 27, 34, 0.03);
+  --shadow-panel: 0 4px 16px rgba(22, 27, 34, 0.08);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+
+/* ── Base styles ───────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-ink-900);
+    color: var(--color-ink-100);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: color-mix(
+      in srgb,
+      var(--color-copper-500) 30%,
+      transparent
+    );
+    color: var(--color-ink-100);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-copper-400);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-600);
+    border-radius: 99px;
+    border: 2px solid var(--color-ink-900);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-500);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ── Utilities ─────────────────────────────────────────────────────────── */
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
