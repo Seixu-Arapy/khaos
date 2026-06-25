@@ -13,7 +13,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { StatusBadge, PriorityBadge, Select } from '../common/ui';
+import { StatusBadge, PriorityBadge, Select, StatusIcon } from '../common/ui';
 import { STATUS_META } from '../../lib/constants';
 import { formatDue, isOverdue } from '../../lib/dateUtils';
 import {
@@ -54,9 +54,7 @@ function TaskRow({ task, onOpen }) {
         onClick={() => onOpen(task)}
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
       >
-        <span
-          className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_META[task.status]?.dot}`}
-        />
+        <StatusBadge status={task.status} />
         <span className="text-ink-100 truncate text-sm">{task.name}</span>
       </button>
       <PriorityBadge priority={task.priority} />
