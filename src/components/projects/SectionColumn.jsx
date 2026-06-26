@@ -95,7 +95,7 @@ export default function SectionColumn({
         <input
           value={section.name}
           onChange={(e) =>
-            updateSection.update.mutate({
+            updateSection.mutate({
               id: section.id,
               patch: { name: e.target.value },
             })
@@ -105,7 +105,7 @@ export default function SectionColumn({
         <Select
           value={section.status}
           onChange={(e) =>
-            updateSection.update.mutate({
+            updateSection.mutate({
               id: section.id,
               patch: { status: e.target.value },
             })
@@ -133,7 +133,7 @@ export default function SectionColumn({
                     if (
                       window.confirm(`Permanently delete "${section.name}"?`)
                     ) {
-                      removeSection.remove.mutate(section.id);
+                      removeSection.mutate(section.id);
                     }
                     setMenuOpen(false);
                   }}

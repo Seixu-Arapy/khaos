@@ -151,7 +151,7 @@ function Sidebar({ onNavigate, spinning }) {
           onClick={() => {
             const name = window.prompt('New project name');
             if (name?.trim())
-              create.create.mutate({ name: name.trim(), status: 'planning' });
+              create.mutate({ name: name.trim(), status: 'planning' });
           }}
           className="text-ink-500 hover:bg-ink-800 hover:text-ink-200 flex h-5 w-5 items-center justify-center rounded"
           aria-label="New project"
