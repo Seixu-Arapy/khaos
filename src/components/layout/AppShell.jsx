@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   FolderKanban,
+  RefreshCw,
 } from 'lucide-react';
 import clsx from 'clsx';
 import {
@@ -45,6 +46,7 @@ const SIDEBAR_NAV = [
   { to: '/tasks', label: 'All tasks', icon: ListTodo },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+  { to: '/routines', label: 'Routines', icon: RefreshCw },
   { to: '/tags', label: 'Tags', icon: Tags },
   { to: '/assistant', label: 'Assistant', icon: Bot },
 ];

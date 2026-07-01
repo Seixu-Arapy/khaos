@@ -7,6 +7,7 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import CalendarPage from './pages/CalendarPage';
 import TagsPage from './pages/TagsPage';
 import AssistantPage from './pages/AssistantPage';
+import RoutinesPage from './pages/RoutinesPage';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/tags" element={<TagsPage />} />
+        <Route path="/routines" element={<RoutinesPage />} />
         <Route path="/assistant" element={<AssistantPage />} />
       </Route>
     </Routes>

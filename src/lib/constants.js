@@ -15,7 +15,7 @@ export const STATUSES = [
 export const PRIORITIES = ['urgent', 'high', 'medium', 'low'];
 
 // public.event_types
-export const EVENT_TYPES = ['scheduled', 'fixed'];
+export const EVENT_TYPES = ['scheduled', 'fixed', 'routine'];
 
 // public.entity_types (used by work_tag_entities / moment_tag_entities)
 export const ENTITY_TYPES = ['project', 'section', 'task'];
@@ -138,6 +138,11 @@ export const PRIORITY_META = {
 export const EVENT_TYPE_META = {
   fixed: { label: 'Fixed', text: 'text-rust-500', bg: 'bg-rust-500/10' },
   scheduled: { label: 'Plan', text: 'text-teal-400', bg: 'bg-teal-500/10' },
+  routine: {
+    label: 'Routine',
+    text: 'text-copper-400',
+    bg: 'bg-copper-500/10',
+  },
 };
 
 // Active/open statuses — excludes done, cancelled, archived

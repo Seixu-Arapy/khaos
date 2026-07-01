@@ -11,6 +11,7 @@ export const ALLOWED_TABLES = [
   'task_items',
   'task_logs',
   'events',
+  'routines',
   'moments',
   'moment_tags',
   'work_tags',
