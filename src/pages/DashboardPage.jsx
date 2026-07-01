@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   const openTaskId = searchParams.get('taskId');
   const openTask = openTaskId
-    ? tasks.find((t) => t.id === Number(openTaskId))
+    ? tasks.find((t) => t.id === openTaskId)
     : null;
   function openTask_(task) {
     setSearchParams({ taskId: String(task.id) });

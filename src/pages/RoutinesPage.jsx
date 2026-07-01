@@ -53,7 +53,7 @@ function RoutineModal({ initial, onClose, onSave, saving }) {
       name: form.name.trim(),
       constraints: form.constraints.trim() || null,
       estimate: form.estimate ? Number(form.estimate) : null,
-      field_id: form.field_id ? Number(form.field_id) : null,
+      field_id: form.field_id || null,
     });
   }
 

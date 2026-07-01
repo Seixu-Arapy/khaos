@@ -47,8 +47,8 @@ export default function EventModal({ event, defaultStart, onClose }) {
       recurrent: form.recurrent,
       start: new Date(form.start),
       end: form.end ? new Date(form.end) : null,
-      taskId: form.taskId ? Number(form.taskId) : null,
-      projectId: form.projectId ? Number(form.projectId) : null,
+      taskId: form.taskId || null,
+      projectId: form.projectId || null,
     };
     if (event) {
       update.mutate({ id: event.id, patch: payload }, { onSuccess: onClose });

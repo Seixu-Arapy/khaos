@@ -52,7 +52,7 @@ export default function ProjectsPage() {
     createProject.mutate(
       {
         name: draft.name.trim(),
-        field_id: draft.fieldId ? Number(draft.fieldId) : null,
+        field_id: draft.fieldId || null,
         status: 'planning',
       },
       { onSuccess: () => setNewProjectOpen(false) }

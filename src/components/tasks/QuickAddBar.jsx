@@ -109,7 +109,7 @@ export default function QuickAddBar() {
                   value={draft.projectId ?? ''}
                   className="w-full"
                   onChange={(e) => {
-                    const projectId = Number(e.target.value);
+                    const projectId = e.target.value;
                     const firstSection = sections.find(
                       (s) => s.project_id === projectId
                     );
@@ -138,7 +138,7 @@ export default function QuickAddBar() {
                   value={draft.sectionId ?? ''}
                   className="w-full"
                   onChange={(e) =>
-                    setDraft({ ...draft, sectionId: Number(e.target.value) })
+                    setDraft({ ...draft, sectionId: e.target.value })
                   }
                   disabled={!draft.projectId}
                 >

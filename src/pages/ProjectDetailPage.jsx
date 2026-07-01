@@ -59,7 +59,7 @@ function SectionBlock({
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
-  const projectId = Number(id);
+  const projectId = id;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -94,7 +94,7 @@ export default function ProjectDetailPage() {
 
   const openTaskId = searchParams.get('taskId');
   const openTask = openTaskId
-    ? tasks.find((t) => t.id === Number(openTaskId))
+    ? tasks.find((t) => t.id === openTaskId)
     : null;
 
   if (!project) {
