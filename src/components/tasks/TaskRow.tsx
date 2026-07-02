@@ -13,6 +13,8 @@ import type { Task } from '../../lib/types';
  *   dragStyle        — style from useSortable (SectionColumn)
  *   dragHandleProps  — attributes + listeners from useSortable (SectionColumn)
  */
+const DIMMED: Task['status'][] = ['done', 'cancelled'];
+
 interface TaskRowProps {
   task: Task;
   onOpen: (task: Task) => void;
@@ -36,11 +38,12 @@ export default function TaskRow({
   // dragHandleProps is a plain object and is always passed alongside dragRef
   // by SortableTaskRow, so it's an equivalent, render-safe signal.
   const draggable = Boolean(dragHandleProps);
+  const dimmed = DIMMED.includes(task.status);
 
   return (
     <div
       ref={dragRef}
-      style={dragStyle}
+      style={{ ...dragStyle, opacity: dimmed ? 0.38 : 1 }}
       className="group hover:border-ink-700 hover:bg-ink-900 flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1.5"
     >
       {draggable && (
@@ -57,7 +60,13 @@ export default function TaskRow({
         className="flex min-w-0 flex-1 items-center gap-1 text-left"
       >
         <StatusBadge status={task.status} />
-        <span className="text-ink-100 truncate text-sm">{task.name}</span>
+        <span
+          className={`text-ink-100 truncate text-sm ${
+            task.status === 'cancelled' ? 'line-through' : ''
+          }`}
+        >
+          {task.name}
+        </span>
         <PriorityBadge priority={task.priority} />
       </button>
 
