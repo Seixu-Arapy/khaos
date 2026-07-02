@@ -125,7 +125,7 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-ink-800 bg-ink-950 text-ink-50 fixed right-4 bottom-4 z-50 w-80 rounded-xl border p-1 shadow-2xl"
+      className="border-ink-700 bg-ink-800 text-ink-50 fixed right-4 bottom-4 z-50 w-80 rounded-xl border p-1 shadow-2xl"
     >
       <div className="flex items-center justify-between px-3.5 py-2.5">
         <div className="flex items-center gap-2">
