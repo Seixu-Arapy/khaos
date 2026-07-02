@@ -125,13 +125,13 @@ export default function TasksPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search tasks…"
-          className="max-w-[14rem]"
+          className="max-w-56"
         />
         <Select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="open">Open (not done/cancelled/archived)</option>
+          <option value="open">Open (not done/cancelled)</option>
           <option value="all">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>

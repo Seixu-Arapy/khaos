@@ -52,11 +52,8 @@ export default function SectionColumn({
   dragHandleProps,
 }) {
   const { create: createTask, reorder: reorderTasks } = useTaskMutations();
-  const {
-    update: updateSection,
-    archive: archiveSection,
-    remove: removeSection,
-  } = useSectionMutations();
+  const { update: updateSection, remove: removeSection } =
+    useSectionMutations();
   const [newTaskName, setNewTaskName] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const sensors = useSensors(
@@ -127,31 +124,15 @@ export default function SectionColumn({
           </button>
           {menuOpen && (
             <div className="border-ink-700 bg-ink-800 shadow-panel absolute right-0 z-10 mt-1 w-44 rounded-md border py-1">
-              {section.status === 'archived' ? (
-                <button
-                  onClick={() => {
-                    if (
-                      window.confirm(`Permanently delete "${section.name}"?`)
-                    ) {
-                      removeSection.mutate(section.id);
-                    }
-                    setMenuOpen(false);
-                  }}
-                  className="text-rust-500 hover:bg-ink-700 flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs"
-                >
-                  <Trash2 size={12} /> Delete permanently
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    archiveSection.mutate(section.id);
-                    setMenuOpen(false);
-                  }}
-                  className="text-ink-400 hover:bg-ink-700 flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs"
-                >
-                  <Trash2 size={12} /> Archive section
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  removeSection.mutate(section.id);
+                  setMenuOpen(false);
+                }}
+                className="text-ink-400 hover:bg-ink-700 flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs"
+              >
+                <Trash2 size={12} /> Remove section
+              </button>
             </div>
           )}
         </div>

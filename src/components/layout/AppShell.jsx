@@ -233,7 +233,7 @@ export default function AppShell() {
   }, []);
 
   return (
-    <div className="bg-ink-900 flex h-[100dvh] overflow-hidden">
+    <div className="bg-ink-900 flex h-dvh overflow-hidden">
       {/* ── Desktop sidebar ─────────────────────────────────── */}
       <aside className="border-ink-700 bg-ink-900 hidden w-60 shrink-0 flex-col border-r md:flex">
         <Sidebar onNavigate={() => {}} spinning={spinning} />
@@ -316,11 +316,13 @@ export default function AppShell() {
         </nav>
       </div>
 
-      <MomentPrompt
-        key={momentPrompt.id}
-        prompt={momentPrompt}
-        onDismiss={dismissMoment}
-      />
+      {momentPrompt && (
+        <MomentPrompt
+          key={momentPrompt.id}
+          prompt={momentPrompt}
+          onDismiss={dismissMoment}
+        />
+      )}
     </div>
   );
 }

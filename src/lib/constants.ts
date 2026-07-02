@@ -11,7 +11,6 @@ export const STATUSES: Status[] = [
   'done',
   'paused',
   'cancelled',
-  'archived',
 ];
 
 // public.priority
@@ -111,14 +110,6 @@ export const STATUS_META: Record<Status, StatusMeta> = {
     circleBg: '#2C1F1F',
     dot: 'bg-rose-800',
   },
-  archived: {
-    label: 'Archived',
-    acronym: 'ARCH',
-    icon: 'Archive',
-    iconColor: '#5F5E5A',
-    circleBg: '#222220',
-    dot: 'bg-ink-600',
-  },
 };
 
 interface PriorityMeta {
@@ -171,7 +162,7 @@ export const EVENT_TYPE_META: Record<EventType, EventTypeMeta> = {
   },
 };
 
-// Active/open statuses — excludes done, cancelled, archived
+// Active/open statuses — excludes done, cancelled
 export const OPEN_STATUSES: Status[] = [
   'planning',
   'todo',

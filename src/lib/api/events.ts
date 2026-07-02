@@ -28,7 +28,9 @@ export type EventPatchInput = Partial<EventInput>;
 
 export const eventsApi = {
   async list(): Promise<Event[]> {
-    return unwrap(await supabase.from('events').select('*'));
+    return unwrap(
+      await supabase.from('events').select('*').is('deleted_at', null)
+    );
   },
 
   async create({
@@ -88,7 +90,14 @@ export const eventsApi = {
     );
   },
 
-  async remove(id: Id): Promise<unknown> {
-    return unwrap(await supabase.from('events').delete().eq('id', id));
+  async remove(id: Id): Promise<Event> {
+    return unwrap(
+      await supabase
+        .from('events')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+    );
   },
 };

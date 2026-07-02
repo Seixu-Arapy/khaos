@@ -15,7 +15,6 @@ import {
   Check,
   Pause,
   Ban,
-  Archive,
   Flame,
   ChevronsUp,
   ChevronUp,
@@ -35,7 +34,6 @@ const STATUS_ICONS: Record<string, LucideIcon> = {
   Check,
   Pause,
   Ban,
-  Archive,
 };
 const PRIORITY_ICONS: Record<string, LucideIcon> = {
   Flame,

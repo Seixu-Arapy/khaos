@@ -68,11 +68,8 @@ export default function ProjectDetailPage() {
   const { data: tasks = [] } = useTasks();
   const { data: sectionEdges = [] } = useSectionsSequence();
   const { data: taskEdges = [] } = useTasksSequence();
-  const {
-    update: updateProject,
-    remove: removeProject,
-    archive: archiveProject,
-  } = useProjectMutations();
+  const { update: updateProject, remove: removeProject } =
+    useProjectMutations();
   const { create: createSection, reorder: reorderSections } =
     useSectionMutations();
 
@@ -127,16 +124,6 @@ export default function ProjectDetailPage() {
       status: 'planning',
     });
     setNewSectionName('');
-  }
-
-  function handleDeleteProject() {
-    if (
-      window.confirm(
-        `Delete "${project.name}" and everything in it? This can't be undone.`
-      )
-    ) {
-      removeProject.mutate(projectId, { onSuccess: () => navigate('/tasks') });
-    }
   }
 
   function openTask_(task) {
@@ -216,31 +203,16 @@ export default function ProjectDetailPage() {
               <ExternalLink size={12} /> Docs
             </a>
           )}
-          {project.status === 'archived' ? (
-            <button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Permanently delete "${project.name}"? This cannot be undone.`
-                  )
-                ) {
-                  removeProject.mutate(projectId, {
-                    onSuccess: () => navigate('/projects'),
-                  });
-                }
-              }}
-              className="text-rust-500 hover:text-rust-400 ml-auto flex items-center gap-1 text-xs"
-            >
-              <Trash2 size={13} /> Delete permanently
-            </button>
-          ) : (
-            <button
-              onClick={() => archiveProject.mutate(projectId)}
-              className="text-ink-500 hover:text-ink-300 ml-auto flex items-center gap-1 text-xs"
-            >
-              <Trash2 size={13} /> Archive project
-            </button>
-          )}
+          <button
+            onClick={() =>
+              removeProject.mutate(projectId, {
+                onSuccess: () => navigate('/tasks'),
+              })
+            }
+            className="text-ink-500 hover:text-ink-300 ml-auto flex items-center gap-1 text-xs"
+          >
+            <Trash2 size={13} /> Delete project
+          </button>
         </div>
       </div>
 

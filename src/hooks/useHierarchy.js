@@ -106,17 +106,9 @@ export function useProjectMutations() {
       mutationFn: ({ id, patch }) => projectsApi.update(id, patch),
       onSuccess: invalidate,
     }),
-    archive: useMutation({
-      mutationFn: projectsApi.archive,
-      onSuccess: invalidate,
-    }),
     remove: useMutation({
       mutationFn: projectsApi.remove,
-      onSuccess: () => {
-        invalidate();
-        qc.invalidateQueries({ queryKey: ['sections'] });
-        qc.invalidateQueries({ queryKey: ['tasks'] });
-      },
+      onSuccess: invalidate,
     }),
   };
 }
@@ -133,16 +125,9 @@ export function useSectionMutations() {
       mutationFn: ({ id, patch }) => sectionsApi.update(id, patch),
       onSuccess: invalidate,
     }),
-    archive: useMutation({
-      mutationFn: sectionsApi.archive,
-      onSuccess: invalidate,
-    }),
     remove: useMutation({
       mutationFn: sectionsApi.remove,
-      onSuccess: () => {
-        invalidate();
-        qc.invalidateQueries({ queryKey: ['tasks'] });
-      },
+      onSuccess: invalidate,
     }),
     reorder: useMutation({
       mutationFn: ({ projectId, orderedIds }) =>
@@ -159,10 +144,6 @@ export function useTaskMutations() {
     create: useMutation({ mutationFn: tasksApi.create, onSuccess: invalidate }),
     update: useMutation({
       mutationFn: ({ id, patch }) => tasksApi.update(id, patch),
-      onSuccess: invalidate,
-    }),
-    archive: useMutation({
-      mutationFn: tasksApi.archive,
       onSuccess: invalidate,
     }),
     remove: useMutation({ mutationFn: tasksApi.remove, onSuccess: invalidate }),

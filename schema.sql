@@ -195,6 +195,46 @@ END;$$;
 ALTER FUNCTION "public"."stop_active_task"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."trg_fn_project_delete_cascade"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    IF OLD.deleted_at IS DISTINCT FROM NEW.deleted_at AND NEW.deleted_at IS NOT NULL THEN
+        -- Atualiza seções filhas
+        UPDATE public.sections
+        SET deleted_at = NEW.deleted_at
+        WHERE project_id = NEW.id AND deleted_at IS NULL;
+        
+        -- Atualiza eventos filhos diretamente ligados ao projeto
+        UPDATE public.events
+        SET deleted_at = NEW.deleted_at
+        WHERE project_id = NEW.id AND deleted_at IS NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."trg_fn_project_delete_cascade"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."trg_fn_section_delete_cascade"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    IF OLD.deleted_at IS DISTINCT FROM NEW.deleted_at AND NEW.deleted_at IS NOT NULL THEN
+        UPDATE public.tasks
+        SET deleted_at = NEW.deleted_at
+        WHERE section_id = NEW.id AND deleted_at IS NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."trg_fn_section_delete_cascade"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."trg_fn_stop_and_start_task_log"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
@@ -210,6 +250,23 @@ $$;
 
 
 ALTER FUNCTION "public"."trg_fn_stop_and_start_task_log"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."trg_fn_task_delete_cascade"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    IF OLD.deleted_at IS DISTINCT FROM NEW.deleted_at AND NEW.deleted_at IS NOT NULL THEN
+        UPDATE public.events
+        SET deleted_at = NEW.deleted_at
+        WHERE task_id = NEW.id AND deleted_at IS NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."trg_fn_task_delete_cascade"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."trg_moment_created"() RETURNS "trigger"
@@ -303,8 +360,16 @@ CREATE OR REPLACE FUNCTION "public"."trg_moment_started"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
 begin
+  -- Se o log for ativo (sem data de fim) e houver uma tarefa associada
   if upper_inf(NEW.duration) and NEW.task_id is not null then
+    -- 1. Mantém o comportamento original de registrar o momento
     perform insert_moment('task_id', NEW.task_id, 'started', lower(NEW.duration)::text);
+    
+    -- 2. Altera o status da tarefa para 'in_progress' se já não for
+    UPDATE public.tasks
+    SET status = 'in_progress'::public.status
+    WHERE id = NEW.task_id 
+      AND status IS DISTINCT FROM 'in_progress'::public.status;
   end if;
   return NEW;
 end;
@@ -348,13 +413,33 @@ CREATE OR REPLACE FUNCTION "public"."trigger_update_sections_status"() RETURNS "
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
-    -- Verifica se o status mudou para 'done' ou 'cancelled'
-    IF (NEW.status IN ('done', 'cancelled')) AND (OLD.status IS DISTINCT FROM NEW.status) THEN
+    -- Evita rodar o código se o status não mudou
+    IF (OLD.status IS NOT DISTINCT FROM NEW.status) THEN
+        RETURN NEW;
+    END IF;
+
+    -- Regra 1: Done ou Cancelled
+    IF NEW.status IN ('done', 'cancelled') THEN
         UPDATE sections
         SET status = 'cancelled'
         WHERE project_id = NEW.id 
           AND status NOT IN ('done', 'cancelled');
+
+    -- Regra 2: Planning -> Todo
+    ELSIF OLD.status = 'planning' AND NEW.status = 'todo' THEN
+        UPDATE sections
+        SET status = 'todo'
+        WHERE project_id = NEW.id 
+          AND status = 'planning';
+
+    -- Regra 3: Qualquer outro status (ex: '*' -> paused)
+    ELSE
+        UPDATE sections
+        SET status = NEW.status
+        WHERE project_id = NEW.id 
+          AND status NOT IN ('done', 'cancelled', NEW.status);
     END IF;
+
     RETURN NEW;
 END;
 $$;
@@ -384,12 +469,32 @@ CREATE OR REPLACE FUNCTION "public"."trigger_update_tasks_status"() RETURNS "tri
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
-    IF (NEW.status IN ('done', 'cancelled')) AND (OLD.status IS DISTINCT FROM NEW.status) THEN
+    IF (OLD.status IS NOT DISTINCT FROM NEW.status) THEN
+        RETURN NEW;
+    END IF;
+
+    -- Regra 1: Done ou Cancelled
+    IF NEW.status IN ('done', 'cancelled') THEN
         UPDATE tasks
         SET status = 'cancelled'
         WHERE section_id = NEW.id 
           AND status NOT IN ('done', 'cancelled');
+
+    -- Regra 2: Planning -> Todo
+    ELSIF OLD.status = 'planning' AND NEW.status = 'todo' THEN
+        UPDATE tasks
+        SET status = 'todo'
+        WHERE section_id = NEW.id 
+          AND status = 'planning';
+
+    -- Regra 3: Qualquer outro status (ex: '*' -> paused)
+    ELSE
+        UPDATE tasks
+        SET status = NEW.status
+        WHERE section_id = NEW.id 
+          AND status NOT IN ('done', 'cancelled', NEW.status);
     END IF;
+
     RETURN NEW;
 END;
 $$;
@@ -419,6 +524,7 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
     "project_id" "uuid",
     "field_id" "uuid",
     "routine_id" "uuid",
+    "deleted_at" timestamp with time zone,
     CONSTRAINT "duration_must_be_bounded" CHECK (((NOT "lower_inf"("duration")) AND (NOT "upper_inf"("duration")) AND (NOT "isempty"("duration"))))
 );
 
@@ -530,7 +636,8 @@ CREATE TABLE IF NOT EXISTS "public"."projects" (
     "priority" "public"."priority" DEFAULT 'medium'::"public"."priority",
     "doc_reference" "text",
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "field_id" "uuid"
+    "field_id" "uuid",
+    "deleted_at" timestamp with time zone
 );
 
 ALTER TABLE ONLY "public"."projects" REPLICA IDENTITY FULL;
@@ -586,7 +693,8 @@ CREATE TABLE IF NOT EXISTS "public"."sections" (
     "priority" "public"."priority",
     "doc_reference" "text",
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "project_id" "uuid"
+    "project_id" "uuid",
+    "deleted_at" timestamp with time zone
 );
 
 ALTER TABLE ONLY "public"."sections" REPLICA IDENTITY FULL;
@@ -679,7 +787,8 @@ CREATE TABLE IF NOT EXISTS "public"."tasks" (
     "priority" "public"."priority" DEFAULT 'medium'::"public"."priority",
     "estimate" integer,
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "section_id" "uuid"
+    "section_id" "uuid",
+    "deleted_at" timestamp with time zone
 );
 
 ALTER TABLE ONLY "public"."tasks" REPLICA IDENTITY FULL;
@@ -856,6 +965,10 @@ ALTER TABLE ONLY "public"."work_tags"
 
 
 
+CREATE INDEX "idx_events_active" ON "public"."events" USING "btree" ("id") WHERE ("deleted_at" IS NULL);
+
+
+
 CREATE INDEX "idx_moment_tag_entities_event" ON "public"."moment_tag_entities" USING "btree" ("event_id") WHERE ("event_id" IS NOT NULL);
 
 
@@ -888,7 +1001,19 @@ CREATE INDEX "idx_moments_task" ON "public"."moments" USING "btree" ("task_id") 
 
 
 
+CREATE INDEX "idx_projects_active" ON "public"."projects" USING "btree" ("id") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_sections_active" ON "public"."sections" USING "btree" ("id") WHERE ("deleted_at" IS NULL);
+
+
+
 CREATE UNIQUE INDEX "idx_task_logs_duration_upper_inf" ON "public"."task_logs" USING "btree" ("upper_inf"("duration")) WHERE ("upper_inf"("duration") = true);
+
+
+
+CREATE INDEX "idx_tasks_active" ON "public"."tasks" USING "btree" ("id") WHERE ("deleted_at" IS NULL);
 
 
 
@@ -964,35 +1089,35 @@ CREATE OR REPLACE TRIGGER "moment_created_tasks" AFTER INSERT ON "public"."tasks
 
 
 
-CREATE OR REPLACE TRIGGER "moment_due_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_due"();
+CREATE OR REPLACE TRIGGER "moment_due_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_due"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_due_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_due"();
+CREATE OR REPLACE TRIGGER "moment_due_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_due"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_due_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_due"();
+CREATE OR REPLACE TRIGGER "moment_due_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_due"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_estimate_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_estimate"();
+CREATE OR REPLACE TRIGGER "moment_estimate_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_estimate"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_priority_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_priority"();
+CREATE OR REPLACE TRIGGER "moment_priority_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_priority"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_priority_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_priority"();
+CREATE OR REPLACE TRIGGER "moment_priority_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_priority"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_priority_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_priority"();
+CREATE OR REPLACE TRIGGER "moment_priority_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_priority"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_scheduled_events" AFTER INSERT OR UPDATE ON "public"."events" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_scheduled"();
+CREATE OR REPLACE TRIGGER "moment_scheduled_events" AFTER INSERT OR UPDATE ON "public"."events" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_scheduled"();
 
 
 
@@ -1000,19 +1125,31 @@ CREATE OR REPLACE TRIGGER "moment_started_task_logs" AFTER INSERT ON "public"."t
 
 
 
-CREATE OR REPLACE TRIGGER "moment_status_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_status"();
+CREATE OR REPLACE TRIGGER "moment_status_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_status"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_status_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_status"();
+CREATE OR REPLACE TRIGGER "moment_status_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_status"();
 
 
 
-CREATE OR REPLACE TRIGGER "moment_status_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_status"();
+CREATE OR REPLACE TRIGGER "moment_status_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_status"();
 
 
 
 CREATE OR REPLACE TRIGGER "moment_stopped_task_logs" AFTER UPDATE ON "public"."task_logs" FOR EACH ROW EXECUTE FUNCTION "public"."trg_moment_stopped"();
+
+
+
+CREATE OR REPLACE TRIGGER "tg_project_delete_cascade" BEFORE UPDATE ON "public"."projects" FOR EACH ROW EXECUTE FUNCTION "public"."trg_fn_project_delete_cascade"();
+
+
+
+CREATE OR REPLACE TRIGGER "tg_section_delete_cascade" BEFORE UPDATE ON "public"."sections" FOR EACH ROW EXECUTE FUNCTION "public"."trg_fn_section_delete_cascade"();
+
+
+
+CREATE OR REPLACE TRIGGER "tg_task_delete_cascade" BEFORE UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."trg_fn_task_delete_cascade"();
 
 
 
@@ -1307,9 +1444,27 @@ GRANT ALL ON FUNCTION "public"."stop_active_task"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."trg_fn_project_delete_cascade"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_fn_project_delete_cascade"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_fn_project_delete_cascade"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trg_fn_section_delete_cascade"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_fn_section_delete_cascade"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_fn_section_delete_cascade"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."trg_fn_stop_and_start_task_log"() TO "anon";
 GRANT ALL ON FUNCTION "public"."trg_fn_stop_and_start_task_log"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trg_fn_stop_and_start_task_log"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trg_fn_task_delete_cascade"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_fn_task_delete_cascade"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_fn_task_delete_cascade"() TO "service_role";
 
 
 

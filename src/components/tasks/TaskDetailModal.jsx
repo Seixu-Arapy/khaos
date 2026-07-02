@@ -46,7 +46,7 @@ function Section({ title, children, action }) {
 }
 
 export default function TaskDetailModal({ taskId, task, onClose }) {
-  const { update, remove, archive } = useTaskMutations();
+  const { update, remove } = useTaskMutations();
   const { data: sections = [] } = useSections();
   const { data: projects = [] } = useProjects();
   const { data: items = [] } = useTaskItems(taskId);
@@ -410,29 +410,12 @@ export default function TaskDetailModal({ taskId, task, onClose }) {
         <div className="border-ink-700 flex justify-between border-t pt-3.5">
           <StatusBadge status={task.status} size="md" />
           <div className="flex items-center gap-3">
-            {task.status === 'archived' ? (
-              <button
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Permanently delete "${task.name}"? This cannot be undone.`
-                    )
-                  ) {
-                    remove.mutate(task.id, { onSuccess: onClose });
-                  }
-                }}
-                className="text-rust-500 hover:text-rust-400 flex items-center gap-1 text-xs"
-              >
-                <Trash2 size={13} /> Delete permanently
-              </button>
-            ) : (
-              <button
-                onClick={() => archive.mutate(task.id, { onSuccess: onClose })}
-                className="text-ink-500 hover:text-ink-300 flex items-center gap-1 text-xs"
-              >
-                <Trash2 size={13} /> Archive
-              </button>
-            )}
+            <button
+              onClick={() => remove.mutate(task.id, { onSuccess: onClose })}
+              className="text-ink-500 hover:text-ink-300 flex items-center gap-1 text-xs"
+            >
+              <Trash2 size={13} /> Delete
+            </button>
           </div>
         </div>
       </div>

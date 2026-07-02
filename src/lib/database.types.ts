@@ -676,8 +676,7 @@ export type Database = {
         | 'in_review'
         | 'done'
         | 'paused'
-        | 'cancelled'
-        | 'archived';
+        | 'cancelled';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -830,7 +829,6 @@ export const Constants = {
         'done',
         'paused',
         'cancelled',
-        'archived',
       ],
     },
   },
