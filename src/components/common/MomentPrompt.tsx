@@ -6,6 +6,9 @@ import clsx from 'clsx';
 import { momentsApi } from '../../lib/api/moments';
 import { supabase } from '../../lib/supabaseClient';
 import type { EntityRef } from '../../lib/api/moments';
+import type { Status, Priority } from '../../lib/types';
+import { StatusBadge, PriorityBadge } from './ui';
+import { formatDueCompact, minutesToHuman } from '../../lib/dateUtils';
 
 interface ChangeItem {
   label: string;
@@ -21,7 +24,7 @@ interface MomentPromptType {
 }
 
 interface MomentPromptProps {
-  prompt: MomentPromptType;
+  prompt: MomentPromptType | null;
   onDismiss: () => void;
 }
 
@@ -56,7 +59,64 @@ const EXTRA_MOMENT_TYPES: ExtraMomentType[] = [
   },
 ];
 
+// Renders a compact badge for a single field change. Falls back to the
+// original plain-text chip for fields we don't have a dedicated visual for.
 function ChangeChip({ change }: { change: ChangeItem }) {
+  const isStatus = change.label === 'status';
+  const isPriority = change.label === 'priority';
+  const isDue = change.label === 'due date';
+  const isEstimate = change.label === 'estimate';
+
+  if (isStatus || isPriority) {
+    return (
+      <span className="bg-ink-700 inline-flex items-center gap-1.5 rounded-full px-2 py-1">
+        {change.from != null && (
+          <>
+            {isStatus ? (
+              <StatusBadge status={change.from as Status} size="sm" />
+            ) : (
+              <PriorityBadge priority={change.from as Priority} size="sm" />
+            )}
+            <span className="text-ink-600">→</span>
+          </>
+        )}
+        {isStatus ? (
+          <StatusBadge status={change.to as Status} size="sm" />
+        ) : (
+          <PriorityBadge priority={change.to as Priority} size="sm" />
+        )}
+      </span>
+    );
+  }
+
+  if (isDue) {
+    const parts = change.to ? formatDueCompact(change.to as string) : null;
+    return (
+      <span className="bg-ink-700 text-ink-300 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs">
+        <span className="text-ink-500">due</span>
+        {parts ? (
+          <span className="font-mono tracking-tight">
+            <span className="font-bold">{parts.day}</span>
+            {parts.month}
+          </span>
+        ) : (
+          <span className="text-ink-500">cleared</span>
+        )}
+      </span>
+    );
+  }
+
+  if (isEstimate) {
+    return (
+      <span className="bg-ink-700 text-ink-300 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs">
+        <span className="text-ink-500">estimate</span>
+        <span className="text-ink-100 font-mono font-medium">
+          {change.to != null ? minutesToHuman(Number(change.to)) : '—'}
+        </span>
+      </span>
+    );
+  }
+
   return (
     <span className="bg-ink-700 text-ink-300 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs">
       <span className="text-ink-500">{change.label}</span>
@@ -80,6 +140,13 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
   );
   const [extraValue, setExtraValue] = useState<string>('');
   const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // AppShell only mounts this component when a prompt is queued, but the
+  // guard is kept for safety in case that contract changes.
+  if (!prompt) return null;
+
+  const activePrompt = prompt;
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     if (e) e.preventDefault();
@@ -87,25 +154,29 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
     if (saving || (!note.trim() && !extraValue.trim())) return;
 
     setSaving(true);
+    setError(null);
     try {
       const saves: Promise<unknown | void>[] = [];
 
       if (note.trim()) {
         saves.push(
-          momentsApi.attachNoteToLatestChange(prompt.entityRef, note.trim())
+          momentsApi.attachNoteToLatestChange(
+            activePrompt.entityRef,
+            note.trim()
+          )
         );
       }
 
       if (extraType && extraValue.trim()) {
         const insertPromise = (async () => {
-          const { error } = await supabase.from('moments').insert({
-            ...prompt.entityRef,
+          const { error: insertError } = await supabase.from('moments').insert({
+            ...activePrompt.entityRef,
             moment_type: extraType,
             value: extraType === 'target' ? extraValue : null,
             moment_note: extraType === 'definition' ? extraValue.trim() : null,
           });
 
-          if (error) throw error;
+          if (insertError) throw insertError;
         })();
 
         saves.push(insertPromise);
@@ -113,8 +184,13 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
 
       await Promise.all(saves);
       onDismiss();
-    } catch (error) {
-      console.error('Erro ao guardar o momento:', error);
+    } catch (err) {
+      console.error('Erro ao guardar o momento:', err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong saving this — try again.'
+      );
     } finally {
       setSaving(false);
     }
@@ -131,7 +207,7 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
         <div className="flex items-center gap-2">
           <MessageSquarePlus className="text-copper-400 h-4 w-4" />
           <span className="text-xs font-medium tracking-tight">
-            Add context to {prompt.entityName || 'change'}
+            Add context to {activePrompt.entityName || 'change'}
           </span>
         </div>
         <button
@@ -144,7 +220,7 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
       </div>
 
       <div className="flex flex-wrap gap-1.5 px-3.5 pb-2.5">
-        {prompt.changes.map((change) => (
+        {activePrompt.changes.map((change) => (
           <ChangeChip key={change.label} change={change} />
         ))}
       </div>
@@ -154,7 +230,10 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
           type="text"
           autoFocus
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={(e) => {
+            setNote(e.target.value);
+            setError(null);
+          }}
           placeholder="Why did this change? (Optional)"
           disabled={saving}
           className="border-ink-800 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-500 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
@@ -169,7 +248,10 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
             <button
               key={meta.type}
               type="button"
-              onClick={() => setExtraType(isSelected ? null : meta.type)}
+              onClick={() => {
+                setExtraType(isSelected ? null : meta.type);
+                setError(null);
+              }}
               className={clsx(
                 'hover:bg-ink-800 flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors',
                 isSelected ? 'bg-ink-800 text-copper-400' : 'text-ink-400'
@@ -191,11 +273,20 @@ export default function MomentPrompt({ prompt, onDismiss }: MomentPromptProps) {
             type={activeMeta.inputType === 'date' ? 'date' : 'text'}
             autoFocus
             value={extraValue}
-            onChange={(e) => setExtraValue(e.target.value)}
+            onChange={(e) => {
+              setExtraValue(e.target.value);
+              setError(null);
+            }}
             placeholder={activeMeta.placeholder || undefined}
             className="border-ink-600 bg-ink-900 text-ink-100 placeholder:text-ink-600 focus:border-copper-400 w-full rounded border px-2.5 py-2 text-sm focus:outline-none"
           />
         </div>
+      )}
+
+      {error && (
+        <p className="text-rust-500 px-3.5 pb-1 text-xs leading-relaxed">
+          {error}
+        </p>
       )}
 
       <div className="flex justify-end gap-2 px-3.5 py-3">
