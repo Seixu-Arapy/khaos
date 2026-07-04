@@ -71,8 +71,10 @@ export default function AssistantPage() {
     resolvePending,
     clearHistory,
   } = useChatAgent();
+
   const [input, setInput] = useState('');
   const scrollRef = useRef(null);
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -81,11 +83,39 @@ export default function AssistantPage() {
     });
   }, [messages, pending]);
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+
+      if (textarea.scrollHeight > 0) {
+        textarea.style.height = `${textarea.scrollHeight}px`;
+      }
+
+      if (textarea.scrollHeight > 200) {
+        textarea.style.overflowY = 'auto';
+      } else {
+        textarea.style.overflowY = 'hidden';
+      }
+    }
+  }, [input]);
+
+  function handleSend() {
     if (!input.trim() || isSending) return;
     sendMessage(input);
     setInput('');
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    handleSend();
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleSend();
+    }
   }
 
   return (
@@ -119,8 +149,8 @@ export default function AssistantPage() {
           <div className="text-ink-600 flex h-full flex-col items-center justify-center gap-2 text-center">
             <Bot size={26} />
             <p className="text-sm">
-              Try: &ldquo;What&lsquo;s overdue?&lrequo; or &ldquo;Move the API
-              redesign task to next Friday and mark it high priority.&ldquo;
+              Try: &ldquo;What&lsquo;s overdue?&rdquo; or &ldquo;Move the API
+              redesign task to next Friday and mark it high priority.&rdquo;
             </p>
           </div>
         )}
@@ -137,18 +167,21 @@ export default function AssistantPage() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-3 flex items-center gap-2">
-        <input
+      <form onSubmit={handleSubmit} className="mt-3 flex items-end gap-2">
+        <textarea
+          ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask the assistant…"
+          onKeyDown={handleKeyDown}
+          placeholder="Ask the assistant… (Cmd+Enter to send)"
           disabled={isSending}
-          className="border-ink-700 bg-ink-800 text-ink-100 placeholder:text-ink-500 focus:border-copper-400 flex-1 rounded-full border px-4 py-2.5 text-sm focus:outline-hidden disabled:opacity-60"
+          rows={1}
+          className="border-ink-700 bg-ink-800 text-ink-100 placeholder:text-ink-500 focus:border-copper-400 max-h-50 min-h-10 flex-1 resize-none overflow-hidden rounded-xl border px-4 py-2.5 text-sm focus:outline-hidden disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={isSending || !input.trim()}
-          className="bg-copper-500 text-ink-900 hover:bg-copper-400 flex h-10 w-10 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
+          className="bg-copper-500 text-ink-900 hover:bg-copper-400 mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
           aria-label="Send"
         >
           <Send size={16} />
