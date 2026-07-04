@@ -1,3 +1,4 @@
+import { useSyncActiveEntity } from '../../lib/activeEntityContext';
 import { useState, type FormEvent } from 'react';
 import { Modal, TextInput, Select, Button } from '../common/ui';
 import { EVENT_TYPES } from '../../lib/constants';
@@ -46,6 +47,7 @@ export default function EventModal({
   const { create, update, remove } = useEventMutations();
   const { data: projects = [] } = useProjects() as { data: Project[] };
   const { data: tasks = [] } = useTasks() as { data: Task[] };
+  useSyncActiveEntity('event', event?.id, event?.name);
 
   const [form, setForm] = useState<EventFormState>(() => ({
     name: event?.name || '',

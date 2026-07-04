@@ -1,8 +1,10 @@
+// src/hooks/useChatAgent.js
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { genAI, GEMINI_MODEL, SYSTEM_INSTRUCTION } from '../lib/gemini/client';
 import { functionDeclarations } from '../lib/gemini/tools';
 import { runTurn } from '../lib/gemini/agent';
 import { useProcessingContext } from '../lib/processingContext';
+import { useActiveEntity } from '../lib/activeEntityContext';
 
 const STORAGE_KEY = 'logbook.chatHistory.v1';
 
@@ -24,6 +26,7 @@ export function useChatAgent() {
   const [pending, setPending] = useState(null); // { name, args, resolve }
   const [isSending, setIsSending] = useState(false);
   const { setAssistantProcessing } = useProcessingContext();
+  const { activeEntity } = useActiveEntity();
   const chatRef = useRef(null);
 
   useEffect(() => {
@@ -73,7 +76,12 @@ export function useChatAgent() {
       setAssistantProcessing(true);
       try {
         const chat = getChat();
-        const replyText = await runTurn(chat, trimmed, {
+        // Injected silently — never shown in the bubble — so pronouns like
+        // "this" or "it" resolve to whatever entity is open on screen.
+        const contextNote = activeEntity
+          ? `[Context: the person currently has this open on screen — ${activeEntity.type} "${activeEntity.name}" (id: ${activeEntity.id}). If their message refers to "this"/"it" without naming something else, assume it's this.]\n\n`
+          : '';
+        const replyText = await runTurn(chat, contextNote + trimmed, {
           onPendingWrite: requestConfirmation,
         });
         setMessages((m) => [
@@ -99,7 +107,7 @@ export function useChatAgent() {
         setAssistantProcessing(false);
       }
     },
-    [requestConfirmation]
+    [requestConfirmation, activeEntity]
   );
 
   const clearHistory = useCallback(() => {

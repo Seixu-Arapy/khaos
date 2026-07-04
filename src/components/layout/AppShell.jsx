@@ -1,3 +1,4 @@
+// src/components/layout/AppShell.jsx
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';
@@ -27,20 +28,20 @@ import QuickAddBar from '../tasks/QuickAddBar';
 import CommandPalette from './CommandPalette';
 import MomentPrompt from '../common/MomentPrompt';
 import TimezonePicker from '../common/TimezonePicker';
+import ChatPanel from '../assistant/ChatPanel';
 import { StatusIcon } from '../common/ui';
 import { useProcessingContext } from '../../lib/processingContext';
 import { useMomentDetector } from '../../hooks/useMomentDetector';
 
-// Bottom tab bar items (mobile) — keep to 5 max for thumb reach
+// Bottom tab bar items (mobile) — Assistant lives in the floating bubble now.
 const BOTTOM_NAV = [
   { to: '/', label: 'Today', icon: LayoutDashboard, end: true },
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
-  { to: '/assistant', label: 'Assistant', icon: Bot },
 ];
 
-// Full sidebar nav (desktop)
+// Full sidebar nav (desktop) — same reasoning, no Assistant link.
 const SIDEBAR_NAV = [
   { to: '/', label: 'Today', icon: LayoutDashboard, end: true },
   { to: '/tasks', label: 'All tasks', icon: ListTodo },
@@ -48,7 +49,6 @@ const SIDEBAR_NAV = [
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/routines', label: 'Routines', icon: RefreshCw },
   { to: '/tags', label: 'Tags', icon: Tags },
-  { to: '/assistant', label: 'Assistant', icon: Bot },
 ];
 
 function sidebarLinkClass({ isActive }) {
@@ -117,7 +117,7 @@ function KhaosLogo({ spinning }) {
   );
 }
 
-function Sidebar({ onNavigate, onClose, spinning }) {
+function Sidebar({ onNavigate, spinning }) {
   const { data: fields = [] } = useFields();
   const { data: projects = [] } = useProjects();
   const { create } = useProjectMutations();
@@ -126,17 +126,8 @@ function Sidebar({ onNavigate, onClose, spinning }) {
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-4">
+      <div className="px-4 py-4">
         <KhaosLogo spinning={spinning} />
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="text-ink-400 hover:text-ink-100"
-            aria-label="Close menu"
-          >
-            <X size={18} />
-          </button>
-        )}
       </div>
 
       <nav className="space-y-0.5 px-3">
@@ -214,6 +205,7 @@ function Sidebar({ onNavigate, onClose, spinning }) {
 
 export default function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [chatSheetOpen, setChatSheetOpen] = useState(false);
   const { current: momentPrompt, dismiss: dismissMoment } = useMomentDetector();
   const { isAssistantProcessing } = useProcessingContext();
   const isFetching = useIsFetching();
@@ -221,21 +213,24 @@ export default function AppShell() {
   const spinning = isAssistantProcessing || isFetching > 0 || isMutating > 0;
   const location = useLocation();
 
-  // Close drawer on route change
+  // Close drawer/sheet on route change
   useEffect(() => {
     setDrawerOpen(false);
+    setChatSheetOpen(false);
   }, [location.pathname]);
 
-  // Cmd+K palette shortcut
+  // Cmd+K palette shortcut, Esc closes any overlay
   useEffect(() => {
     function onKey(e) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setDrawerOpen(false);
-        // Palette lives inside Sidebar — trigger via a custom event
         window.dispatchEvent(new CustomEvent('open-palette'));
       }
-      if (e.key === 'Escape') setDrawerOpen(false);
+      if (e.key === 'Escape') {
+        setDrawerOpen(false);
+        setChatSheetOpen(false);
+      }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -243,7 +238,7 @@ export default function AppShell() {
 
   return (
     <div className="bg-ink-900 flex h-dvh overflow-hidden">
-      {/* ── Desktop sidebar ─────────────────────────────────── */}
+      {/* ── Desktop nav sidebar ─────────────────────────────── */}
       <aside className="border-ink-700 bg-ink-900 hidden w-60 shrink-0 flex-col border-r md:flex">
         <Sidebar onNavigate={() => {}} spinning={spinning} />
       </aside>
@@ -263,58 +258,93 @@ export default function AppShell() {
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Reuse sidebar contents, close drawer on navigation or via X */}
+        <div className="flex items-center justify-between px-4 py-4">
+          <KhaosLogo spinning={spinning} />
+          <button
+            onClick={() => setDrawerOpen(false)}
+            className="text-ink-400 hover:text-ink-100"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
+        </div>
         <div className="flex flex-1 flex-col overflow-hidden">
           <Sidebar
             onNavigate={() => setDrawerOpen(false)}
-            onClose={() => setDrawerOpen(false)}
             spinning={spinning}
           />
         </div>
       </aside>
 
-      {/* ── Main content area ────────────────────────────────── */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top header */}
-        <header className="border-ink-700 flex shrink-0 items-center gap-2 border-b px-3 py-2.5 md:px-5 md:py-3">
-          {/* Hamburger — mobile only */}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="text-ink-400 hover:bg-ink-800 flex h-8 w-8 shrink-0 items-center justify-center rounded md:hidden"
-            aria-label="Open menu"
-          >
-            <Menu size={18} />
-          </button>
-
-          <QuickAddBar />
-
-          {/* Timer — hidden on very small screens, visible md+ */}
-          <div className="hidden sm:block">
-            <ActiveTimerWidget />
-          </div>
-          <TimezonePicker />
-        </header>
-
-        {/* Page content — extra bottom padding on mobile for the tab bar */}
-        <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
-          <Outlet />
-        </main>
-
-        {/* ── Mobile bottom tab bar ─────────────────────────── */}
-        <nav className="border-ink-700 bg-ink-900 flex shrink-0 border-t md:hidden">
-          {BOTTOM_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={bottomLinkClass}
+      {/* ── Main content + persistent chat ──────────────────── */}
+      <div className="flex min-w-0 flex-1 overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="border-ink-700 flex shrink-0 items-center gap-2 border-b px-3 py-2.5 md:px-5 md:py-3">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="text-ink-400 hover:bg-ink-800 flex h-8 w-8 shrink-0 items-center justify-center rounded md:hidden"
+              aria-label="Open menu"
             >
-              <item.icon size={20} />
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+              <Menu size={18} />
+            </button>
+
+            <QuickAddBar />
+
+            <div className="hidden sm:block">
+              <ActiveTimerWidget />
+            </div>
+            <TimezonePicker />
+          </header>
+
+          <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+            <Outlet />
+          </main>
+
+          {/* ── Mobile bottom tab bar ─────────────────────────── */}
+          <nav className="border-ink-700 bg-ink-900 flex shrink-0 border-t md:hidden">
+            {BOTTOM_NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={bottomLinkClass}
+              >
+                <item.icon size={20} />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        {/* ── Persistent chat column — desktop/lg only ────────── */}
+        <aside className="border-ink-700 bg-ink-900 hidden w-100 shrink-0 flex-col border-l lg:flex">
+          <ChatPanel />
+        </aside>
       </div>
+
+      {/* ── Mobile floating chat bubble ──────────────────────── */}
+      {!chatSheetOpen && (
+        <button
+          onClick={() => setChatSheetOpen(true)}
+          className="bg-copper-500 text-ink-900 shadow-panel fixed right-4 bottom-20 z-30 flex h-13 w-13 items-center justify-center rounded-full lg:hidden"
+          aria-label="Open assistant"
+        >
+          <Bot size={22} />
+        </button>
+      )}
+
+      {/* ── Mobile chat bottom-sheet ─────────────────────────── */}
+      {chatSheetOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setChatSheetOpen(false)}
+          />
+          <div className="border-ink-700 bg-ink-900 shadow-panel relative flex h-[88vh] flex-col rounded-t-2xl border-t">
+            <ChatPanel onRequestClose={() => setChatSheetOpen(false)} />
+          </div>
+        </div>
+      )}
 
       {momentPrompt && (
         <MomentPrompt
