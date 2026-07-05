@@ -327,6 +327,21 @@ $$;
 ALTER FUNCTION "public"."trg_moment_priority"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."trg_moment_schedule"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+begin
+  if OLD.schedule IS DISTINCT FROM NEW.schedule then
+    perform insert_moment(moment_entity_column(TG_TABLE_NAME), NEW.id, 'scheduled', NEW.schedule::text);
+  end if;
+  return NEW;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."trg_moment_schedule"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."trg_moment_scheduled"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
@@ -637,7 +652,9 @@ CREATE TABLE IF NOT EXISTS "public"."projects" (
     "doc_reference" "text",
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "field_id" "uuid",
-    "deleted_at" timestamp with time zone
+    "deleted_at" timestamp with time zone,
+    "schedule" "tstzrange",
+    CONSTRAINT "projects_schedule_valid" CHECK ((("schedule" IS NULL) OR ((NOT "isempty"("schedule")) AND (NOT "lower_inf"("schedule")) AND (("due" IS NULL) OR (("lower"("schedule") < "due") AND ("upper_inf"("schedule") OR ("upper"("schedule") <= "due")))))))
 );
 
 ALTER TABLE ONLY "public"."projects" REPLICA IDENTITY FULL;
@@ -694,7 +711,9 @@ CREATE TABLE IF NOT EXISTS "public"."sections" (
     "doc_reference" "text",
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "project_id" "uuid",
-    "deleted_at" timestamp with time zone
+    "deleted_at" timestamp with time zone,
+    "schedule" "tstzrange",
+    CONSTRAINT "sections_schedule_valid" CHECK ((("schedule" IS NULL) OR ((NOT "isempty"("schedule")) AND (NOT "lower_inf"("schedule")) AND (("due" IS NULL) OR (("lower"("schedule") < "due") AND ("upper_inf"("schedule") OR ("upper"("schedule") <= "due")))))))
 );
 
 ALTER TABLE ONLY "public"."sections" REPLICA IDENTITY FULL;
@@ -788,7 +807,9 @@ CREATE TABLE IF NOT EXISTS "public"."tasks" (
     "estimate" integer,
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "section_id" "uuid",
-    "deleted_at" timestamp with time zone
+    "deleted_at" timestamp with time zone,
+    "schedule" "tstzrange",
+    CONSTRAINT "tasks_schedule_valid" CHECK ((("schedule" IS NULL) OR ((NOT "isempty"("schedule")) AND (NOT "lower_inf"("schedule")) AND (("due" IS NULL) OR (("lower"("schedule") < "due") AND ("upper_inf"("schedule") OR ("upper"("schedule") <= "due")))))))
 );
 
 ALTER TABLE ONLY "public"."tasks" REPLICA IDENTITY FULL;
@@ -1114,6 +1135,18 @@ CREATE OR REPLACE TRIGGER "moment_priority_sections" AFTER UPDATE ON "public"."s
 
 
 CREATE OR REPLACE TRIGGER "moment_priority_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_priority"();
+
+
+
+CREATE OR REPLACE TRIGGER "moment_schedule_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_schedule"();
+
+
+
+CREATE OR REPLACE TRIGGER "moment_schedule_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_schedule"();
+
+
+
+CREATE OR REPLACE TRIGGER "moment_schedule_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_schedule"();
 
 
 
@@ -1489,6 +1522,12 @@ GRANT ALL ON FUNCTION "public"."trg_moment_estimate"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."trg_moment_priority"() TO "anon";
 GRANT ALL ON FUNCTION "public"."trg_moment_priority"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trg_moment_priority"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trg_moment_schedule"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_moment_schedule"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_moment_schedule"() TO "service_role";
 
 
 

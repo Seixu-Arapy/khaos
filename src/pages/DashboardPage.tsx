@@ -2,7 +2,12 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { isToday } from 'date-fns';
 import { AlertTriangle, CalendarClock, CheckCircle2 } from 'lucide-react';
-import { useTasks, useSections, useProjects } from '../hooks/useHierarchy';
+import {
+  useTasks,
+  useSections,
+  useProjects,
+  useFields,
+} from '../hooks/useHierarchy';
 import { useEvents } from '../hooks/useEvents';
 import { OPEN_STATUSES } from '../lib/constants';
 import { isOverdue } from '../lib/dateUtils';
@@ -11,12 +16,13 @@ import { getEventLabel } from '../lib/eventLabel';
 import { EmptyState } from '../components/common/ui';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import TaskRow from '../components/tasks/TaskRow';
-import type { Event, Project, Section, Task } from '../lib/types';
+import type { Event, Field, Project, Section, Task } from '../lib/types';
 
 export default function DashboardPage() {
   const { data: tasks = [] } = useTasks() as { data: Task[] };
   const { data: sections = [] } = useSections() as { data: Section[] };
   const { data: projects = [] } = useProjects() as { data: Project[] };
+  const { data: fields = [] } = useFields() as { data: Field[] };
   const { data: events = [] } = useEvents() as { data: Event[] };
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -27,6 +33,10 @@ export default function DashboardPage() {
   const projectsById = useMemo(
     () => new Map(projects.map((p) => [p.id, p])),
     [projects]
+  );
+  const fieldsById = useMemo(
+    () => new Map(fields.map((f) => [f.id, f])),
+    [fields]
   );
   const tasksById = useMemo(
     () => new Map(tasks.map((t) => [t.id, t])),
@@ -56,9 +66,14 @@ export default function DashboardPage() {
     setSearchParams(searchParams);
   }
 
-  function projectLabel(task: Task) {
+  function projectForTask(task: Task): Project | null {
     const section = sectionsById.get(task.section_id!);
-    return section ? projectsById.get(section.project_id!)?.name : null;
+    return section ? (projectsById.get(section.project_id!) ?? null) : null;
+  }
+
+  function fieldNameForProject(project: Project | null): string | null {
+    if (!project?.field_id) return null;
+    return fieldsById.get(project.field_id)?.name ?? null;
   }
 
   return (
@@ -81,14 +96,18 @@ export default function DashboardPage() {
             <p className="text-ink-600 text-sm">Nothing overdue. Good work.</p>
           ) : (
             <div className="space-y-1">
-              {overdue.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  project={projectLabel(task)}
-                  onOpen={openTask_}
-                />
-              ))}
+              {overdue.map((task) => {
+                const project = projectForTask(task);
+                return (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    project={project?.name}
+                    projectField={fieldNameForProject(project)}
+                    onOpen={openTask_}
+                  />
+                );
+              })}
             </div>
           )}
         </section>
@@ -101,14 +120,18 @@ export default function DashboardPage() {
             <p className="text-ink-600 text-sm">Nothing due today.</p>
           ) : (
             <div className="space-y-1">
-              {dueToday.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  project={projectLabel(task)}
-                  onOpen={openTask_}
-                />
-              ))}
+              {dueToday.map((task) => {
+                const project = projectForTask(task);
+                return (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    project={project?.name}
+                    projectField={fieldNameForProject(project)}
+                    onOpen={openTask_}
+                  />
+                );
+              })}
             </div>
           )}
         </section>

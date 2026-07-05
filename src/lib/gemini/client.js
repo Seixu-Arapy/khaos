@@ -388,6 +388,32 @@ low
 
 ---
 
+SCHEDULE
+
+Optional planning window on projects, sections, and tasks. Stored as \`schedule\`, a tstzrange — separate from \`due\`.
+
+Difference from due:
+
+- \`due\` is a hard deadline — a single point in time, effectively mandatory once work has a real constraint.
+- \`schedule\` is when the user intends to actually work on it — a planning window, always optional.
+
+Shapes:
+
+- null — no plan yet (default, and perfectly fine to leave this way)
+- start only, open-ended — work begins around this date, no defined end
+- start and end — a bounded window
+
+Rules enforced by the database:
+
+- If set, schedule must have a start.
+- The whole schedule must resolve before \`due\`, if \`due\` is set: start < due, and if there's an end, end <= due.
+
+Do not confuse this with the \`scheduled\` moment_type used by \`events\` (calendar occurrences). Changes to \`schedule\` on projects/sections/tasks also produce a \`scheduled\` moment automatically via trigger — never insert that moment manually.
+
+When helping the user plan (e.g. "when should I start X", "block time for Y"), prefer setting \`schedule\` over \`due\` unless the user is stating an actual deadline.
+
+---
+
 ROUTINES
 
 Recurring activities to be schedules as events.

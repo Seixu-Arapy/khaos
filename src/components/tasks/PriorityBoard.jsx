@@ -7,10 +7,10 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { PRIORITIES, PRIORITY_META } from '../../lib/constants';
-import { StatusBadge } from '../common/ui';
+import { StatusBadge, ProjectChip } from '../common/ui';
 import { useTaskMutations } from '../../hooks/useHierarchy';
 
-function Card({ task, onOpen }) {
+function Card({ task, projectInfo, onOpen }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: task.id });
   const style = transform
@@ -26,12 +26,21 @@ function Card({ task, onOpen }) {
       className="border-ink-700 bg-ink-800 text-ink-100 shadow-card cursor-grab rounded-md border p-2.5 text-sm active:cursor-grabbing"
     >
       <p className="mb-1.5 leading-snug">{task.name}</p>
-      <StatusBadge status={task.status} />
+      <div className="flex items-center justify-between gap-2">
+        <StatusBadge status={task.status} />
+        {projectInfo?.name && (
+          <ProjectChip
+            name={projectInfo.name}
+            fieldName={projectInfo.fieldName}
+            className="min-w-0"
+          />
+        )}
+      </div>
     </div>
   );
 }
 
-function Column({ priority, tasks, onOpen }) {
+function Column({ priority, tasks, projectInfoById, onOpen }) {
   const { setNodeRef, isOver } = useDroppable({ id: priority });
   const meta = PRIORITY_META[priority];
   return (
@@ -49,14 +58,19 @@ function Column({ priority, tasks, onOpen }) {
       </div>
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
         {tasks.map((task) => (
-          <Card key={task.id} task={task} onOpen={onOpen} />
+          <Card
+            key={task.id}
+            task={task}
+            projectInfo={projectInfoById.get(task.id)}
+            onOpen={onOpen}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-export default function PriorityBoard({ tasks, onOpenTask }) {
+export default function PriorityBoard({ tasks, projectInfoById, onOpenTask }) {
   const { update } = useTaskMutations();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -79,6 +93,7 @@ export default function PriorityBoard({ tasks, onOpenTask }) {
             key={priority}
             priority={priority}
             tasks={tasks.filter((t) => (t.priority || 'medium') === priority)}
+            projectInfoById={projectInfoById}
             onOpen={onOpenTask}
           />
         ))}

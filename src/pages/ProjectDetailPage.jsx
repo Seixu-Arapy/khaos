@@ -25,6 +25,7 @@ import {
 } from '../hooks/useHierarchy';
 import { STATUSES, PRIORITIES } from '../lib/constants';
 import { Select, TextInput, EmptyState } from '../components/common/ui';
+import ScheduleEditor from '../components/common/ScheduleEditor';
 import SectionColumn, {
   SortableSectionWrapper,
 } from '../components/projects/SectionColumn';
@@ -213,6 +214,22 @@ export default function ProjectDetailPage() {
           >
             <Trash2 size={13} /> Delete project
           </button>
+        </div>
+
+        <div className="mt-2 max-w-sm">
+          <label className="text-ink-500 mb-1 block text-xs font-medium">
+            Schedule{' '}
+            <span className="text-ink-600 font-normal normal-case">
+              (planned window — optional, must land before due)
+            </span>
+          </label>
+          <ScheduleEditor
+            value={project.schedule}
+            due={project.due}
+            onChange={(v) =>
+              updateProject.mutate({ id: projectId, patch: { schedule: v } })
+            }
+          />
         </div>
       </div>
 

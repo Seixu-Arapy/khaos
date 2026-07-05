@@ -1,14 +1,34 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { useProjects, useTasks } from '../../hooks/useHierarchy';
-import { StatusBadge } from '../common/ui';
+import {
+  useProjects,
+  useTasks,
+  useFields,
+  useSections,
+} from '../../hooks/useHierarchy';
+import { StatusBadge, ProjectChip } from '../common/ui';
 
 export default function CommandPalette({ open, onClose }) {
   const [query, setQuery] = useState('');
   const { data: projects = [] } = useProjects();
   const { data: tasks = [] } = useTasks();
+  const { data: fields = [] } = useFields();
+  const { data: sections = [] } = useSections();
   const navigate = useNavigate();
+
+  const fieldsById = useMemo(
+    () => new Map(fields.map((f) => [f.id, f])),
+    [fields]
+  );
+  const sectionsById = useMemo(
+    () => new Map(sections.map((s) => [s.id, s])),
+    [sections]
+  );
+  const projectsById = useMemo(
+    () => new Map(projects.map((p) => [p.id, p])),
+    [projects]
+  );
 
   useEffect(() => {
     if (open) setQuery('');
@@ -24,18 +44,29 @@ export default function CommandPalette({ open, onClose }) {
         id: p.id,
         label: p.name,
         status: p.status,
+        fieldName: p.field_id ? fieldsById.get(p.field_id)?.name : null,
       }));
     const taskMatches = tasks
       .filter((t) => !q || t.name.toLowerCase().includes(q))
       .slice(0, 8)
-      .map((t) => ({
-        type: 'task',
-        id: t.id,
-        label: t.name,
-        status: t.status,
-      }));
+      .map((t) => {
+        const section = t.section_id ? sectionsById.get(t.section_id) : null;
+        const project = section?.project_id
+          ? projectsById.get(section.project_id)
+          : null;
+        return {
+          type: 'task',
+          id: t.id,
+          label: t.name,
+          status: t.status,
+          projectName: project?.name,
+          fieldName: project?.field_id
+            ? fieldsById.get(project.field_id)?.name
+            : null,
+        };
+      });
     return [...projectMatches, ...taskMatches];
-  }, [query, projects, tasks]);
+  }, [query, projects, tasks, fieldsById, sectionsById, projectsById]);
 
   function go(item) {
     onClose();
@@ -72,7 +103,25 @@ export default function CommandPalette({ open, onClose }) {
               onClick={() => go(item)}
               className="text-ink-200 hover:bg-ink-700 flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm"
             >
-              <span className="truncate">{item.label}</span>
+              <span className="flex min-w-0 flex-col items-start gap-0.5">
+                {item.type === 'project' ? (
+                  <ProjectChip
+                    name={item.label}
+                    fieldName={item.fieldName}
+                    className="text-ink-200 text-sm"
+                  />
+                ) : (
+                  <>
+                    <span className="truncate">{item.label}</span>
+                    {item.projectName && (
+                      <ProjectChip
+                        name={item.projectName}
+                        fieldName={item.fieldName}
+                      />
+                    )}
+                  </>
+                )}
+              </span>
               <span className="flex shrink-0 items-center gap-2">
                 <span className="text-ink-600 text-xs tracking-wide uppercase">
                   {item.type}

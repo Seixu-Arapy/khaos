@@ -7,16 +7,15 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { STATUSES, STATUS_META } from '../../lib/constants';
-import { PriorityBadge } from '../common/ui';
+import { PriorityBadge, ProjectChip } from '../common/ui';
 import { useTaskMutations } from '../../hooks/useHierarchy';
 
-function Card({ task, onOpen }) {
+function Card({ task, projectInfo, onOpen }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: task.id });
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 10 }
     : undefined;
-
   return (
     <div
       ref={setNodeRef}
@@ -27,36 +26,52 @@ function Card({ task, onOpen }) {
       className="border-ink-700 bg-ink-800 text-ink-100 shadow-card cursor-grab rounded-md border p-2.5 text-sm active:cursor-grabbing"
     >
       <p className="mb-1.5 leading-snug">{task.name}</p>
-      <PriorityBadge priority={task.priority} />
+      <div className="flex items-center justify-between gap-2">
+        <PriorityBadge priority={task.priority} />
+        {projectInfo?.name && (
+          <ProjectChip
+            name={projectInfo.name}
+            fieldName={projectInfo.fieldName}
+            className="min-w-0"
+          />
+        )}
+      </div>
     </div>
   );
 }
 
-function Column({ status, tasks, onOpen }) {
-  const { setNodeRef, isOver } = useDroppable({ id: status });
-  const meta = STATUS_META[status];
+function Column({ priority, tasks, projectInfoById, onOpen }) {
+  const { setNodeRef, isOver } = useDroppable({ id: priority });
+  const meta = STATUS_META[priority] || null;
   return (
     <div
       ref={setNodeRef}
       className={`flex w-64 shrink-0 flex-col rounded-lg border ${isOver ? 'border-copper-400' : 'border-ink-700'} bg-ink-900`}
     >
       <div className="border-ink-700 flex items-center gap-1.5 border-b px-3 py-2">
-        <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${meta?.dot || 'bg-ink-500'}`}
+        />
         <span className="text-ink-400 text-xs font-semibold tracking-wide uppercase">
-          {meta.label}
+          {priority}
         </span>
         <span className="text-ink-600 ml-auto text-xs">{tasks.length}</span>
       </div>
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
         {tasks.map((task) => (
-          <Card key={task.id} task={task} onOpen={onOpen} />
+          <Card
+            key={task.id}
+            task={task}
+            projectInfo={projectInfoById.get(task.id)}
+            onOpen={onOpen}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-export default function KanbanBoard({ tasks, onOpenTask }) {
+export default function KanbanBoard({ tasks, projectInfoById, onOpenTask }) {
   const { update } = useTaskMutations();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -79,8 +94,9 @@ export default function KanbanBoard({ tasks, onOpenTask }) {
         {STATUSES.map((status) => (
           <Column
             key={status}
-            status={status}
+            priority={status}
             tasks={tasks.filter((t) => t.status === status)}
+            projectInfoById={projectInfoById}
             onOpen={onOpenTask}
           />
         ))}

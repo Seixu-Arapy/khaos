@@ -1,8 +1,10 @@
+// src/components/projects/ProjectCard.jsx
 import { useNavigate } from 'react-router-dom';
-import { StatusBadge, PriorityBadge, DueBadge } from '../common/ui';
+import { StatusBadge, PriorityBadge, DueBadge, FieldBadge } from '../common/ui';
 
 export default function ProjectCard({
   project,
+  fieldName,
   sectionCount,
   taskCount,
   doneCount,
@@ -17,7 +19,10 @@ export default function ProjectCard({
     >
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-ink-100 font-medium">{project.name}</h3>
-        <PriorityBadge priority={project.priority} />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <FieldBadge fieldName={fieldName} />
+          <PriorityBadge priority={project.priority} />
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <StatusBadge status={project.status} />

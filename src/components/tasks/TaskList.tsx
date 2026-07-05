@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowUpDown, ListTodo } from 'lucide-react';
 import { EmptyState } from '../common/ui';
-import type { Task, Project, Section, Id } from '../../lib/types';
+import type { Task, Id } from '../../lib/types';
 import TaskRow from './TaskRow';
 
 type SortKey = 'due' | 'priority' | 'name';
@@ -18,17 +18,20 @@ function priorityRank(p: Task['priority']) {
   return { urgent: 0, high: 1, medium: 2, low: 3 }[p ?? 'medium'] ?? 4;
 }
 
+export interface ProjectInfo {
+  name: string | null;
+  fieldName: string | null;
+}
+
 interface TaskListProps {
   tasks: Task[];
-  projectsById: Map<Id, Project>;
-  sectionsById: Map<Id, Section>;
+  projectInfoById: Map<Id, ProjectInfo>;
   onOpenTask: (task: Task) => void;
 }
 
 export default function TaskList({
   tasks,
-  projectsById,
-  sectionsById,
+  projectInfoById,
   onOpenTask,
 }: TaskListProps) {
   const [sortKey, setSortKey] = useState<SortKey>('due');
@@ -72,18 +75,14 @@ export default function TaskList({
       </div>
       <div className="divide-ink-700 divide-y p-1">
         {sorted.map((task) => {
-          const section = task.section_id
-            ? sectionsById.get(task.section_id)
-            : null;
-          const project = section?.project_id
-            ? projectsById.get(section.project_id)
-            : null;
+          const info = projectInfoById.get(task.id);
           return (
             <TaskRow
               key={task.id}
               task={task}
               onOpen={onOpenTask}
-              project={project?.name}
+              projectName={info?.name}
+              projectField={info?.fieldName}
             />
           );
         })}

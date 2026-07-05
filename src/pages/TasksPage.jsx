@@ -2,7 +2,12 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { List, Columns3, BarChart3 } from 'lucide-react';
 import clsx from 'clsx';
-import { useTasks, useProjects, useSections } from '../hooks/useHierarchy';
+import {
+  useTasks,
+  useProjects,
+  useSections,
+  useFields,
+} from '../hooks/useHierarchy';
 import { useTags, useTagLinks } from '../hooks/useTags';
 import { STATUSES, PRIORITIES, OPEN_STATUSES } from '../lib/constants';
 import { Select, TextInput } from '../components/common/ui';
@@ -21,6 +26,7 @@ export default function TasksPage() {
   const { data: tasks = [] } = useTasks();
   const { data: projects = [] } = useProjects();
   const { data: sections = [] } = useSections();
+  const { data: fields = [] } = useFields();
   const { data: tags = [] } = useTags();
   const { data: tagLinks = [] } = useTagLinks();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,14 +38,39 @@ export default function TasksPage() {
   const [tagFilter, setTagFilter] = useState('all');
   const [search, setSearch] = useState('');
 
-  const projectsById = useMemo(
-    () => new Map(projects.map((p) => [p.id, p])),
-    [projects]
-  );
   const sectionsById = useMemo(
     () => new Map(sections.map((s) => [s.id, s])),
     [sections]
   );
+  const projectsById = useMemo(
+    () => new Map(projects.map((p) => [p.id, p])),
+    [projects]
+  );
+  const fieldsById = useMemo(
+    () => new Map(fields.map((f) => [f.id, f])),
+    [fields]
+  );
+
+  // Single source of truth for "which project/field does this task belong
+  // to" — computed once here and handed to every view (list/kanban/priority)
+  // so the ProjectChip lookup logic doesn't get duplicated three times.
+  const projectInfoById = useMemo(() => {
+    const map = new Map();
+    tasks.forEach((t) => {
+      const section = t.section_id ? sectionsById.get(t.section_id) : null;
+      const project = section?.project_id
+        ? projectsById.get(section.project_id)
+        : null;
+      const fieldName = project?.field_id
+        ? fieldsById.get(project.field_id)?.name
+        : null;
+      map.set(t.id, {
+        name: project?.name ?? null,
+        fieldName: fieldName ?? null,
+      });
+    });
+    return map;
+  }, [tasks, sectionsById, projectsById, fieldsById]);
 
   const taggedTaskIds = useMemo(() => {
     if (tagFilter === 'all') return null;
@@ -182,16 +213,23 @@ export default function TasksPage() {
       {view === 'list' && (
         <TaskList
           tasks={filtered}
-          projectsById={projectsById}
-          sectionsById={sectionsById}
+          projectInfoById={projectInfoById}
           onOpenTask={openTask_}
         />
       )}
       {view === 'kanban' && (
-        <KanbanBoard tasks={filtered} onOpenTask={openTask_} />
+        <KanbanBoard
+          tasks={filtered}
+          projectInfoById={projectInfoById}
+          onOpenTask={openTask_}
+        />
       )}
       {view === 'priority' && (
-        <PriorityBoard tasks={filtered} onOpenTask={openTask_} />
+        <PriorityBoard
+          tasks={filtered}
+          projectInfoById={projectInfoById}
+          onOpenTask={openTask_}
+        />
       )}
 
       {openTask && (

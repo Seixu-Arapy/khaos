@@ -103,7 +103,12 @@ export default function ProjectsPage() {
               </h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {fieldProjects.map((p) => (
-                  <ProjectCard key={p.id} project={p} {...stats.get(p.id)} />
+                  <ProjectCard
+                    key={p.id}
+                    project={p}
+                    fieldName={field.name}
+                    {...stats.get(p.id)}
+                  />
                 ))}
               </div>
             </div>

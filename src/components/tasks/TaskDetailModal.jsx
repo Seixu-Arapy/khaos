@@ -8,6 +8,7 @@ import {
   StatusBadge,
   Tag,
 } from '../common/ui';
+import ScheduleEditor from '../common/ScheduleEditor';
 import { STATUSES, PRIORITIES } from '../../lib/constants';
 import {
   toDatetimeLocalValue,
@@ -222,6 +223,20 @@ export default function TaskDetailModal({ taskId, task, onClose }) {
               }
             />
           </div>
+        </div>
+
+        <div>
+          <label className="text-ink-500 mb-1 block text-xs font-medium">
+            Schedule{' '}
+            <span className="text-ink-600 font-normal normal-case">
+              (planned window — optional, must land before due)
+            </span>
+          </label>
+          <ScheduleEditor
+            value={task.schedule}
+            due={task.due}
+            onChange={(v) => patch({ schedule: v })}
+          />
         </div>
 
         <Section

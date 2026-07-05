@@ -19,11 +19,14 @@ import {
   ChevronsUp,
   ChevronUp,
   ChevronDown,
+  CalendarRange,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { STATUS_META, PRIORITY_META } from '../../lib/constants';
 import { formatDueCompact, isOverdue } from '../../lib/dateUtils';
+import { parseRange } from '../../lib/range';
+import { getFieldMeta } from '../../lib/fieldsConfig';
 import type { Status, Priority } from '../../lib/types';
 
 const STATUS_ICONS: Record<string, LucideIcon> = {
@@ -330,6 +333,126 @@ export function DueBadge({ due, status }: DueBadgeProps) {
         <span className="font-bold">{parts.day}</span>
         <span>{parts.month}</span>
       </span>
+    </span>
+  );
+}
+
+interface ScheduleBadgeProps {
+  schedule?: string | null;
+}
+
+// Compact display of the `schedule` planning window — start (bold day +
+// month, same convention as DueBadge) through end, or an arrow with no
+// second date when the schedule is open-ended.
+export function ScheduleBadge({ schedule }: ScheduleBadgeProps) {
+  if (!schedule) return null;
+  const { start, end } = parseRange(schedule);
+  if (!start) return null;
+  const startParts = formatDueCompact(start);
+  const endParts = end ? formatDueCompact(end) : null;
+  if (!startParts) return null;
+
+  return (
+    <span className="border-ink-600 text-ink-400 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px] tracking-tight">
+      <CalendarRange size={11} className="shrink-0" />
+      <span>
+        <span className="font-bold">{startParts.day}</span>
+        {startParts.month}
+      </span>
+      <span className="text-ink-600">→</span>
+      {endParts && (
+        <span>
+          <span className="font-bold">{endParts.day}</span>
+          {endParts.month}
+        </span>
+      )}
+    </span>
+  );
+}
+
+interface FieldBadgeProps {
+  fieldName?: string | null;
+  size?: 'xs' | 'sm' | 'md';
+}
+
+// The one place field icon/color is resolved into a visual. Three sizes for
+// three contexts: 'xs' inline next to a project name in dense lists (no
+// circle, just a colored glyph), 'sm' a standalone icon-in-circle (project
+// cards), 'md' a full pill with the field name spelled out (project detail
+// header). Field names not in FIELDS_CONFIG fall back silently via
+// getFieldMeta rather than rendering nothing or throwing.
+export function FieldBadge({ fieldName, size = 'sm' }: FieldBadgeProps) {
+  if (!fieldName) return null;
+  const meta = getFieldMeta(fieldName);
+  const Icon = meta.icon;
+
+  if (size === 'xs') {
+    return (
+      <span
+        title={fieldName}
+        className={clsx('inline-flex shrink-0', meta.classes.text)}
+      >
+        <Icon size={11} />
+      </span>
+    );
+  }
+
+  if (size === 'sm') {
+    return (
+      <span
+        title={fieldName}
+        className={clsx(
+          'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border',
+          meta.classes.border,
+          meta.classes.bg,
+          meta.classes.text
+        )}
+      >
+        <Icon size={13} />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      title={fieldName}
+      className={clsx(
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium tracking-wide uppercase',
+        meta.classes.border,
+        meta.classes.bg,
+        meta.classes.text
+      )}
+      style={{ fontVariantCaps: 'small-caps' }}
+    >
+      <Icon size={13} />
+      {fieldName}
+    </span>
+  );
+}
+
+interface ProjectChipProps {
+  name?: string | null;
+  fieldName?: string | null;
+  className?: string;
+}
+
+// Canonical way to reference a project inline — next to a task row, in
+// search results, in breadcrumbs. Anywhere a project shows up as *context*
+// for something else (not as the primary subject, which is ProjectCard),
+// it should render through this component so it always looks the same:
+// field glyph + name, muted, no status/priority (those belong to the task
+// or to the full ProjectCard, not to a passing reference).
+export function ProjectChip({ name, fieldName, className }: ProjectChipProps) {
+  if (!name) return null;
+  return (
+    <span
+      className={clsx(
+        'text-ink-500 inline-flex min-w-0 items-center gap-1 text-xs',
+        className
+      )}
+    >
+      <FieldBadge fieldName={fieldName} size="xs" />
+      <span className="truncate">{name}</span>
     </span>
   );
 }
