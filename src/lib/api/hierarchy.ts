@@ -202,22 +202,11 @@ export const tasksApi = {
       .single();
     return unwrap(response);
   },
-
-  async persistOrder(orderedTaskIds: Id[]): Promise<void> {
-    await supabase
-      .from('tasks_sequence')
-      .delete()
-      .in('task_previous', orderedTaskIds);
-    await supabase
-      .from('tasks_sequence')
-      .delete()
-      .in('task_next', orderedTaskIds);
-    const rows = edgesFromOrder(orderedTaskIds, 'task_previous', 'task_next');
-    if (rows.length) {
-      const response = await supabase.from('tasks_sequence').insert(rows);
-      unwrap(response);
-    }
-  },
+  // persistOrder foi removido: tasks_sequence agora representa relações de
+  // sequência entre tasks (task_previous vem antes de task_next) — ver
+  // src/lib/api/sequence.ts. Não é mais usada para reordenação manual; a
+  // ordem visual de uma seção é calculada cronologicamente a partir de
+  // schedule/due, no client — ver ProjectDetailPage.jsx.
 };
 
 export const tasksSequenceApi = {

@@ -52,15 +52,9 @@ export function useTaskItems(taskId) {
   });
 }
 
-// Orders a set of task ids that share a section using tasks_sequence edges
-export function useOrderedTaskIds(sectionId, tasks, sequenceEdges) {
-  const ids = tasks.filter((t) => t.section_id === sectionId).map((t) => t.id);
-  const edges = sequenceEdges
-    .filter((e) => ids.includes(e.task_previous) && ids.includes(e.task_next))
-    .map((e) => ({ prev: e.task_previous, next: e.task_next }));
-  return orderFromEdges(ids, edges);
-}
-
+// tasks_sequence agora é só o grafo de dependências (ver
+// src/hooks/useDependencies.js) — não existe mais ordenação manual de
+// tasks por linked-list. Sections continuam usando sections_sequence.
 export function useOrderedSectionIds(projectId, sections, sequenceEdges) {
   const ids = sections
     .filter((s) => s.project_id === projectId)
@@ -147,10 +141,7 @@ export function useTaskMutations() {
       onSuccess: invalidate,
     }),
     remove: useMutation({ mutationFn: tasksApi.remove, onSuccess: invalidate }),
-    reorder: useMutation({
-      mutationFn: ({ orderedIds }) => tasksApi.persistOrder(orderedIds),
-      onSuccess: () => qc.invalidateQueries({ queryKey: ['tasksSequence'] }),
-    }),
+    // reorder foi removido — ver comentário em tasksApi (hierarchy.ts).
   };
 }
 

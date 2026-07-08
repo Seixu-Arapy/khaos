@@ -1,5 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Plus, Trash2, Play, Square, X } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Play,
+  Square,
+  X,
+  CornerUpLeft,
+  CornerDownRight,
+} from 'lucide-react';
 import {
   Modal,
   Select,
@@ -23,6 +31,8 @@ import {
   useTaskItemMutations,
   useSections,
   useProjects,
+  useTasks,
+  useTasksSequence,
 } from '../../hooks/useHierarchy';
 import {
   useTaskLogs,
@@ -31,6 +41,8 @@ import {
 } from '../../hooks/useTimeTracking';
 import { useTags, useTagLinks, useTagMutations } from '../../hooks/useTags';
 import { useNotes, useNoteMutations } from '../../hooks/useMoments';
+import { useTaskSequence, useSequenceMutations } from '../../hooks/useSequence';
+import { wouldCreateCycle } from '../../lib/sequenceGraph';
 
 function Section({ title, children, action }) {
   return (
@@ -46,7 +58,30 @@ function Section({ title, children, action }) {
   );
 }
 
-export default function TaskDetailModal({ taskId, task, onClose }) {
+function SequenceChip({ task, onOpen, onRemove }) {
+  return (
+    <span className="bg-ink-700 text-ink-200 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs">
+      <button
+        type="button"
+        onClick={() => onOpen?.(task)}
+        disabled={!onOpen}
+        className={onOpen ? 'hover:text-copper-400' : 'cursor-default'}
+      >
+        {task.name}
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="hover:text-rust-500"
+        aria-label="Remover da sequência"
+      >
+        <X size={11} />
+      </button>
+    </span>
+  );
+}
+
+export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
   const { update, remove } = useTaskMutations();
   const { data: sections = [] } = useSections();
   const { data: projects = [] } = useProjects();
@@ -60,6 +95,17 @@ export default function TaskDetailModal({ taskId, task, onClose }) {
   const tagMutations = useTagMutations();
   const { data: notes = [] } = useNotes({ task_id: taskId });
   const noteMutations = useNoteMutations({ task_id: taskId });
+
+  const { data: allTasks = [] } = useTasks();
+  const { data: seqEdges = [] } = useTasksSequence();
+  const tasksById = useMemo(
+    () => new Map(allTasks.map((t) => [t.id, t])),
+    [allTasks]
+  );
+  const { before, after } = useTaskSequence(task.id, tasksById);
+  const sequenceMutations = useSequenceMutations();
+  const [seqPicker, setSeqPicker] = useState(null); // { kind: 'before' | 'after', search }
+  const [seqError, setSeqError] = useState(null);
 
   const [newItem, setNewItem] = useState('');
   const [newNote, setNewNote] = useState('');
@@ -85,6 +131,38 @@ export default function TaskDetailModal({ taskId, task, onClose }) {
     (sum, log) => sum + rangeDurationMinutes(log.duration),
     0
   );
+
+  const linkedSequenceIds = useMemo(
+    () =>
+      new Set([task.id, ...before.map((t) => t.id), ...after.map((t) => t.id)]),
+    [task.id, before, after]
+  );
+
+  const candidateTasks = seqPicker
+    ? allTasks
+        .filter((t) => !linkedSequenceIds.has(t.id))
+        .filter((t) =>
+          seqPicker.search.trim()
+            ? t.name
+                .toLowerCase()
+                .includes(seqPicker.search.trim().toLowerCase())
+            : true
+        )
+        .slice(0, 20)
+    : [];
+
+  function handleAddSequence(otherTask) {
+    const previousId = seqPicker.kind === 'before' ? otherTask.id : task.id;
+    const nextId = seqPicker.kind === 'before' ? task.id : otherTask.id;
+
+    if (wouldCreateCycle(seqEdges, previousId, nextId)) {
+      setSeqError('Isso criaria uma sequência circular.');
+      return;
+    }
+    setSeqError(null);
+    sequenceMutations.add.mutate({ previousId, nextId });
+    setSeqPicker(null);
+  }
 
   function patch(fields) {
     update.mutate({ id: task.id, patch: fields });
@@ -237,6 +315,122 @@ export default function TaskDetailModal({ taskId, task, onClose }) {
             onChange={(v) => patch({ schedule: v })}
           />
         </div>
+
+        <Section title="Sequência">
+          <div className="space-y-3">
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-ink-400 flex items-center gap-1 text-xs font-medium">
+                  <CornerUpLeft size={12} /> Antes desta tarefa
+                </span>
+                <button
+                  onClick={() => {
+                    setSeqError(null);
+                    setSeqPicker({ kind: 'before', search: '' });
+                  }}
+                  className="text-copper-400 hover:text-copper-300 text-xs"
+                >
+                  + Adicionar
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {before.map((t) => (
+                  <SequenceChip
+                    key={t.id}
+                    task={t}
+                    onOpen={onOpenTask}
+                    onRemove={() =>
+                      sequenceMutations.remove.mutate({
+                        previousId: t.id,
+                        nextId: task.id,
+                      })
+                    }
+                  />
+                ))}
+                {!before.length && (
+                  <p className="text-ink-600 text-xs">Nenhuma</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-ink-400 flex items-center gap-1 text-xs font-medium">
+                  <CornerDownRight size={12} /> Depois desta tarefa
+                </span>
+                <button
+                  onClick={() => {
+                    setSeqError(null);
+                    setSeqPicker({ kind: 'after', search: '' });
+                  }}
+                  className="text-copper-400 hover:text-copper-300 text-xs"
+                >
+                  + Adicionar
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {after.map((t) => (
+                  <SequenceChip
+                    key={t.id}
+                    task={t}
+                    onOpen={onOpenTask}
+                    onRemove={() =>
+                      sequenceMutations.remove.mutate({
+                        previousId: task.id,
+                        nextId: t.id,
+                      })
+                    }
+                  />
+                ))}
+                {!after.length && (
+                  <p className="text-ink-600 text-xs">Nenhuma</p>
+                )}
+              </div>
+            </div>
+
+            {seqPicker && (
+              <div className="border-ink-700 bg-ink-900 rounded-md border p-2.5">
+                <input
+                  autoFocus
+                  value={seqPicker.search}
+                  onChange={(e) =>
+                    setSeqPicker({ ...seqPicker, search: e.target.value })
+                  }
+                  placeholder="Buscar tarefa…"
+                  className="border-ink-600 bg-ink-800 text-ink-100 placeholder:text-ink-500 mb-2 w-full rounded border px-2.5 py-1.5 text-xs focus:outline-hidden"
+                />
+                {seqError && (
+                  <p className="text-rust-500 mb-1.5 text-xs">{seqError}</p>
+                )}
+                <div className="max-h-40 space-y-0.5 overflow-y-auto">
+                  {candidateTasks.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => handleAddSequence(t)}
+                      className="text-ink-300 hover:bg-ink-800 w-full truncate rounded px-2 py-1 text-left text-xs"
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                  {!candidateTasks.length && (
+                    <p className="text-ink-600 px-2 py-1 text-xs">
+                      Nada encontrado
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setSeqPicker(null);
+                    setSeqError(null);
+                  }}
+                  className="text-ink-500 hover:text-ink-300 mt-2 text-xs"
+                >
+                  Fechar
+                </button>
+              </div>
+            )}
+          </div>
+        </Section>
 
         <Section
           title="Tags"

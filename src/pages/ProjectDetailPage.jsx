@@ -17,13 +17,12 @@ import {
   useSections,
   useTasks,
   useSectionsSequence,
-  useTasksSequence,
   useOrderedSectionIds,
-  useOrderedTaskIds,
   useProjectMutations,
   useSectionMutations,
 } from '../hooks/useHierarchy';
 import { STATUSES, PRIORITIES } from '../lib/constants';
+import { parseRange } from '../lib/range';
 import { Select, TextInput, EmptyState } from '../components/common/ui';
 import ScheduleEditor from '../components/common/ScheduleEditor';
 import SectionColumn, {
@@ -31,22 +30,27 @@ import SectionColumn, {
 } from '../components/projects/SectionColumn';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 
+// Ordem cronológica dentro de uma seção: schedule.start primeiro, senão due,
+// senão vai para o final (precisa "se encaixar" — mesmo critério do Gantt).
+function taskChronoKey(task) {
+  const { start } = parseRange(task.schedule);
+  if (start) return start.getTime();
+  if (task.due) return new Date(task.due).getTime();
+  return Infinity;
+}
+
 function SectionBlock({
   sectionId,
   section,
   tasks,
-  taskEdges,
   onOpenTask,
   dragHandleProps,
 }) {
-  const orderedIds = useOrderedTaskIds(sectionId, tasks, taskEdges);
-  const tasksById = useMemo(
-    () => new Map(tasks.map((t) => [t.id, t])),
-    [tasks]
-  );
-  const orderedTasks = orderedIds
-    .map((id) => tasksById.get(id))
-    .filter(Boolean);
+  const orderedTasks = useMemo(() => {
+    return tasks
+      .filter((t) => t.section_id === sectionId)
+      .sort((a, b) => taskChronoKey(a) - taskChronoKey(b));
+  }, [tasks, sectionId]);
 
   return (
     <SectionColumn
@@ -68,7 +72,6 @@ export default function ProjectDetailPage() {
   const { data: sections = [] } = useSections();
   const { data: tasks = [] } = useTasks();
   const { data: sectionEdges = [] } = useSectionsSequence();
-  const { data: taskEdges = [] } = useTasksSequence();
   const { update: updateProject, remove: removeProject } =
     useProjectMutations();
   const { create: createSection, reorder: reorderSections } =
@@ -249,7 +252,6 @@ export default function ProjectDetailPage() {
                       sectionId={sectionId}
                       section={section}
                       tasks={tasks}
-                      taskEdges={taskEdges}
                       onOpenTask={openTask_}
                       dragHandleProps={dragHandleProps}
                     />
@@ -284,9 +286,11 @@ export default function ProjectDetailPage() {
 
       {openTask && (
         <TaskDetailModal
+          key={openTask.id}
           taskId={openTask.id}
           task={openTask}
           onClose={closeTask}
+          onOpenTask={openTask_}
         />
       )}
     </div>

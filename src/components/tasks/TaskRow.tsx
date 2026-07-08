@@ -1,4 +1,4 @@
-import { GripVertical } from 'lucide-react';
+import { GripVertical, CornerUpLeft, CornerDownRight } from 'lucide-react';
 import {
   StatusBadge,
   PriorityBadge,
@@ -6,6 +6,7 @@ import {
   ProjectChip,
 } from '../common/ui';
 import { minutesToHuman } from '../../lib/dateUtils';
+import { useSequenceCounts } from '../../hooks/useSequence';
 import type { Task } from '../../lib/types';
 
 const DIMMED: Task['status'][] = ['done', 'cancelled', 'archived'];
@@ -31,6 +32,7 @@ export default function TaskRow({
 }: TaskRowProps) {
   const draggable = Boolean(dragHandleProps);
   const dimmed = DIMMED.includes(task.status);
+  const seqCounts = useSequenceCounts().get(task.id);
 
   return (
     <div
@@ -66,6 +68,24 @@ export default function TaskRow({
               {minutesToHuman(task.estimate)}
             </span>
           ) : null}
+          {Boolean(seqCounts?.before) && (
+            <span
+              title={`${seqCounts!.before} tarefa(s) antes desta`}
+              className="text-ink-500 flex shrink-0 items-center gap-0.5 text-[11px]"
+            >
+              <CornerUpLeft size={11} />
+              {seqCounts!.before}
+            </span>
+          )}
+          {Boolean(seqCounts?.after) && (
+            <span
+              title={`${seqCounts!.after} tarefa(s) depois desta`}
+              className="text-ink-500 flex shrink-0 items-center gap-0.5 text-[11px]"
+            >
+              <CornerDownRight size={11} />
+              {seqCounts!.after}
+            </span>
+          )}
           <DueBadge due={task.due} status={task.status} />
         </button>
 
