@@ -8,7 +8,6 @@ import {
   Tags,
   Command,
   Plus,
-  Bot,
   Menu,
   X,
   FolderKanban,
@@ -26,6 +25,7 @@ import CommandPalette from './CommandPalette';
 import MomentPrompt from '../common/MomentPrompt';
 import TimezonePicker from '../common/TimezonePicker';
 import ChatPanel from '../assistant/ChatPanel';
+import KhaosIcon from '../common/KhaosIcon'; // Certifique-se de que o caminho relativo está correto
 import { StatusBadge, ProjectChip } from '../common/ui';
 import { useProcessingContext } from '../../lib/processingContext';
 import { useMomentDetector } from '../../hooks/useMomentDetector';
@@ -67,12 +67,7 @@ function bottomLinkClass({ isActive }) {
 function KhaosLogo({ spinning }) {
   return (
     <div className="flex items-center gap-2">
-      <span
-        className={`text-copper-400 text-xl leading-none select-none ${spinning ? 'animate-spin-slow' : ''}`}
-        aria-hidden="true"
-      >
-        ✷
-      </span>
+      <KhaosIcon size="h-5 w-5" spin={spinning} />
       <span className="font-display text-ink-100 text-base font-semibold tracking-tight">
         Khaos
       </span>
@@ -290,10 +285,15 @@ export default function AppShell() {
       {!chatSheetOpen && (
         <button
           onClick={() => setChatSheetOpen(true)}
-          className="bg-copper-500 text-ink-900 shadow-panel fixed right-4 bottom-20 z-30 flex h-13 w-13 items-center justify-center rounded-full lg:hidden"
+          className="shadow-panel fixed right-4 bottom-20 z-30 flex items-center justify-center rounded-full lg:hidden"
           aria-label="Open assistant"
         >
-          <Bot size={22} />
+          <KhaosIcon
+            size="h-13 w-13"
+            bgColor="bg-copper-500"
+            color="text-ink-900"
+            spin={true}
+          />
         </button>
       )}
 

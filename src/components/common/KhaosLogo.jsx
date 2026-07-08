@@ -1,14 +1,15 @@
+import KhaosIcon from '../common/KhaosIcon'; // Ajusta o caminho relativo se necessário
 import ChaoticText from './ChaoticText';
 
 export function KhaosLogo({ spinning }) {
   return (
     <div className="flex items-center gap-2">
-      <span
-        className={`text-copper-400 text-xl leading-none select-none ${spinning ? 'animate-slow' : ''}`}
-        aria-hidden="true"
-      >
-        ✷
-      </span>
+      <KhaosIcon
+        size="h-5 w-5"
+        color="text-copper-400"
+        bgColor="bg-transparent"
+        spin={spinning}
+      />
       <KhaosTitle className="text-base" />
     </div>
   );

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bot, Send, Trash2, User, Loader2, X, Link2 } from 'lucide-react';
+import { Send, Trash2, User, Loader2, X, Link2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useChatAgent, type ChatMessage } from '../../hooks/useChatAgent';
 import { useActiveEntity } from '../../lib/activeEntityContext';
 import { parseMessageSegments } from '../../lib/gemini/entityRefs';
 import { EntityChip } from './EntityChip';
 import ConfirmationCard from './ConfirmationCard';
+import KhaosIcon from '../common/KhaosIcon';
 
 function MessageContent({ text }: { text: string }) {
   const segments = parseMessageSegments(text);
@@ -30,16 +31,18 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
   return (
     <div className={clsx('flex gap-2.5', isUser && 'flex-row-reverse')}>
-      <div
-        className={clsx(
-          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-          isUser
-            ? 'bg-ink-700 text-ink-200'
-            : 'bg-copper-500/15 text-copper-400'
-        )}
-      >
-        {isUser ? <User size={14} /> : <Bot size={14} />}
-      </div>
+      {isUser ? (
+        <div className="bg-ink-700 text-ink-200 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+          <User size={14} />
+        </div>
+      ) : (
+        <KhaosIcon
+          size="h-7 w-7"
+          bgColor="bg-copper-500/15"
+          color="text-copper-400"
+          spin={false}
+        />
+      )}
       <div
         className={clsx(
           'max-w-[85%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed',
@@ -93,9 +96,9 @@ export default function ChatPanel({
     <div className="flex h-full min-h-0 flex-col">
       <div className="border-ink-700 flex shrink-0 items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-2">
-          <Bot size={16} className="text-copper-400" />
+          <KhaosIcon size="h-5 w-5" bgColor="bg-transparent" />
           <h2 className="font-display text-ink-100 text-sm font-semibold">
-            Assistant
+            Kall Khaos
           </h2>
         </div>
         <div className="flex items-center gap-3">
@@ -146,7 +149,7 @@ export default function ChatPanel({
       >
         {!messages.length && (
           <div className="text-ink-600 flex h-full flex-col items-center justify-center gap-2 text-center">
-            <Bot size={26} />
+            <KhaosIcon size="h-10 w-10" bgColor="bg-transparent" spin={true} />
             <p className="text-sm">
               Try: &ldquo;What&lsquo;s overdue?&rdquo; — or open a task and ask
               about it directly.
@@ -177,7 +180,7 @@ export default function ChatPanel({
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask the assistant…"
+          placeholder="Ask Khaos…"
           disabled={isSending}
           className="border-ink-700 bg-ink-800 text-ink-100 placeholder:text-ink-500 focus:border-copper-400 flex-1 rounded-full border px-4 py-2.5 text-sm focus:outline-hidden disabled:opacity-60"
         />
