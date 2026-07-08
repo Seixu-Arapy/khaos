@@ -7,6 +7,7 @@ import {
   X,
   CornerUpLeft,
   CornerDownRight,
+  Clock,
 } from 'lucide-react';
 import {
   Modal,
@@ -19,7 +20,6 @@ import {
 import TargetEditor from '../common/TargetEditor';
 import { STATUSES, PRIORITIES } from '../../lib/constants';
 import {
-  toDatetimeLocalValue,
   minutesToHuman,
   formatDue,
   parseMomentTime,
@@ -104,12 +104,18 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
   );
   const { before, after } = useTaskSequence(task.id, tasksById);
   const sequenceMutations = useSequenceMutations();
-  const [seqPicker, setSeqPicker] = useState(null); // { kind: 'before' | 'after', search }
+  const [seqPicker, setSeqPicker] = useState(null);
   const [seqError, setSeqError] = useState(null);
 
   const [newItem, setNewItem] = useState('');
   const [newNote, setNewNote] = useState('');
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
+
+  const [showDueTime, setShowDueTime] = useState(() => {
+    if (!task.due) return false;
+    const timePart = task.due.split('T')[1];
+    return timePart && !timePart.startsWith('00:00:00');
+  });
 
   const section = sections.find((s) => s.id === task.section_id);
   const project = projects.find((p) => p.id === section?.project_id);
@@ -150,6 +156,42 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
         )
         .slice(0, 20)
     : [];
+
+  const dueValues = useMemo(() => {
+    if (!task.due) return { date: '', time: '' };
+    const d = new Date(task.due);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return {
+      date: `${year}-${month}-${day}`,
+      time: `${hours}:${minutes}`,
+    };
+  }, [task.due]);
+
+  function handleDueChange(dateStr, timeStr, forceTimeActive) {
+    if (!dateStr) {
+      patch({ due: null });
+      return;
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+
+    const isTimeActive =
+      forceTimeActive !== undefined ? forceTimeActive : showDueTime;
+
+    if (isTimeActive && timeStr) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      localDate.setHours(hours, minutes, 0, 0);
+    } else {
+      localDate.setHours(0, 0, 0, 0);
+    }
+
+    patch({ due: localDate.toISOString() });
+  }
 
   function handleAddSequence(otherTask) {
     const previousId = seqPicker.kind === 'before' ? otherTask.id : task.id;
@@ -236,69 +278,107 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div>
-            <label className="text-ink-500 mb-1 block text-xs font-medium">
-              Status
-            </label>
-            <Select
-              value={task.status}
-              onChange={(e) => patch({ status: e.target.value })}
-              className="w-full"
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace('_', ' ')}
-                </option>
-              ))}
-            </Select>
+        {/* Form Grid reorganizada em pares de duas colunas */}
+        <div className="space-y-3">
+          {/* Linha 1: Status | Priority */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-ink-500 mb-1 block text-xs font-medium">
+                Status
+              </label>
+              <Select
+                value={task.status}
+                onChange={(e) => patch({ status: e.target.value })}
+                className="w-full"
+              >
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s.replace('_', ' ')}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className="text-ink-500 mb-1 block text-xs font-medium">
+                Priority
+              </label>
+              <Select
+                value={task.priority || 'medium'}
+                onChange={(e) => patch({ priority: e.target.value })}
+                className="w-full"
+              >
+                {PRIORITIES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
-          <div>
-            <label className="text-ink-500 mb-1 block text-xs font-medium">
-              Priority
-            </label>
-            <Select
-              value={task.priority || 'medium'}
-              onChange={(e) => patch({ priority: e.target.value })}
-              className="w-full"
-            >
-              {PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <label className="text-ink-500 mb-1 block text-xs font-medium">
-              Due
-            </label>
-            <TextInput
-              type="datetime-local"
-              value={toDatetimeLocalValue(task.due)}
-              onChange={(e) =>
-                patch({
-                  due: e.target.value
-                    ? new Date(e.target.value).toISOString()
-                    : null,
-                })
-              }
-            />
-          </div>
-          <div>
-            <label className="text-ink-500 mb-1 block text-xs font-medium">
-              Estimate (min)
-            </label>
-            <TextInput
-              type="number"
-              min="0"
-              value={task.estimate ?? ''}
-              onChange={(e) =>
-                patch({
-                  estimate: e.target.value ? Number(e.target.value) : null,
-                })
-              }
-            />
+
+          {/* Linha 2: Estimate | Due Date (+ Hora opcional) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-ink-500 mb-1 block text-xs font-medium">
+                Estimate (min)
+              </label>
+              <TextInput
+                type="number"
+                min="0"
+                value={task.estimate ?? ''}
+                onChange={(e) =>
+                  patch({
+                    estimate: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-ink-500 block text-xs font-medium">
+                  Due
+                </label>
+                {dueValues.date && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextState = !showDueTime;
+                      setShowDueTime(nextState);
+                      if (!nextState) {
+                        handleDueChange(dueValues.date, '00:00', false);
+                      }
+                    }}
+                    className={`flex items-center gap-0.5 rounded border px-1 text-[10px] transition-colors ${
+                      showDueTime
+                        ? 'border-copper-500 text-copper-400 bg-copper-950/20'
+                        : 'border-ink-700 text-ink-500 hover:text-ink-300'
+                    }`}
+                  >
+                    <Clock size={10} />{' '}
+                    {showDueTime ? 'Remove time' : 'Add time'}
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-1">
+                <TextInput
+                  type="date"
+                  value={dueValues.date}
+                  onChange={(e) => {
+                    handleDueChange(e.target.value, dueValues.time);
+                  }}
+                />
+                {showDueTime && dueValues.date && (
+                  <TextInput
+                    type="time"
+                    value={dueValues.time || '12:00'}
+                    onChange={(e) => {
+                      handleDueChange(dueValues.date, e.target.value, true);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -306,7 +386,8 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
           <label className="text-ink-500 mb-1 block text-xs font-medium">
             Target{' '}
             <span className="text-ink-600 font-normal normal-case">
-              (planned window — optional, must land before due)
+              (planned window — optional, primarily dates, exported as
+              tstzrange)
             </span>
           </label>
           <TargetEditor
@@ -316,12 +397,12 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
           />
         </div>
 
-        <Section title="Sequência">
+        <Section title="Sequence">
           <div className="space-y-3">
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-ink-400 flex items-center gap-1 text-xs font-medium">
-                  <CornerUpLeft size={12} /> Antes desta tarefa
+                  <CornerUpLeft size={12} /> Previous tasks
                 </span>
                 <button
                   onClick={() => {
@@ -330,7 +411,7 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
                   }}
                   className="text-copper-400 hover:text-copper-300 text-xs"
                 >
-                  + Adicionar
+                  + Add
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -347,16 +428,14 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
                     }
                   />
                 ))}
-                {!before.length && (
-                  <p className="text-ink-600 text-xs">Nenhuma</p>
-                )}
+                {!before.length && <p className="text-ink-600 text-xs">None</p>}
               </div>
             </div>
 
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-ink-400 flex items-center gap-1 text-xs font-medium">
-                  <CornerDownRight size={12} /> Depois desta tarefa
+                  <CornerDownRight size={12} /> Next tasks
                 </span>
                 <button
                   onClick={() => {
@@ -365,7 +444,7 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
                   }}
                   className="text-copper-400 hover:text-copper-300 text-xs"
                 >
-                  + Adicionar
+                  + Add
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -382,9 +461,7 @@ export default function TaskDetailModal({ taskId, task, onClose, onOpenTask }) {
                     }
                   />
                 ))}
-                {!after.length && (
-                  <p className="text-ink-600 text-xs">Nenhuma</p>
-                )}
+                {!after.length && <p className="text-ink-600 text-xs">None</p>}
               </div>
             </div>
 
