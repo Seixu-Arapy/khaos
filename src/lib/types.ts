@@ -1,21 +1,3 @@
-// Friendly aliases over the generated Supabase types (src/lib/database.types.ts).
-// Import domain types from here, not from database.types.ts directly.
-//
-// Schema drift vs. the pre-migration code, worth keeping in mind while
-// migrating other files:
-//   - All primary/foreign keys are now uuid strings, not integers.
-//   - moments and work_tag_entities dropped the polymorphic
-//     (entity_type, entity_id) pair in favor of direct nullable FK columns
-//     (project_id / section_id / task_id / event_id). See EntityRef below.
-//   - A new moment_tags / moment_tag_entities pair exists alongside the
-//     original work_tags / work_tag_entities — two separate tagging systems.
-//   - events gained field_id and routine_id FK columns.
-//   - active_task_log is a VIEW, not a table — see ActiveTaskLog below.
-//   - the generated moment_types enum does NOT include 'definition', even
-//     though supabase_triggers.sql adds it via `alter type ... add value`
-//     and MomentPrompt.jsx inserts moment_type: 'definition'. Verify that
-//     migration actually ran against this database before relying on it.
-
 import type { Database } from './database.types';
 
 type Tables = Database['public']['Tables'];

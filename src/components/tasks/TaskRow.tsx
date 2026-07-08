@@ -9,7 +9,7 @@ import { minutesToHuman } from '../../lib/dateUtils';
 import { useSequenceCounts } from '../../hooks/useSequence';
 import type { Task } from '../../lib/types';
 
-const DIMMED: Task['status'][] = ['done', 'cancelled', 'archived'];
+const DIMMED: Task['status'][] = ['done', 'cancelled'];
 
 interface TaskRowProps {
   task: Task;

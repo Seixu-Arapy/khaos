@@ -353,21 +353,6 @@ $$;
 ALTER FUNCTION "public"."trg_moment_priority"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."trg_moment_schedule"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
-    AS $$
-begin
-  if OLD.schedule IS DISTINCT FROM NEW.schedule then
-    perform insert_moment(moment_entity_column(TG_TABLE_NAME), NEW.id, 'scheduled', NEW.schedule::text);
-  end if;
-  return NEW;
-end;
-$$;
-
-
-ALTER FUNCTION "public"."trg_moment_schedule"() OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."trg_moment_scheduled"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
@@ -463,6 +448,138 @@ $$;
 
 
 ALTER FUNCTION "public"."trg_moment_target"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."trg_status_waiting_section"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+begin
+  -- Quando uma sequência de seções é criada, a próxima seção entra em modo 'waiting'
+  UPDATE public.sections
+  SET status = 'waiting'::public.section_statuses -- Ajuste para o nome real do seu enum de status
+  WHERE id = NEW.section_next
+    AND status != 'waiting'::public.section_statuses;
+    
+  return NEW;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."trg_status_waiting_section"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."trg_status_waiting_section"() IS 'Automated workflow function that immediately flags a sequential section as "waiting" as soon as it is linked as a next step in sections_sequence.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."trg_status_waiting_task"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+begin
+  -- Quando um vínculo de sequência é criado, a próxima task entra em modo 'waiting'
+  UPDATE public.tasks
+  SET status = 'waiting'::public.task_statuses -- Ajuste para o nome real do seu enum de status, se aplicável
+  WHERE id = NEW.task_next
+    AND status != 'waiting'::public.task_statuses; -- Evita updates desnecessários
+    
+  return NEW;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."trg_status_waiting_task"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."trg_status_waiting_task"() IS 'Automated workflow function that immediately flags a sequential task as "waiting" as soon as it is linked as a next step in tasks_sequence.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."trg_status_waiting_to_todo_section"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+declare
+  r_next record;
+  v_pending_count integer;
+begin
+  if OLD.status is distinct from NEW.status and NEW.status = 'done' then
+    
+    for r_next in 
+      SELECT ss.section_next 
+      FROM public.sections_sequence ss
+      JOIN public.sections s ON s.id = ss.section_next
+      WHERE ss.section_id = NEW.id AND s.status = 'waiting'
+    loop
+      
+      SELECT count(*)
+      INTO v_pending_count
+      FROM public.sections_sequence ss_check
+      JOIN public.sections s_check ON s_check.id = ss_check.section_id
+      WHERE ss_check.section_next = r_next.section_next
+        AND s_check.status != 'done';
+        
+      if v_pending_count = 0 then
+        UPDATE public.sections
+        SET status = 'todo'
+        WHERE id = r_next.section_next;
+      end if;
+      
+    end loop;
+  end if;
+  
+  return NEW;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."trg_status_waiting_to_todo_section"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."trg_status_waiting_to_todo_section"() IS 'Pipeline function that checks sections_sequence when a section goes "done", unlocking subsequent sections from waiting to todo once all barriers are cleared.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."trg_status_waiting_to_todo_task"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+declare
+  r_next record;
+  v_pending_count integer;
+begin
+  if OLD.status is distinct from NEW.status and NEW.status = 'done' then
+    
+    for r_next in 
+      SELECT ts.task_next 
+      FROM public.tasks_sequence ts
+      JOIN public.tasks t ON t.id = ts.task_next
+      WHERE ts.task_id = NEW.id AND t.status = 'waiting'
+    loop
+      
+      SELECT count(*)
+      INTO v_pending_count
+      FROM public.tasks_sequence ts_check
+      JOIN public.tasks t_check ON t_check.id = ts_check.task_id
+      WHERE ts_check.task_next = r_next.task_next
+        AND t_check.status != 'done';
+        
+      if v_pending_count = 0 then
+        UPDATE public.tasks
+        SET status = 'todo'
+        WHERE id = r_next.task_next;
+      end if;
+      
+    end loop;
+  end if;
+  
+  return NEW;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."trg_status_waiting_to_todo_task"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."trg_status_waiting_to_todo_task"() IS 'Pipeline function that checks tasks_sequence when a task goes "done", unlocking subsequent tasks from waiting to todo once all barriers are cleared.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."trigger_update_sections_status"() RETURNS "trigger"
@@ -1443,18 +1560,6 @@ CREATE OR REPLACE TRIGGER "moment_priority_tasks" AFTER UPDATE ON "public"."task
 
 
 
-CREATE OR REPLACE TRIGGER "moment_schedule_projects" AFTER UPDATE ON "public"."projects" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_schedule"();
-
-
-
-CREATE OR REPLACE TRIGGER "moment_schedule_sections" AFTER UPDATE ON "public"."sections" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_schedule"();
-
-
-
-CREATE OR REPLACE TRIGGER "moment_schedule_tasks" AFTER UPDATE ON "public"."tasks" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_schedule"();
-
-
-
 CREATE OR REPLACE TRIGGER "moment_scheduled_events" AFTER INSERT OR UPDATE ON "public"."events" FOR EACH ROW WHEN (("new"."deleted_at" IS NULL)) EXECUTE FUNCTION "public"."trg_moment_scheduled"();
 
 
@@ -1500,6 +1605,38 @@ CREATE OR REPLACE TRIGGER "tg_section_delete_cascade" BEFORE UPDATE ON "public".
 
 
 CREATE OR REPLACE TRIGGER "tg_task_delete_cascade" BEFORE UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."trg_fn_task_delete_cascade"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_status_waiting_section" AFTER INSERT ON "public"."sections_sequence" FOR EACH ROW EXECUTE FUNCTION "public"."trg_status_waiting_section"();
+
+
+
+COMMENT ON TRIGGER "trg_status_waiting_section" ON "public"."sections_sequence" IS 'Trigger that automates section dependency pipeline states upon sequence insertion.';
+
+
+
+CREATE OR REPLACE TRIGGER "trg_status_waiting_task" AFTER INSERT ON "public"."tasks_sequence" FOR EACH ROW EXECUTE FUNCTION "public"."trg_status_waiting_task"();
+
+
+
+COMMENT ON TRIGGER "trg_status_waiting_task" ON "public"."tasks_sequence" IS 'Trigger that automates task dependency pipeline states upon sequence insertion.';
+
+
+
+CREATE OR REPLACE TRIGGER "trg_status_waiting_to_todo_section" AFTER UPDATE ON "public"."sections" FOR EACH ROW EXECUTE FUNCTION "public"."trg_status_waiting_to_todo_section"();
+
+
+
+COMMENT ON TRIGGER "trg_status_waiting_to_todo_section" ON "public"."sections" IS 'Trigger managing automated section status progression from waiting to todo based on dependency graph resolution.';
+
+
+
+CREATE OR REPLACE TRIGGER "trg_status_waiting_to_todo_task" AFTER UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."trg_status_waiting_to_todo_task"();
+
+
+
+COMMENT ON TRIGGER "trg_status_waiting_to_todo_task" ON "public"."tasks" IS 'Trigger managing automated task status progression from waiting to todo based on dependency graph resolution.';
 
 
 
@@ -1842,12 +1979,6 @@ GRANT ALL ON FUNCTION "public"."trg_moment_priority"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."trg_moment_schedule"() TO "anon";
-GRANT ALL ON FUNCTION "public"."trg_moment_schedule"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."trg_moment_schedule"() TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."trg_moment_scheduled"() TO "anon";
 GRANT ALL ON FUNCTION "public"."trg_moment_scheduled"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trg_moment_scheduled"() TO "service_role";
@@ -1875,6 +2006,30 @@ GRANT ALL ON FUNCTION "public"."trg_moment_stopped"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."trg_moment_target"() TO "anon";
 GRANT ALL ON FUNCTION "public"."trg_moment_target"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trg_moment_target"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_section"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_section"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_section"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_task"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_task"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_task"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_to_todo_section"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_to_todo_section"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_to_todo_section"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_to_todo_task"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_to_todo_task"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trg_status_waiting_to_todo_task"() TO "service_role";
 
 
 

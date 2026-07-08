@@ -11,6 +11,7 @@ export const STATUSES: Status[] = [
   'done',
   'paused',
   'cancelled',
+  'waiting',
 ];
 
 // public.priority
@@ -110,6 +111,14 @@ export const STATUS_META: Record<Status, StatusMeta> = {
     circleBg: '#2C1F1F',
     dot: 'bg-rose-800',
   },
+  waiting: {
+    label: 'Waiting on previous',
+    acronym: 'WAIT',
+    icon: 'Hourglass',
+    iconColor: '#8B93A6',
+    circleBg: '#212836',
+    dot: 'bg-slate-400',
+  },
 };
 
 interface PriorityMeta {
@@ -169,4 +178,5 @@ export const OPEN_STATUSES: Status[] = [
   'in_progress',
   'in_review',
   'paused',
+  'waiting',
 ];
