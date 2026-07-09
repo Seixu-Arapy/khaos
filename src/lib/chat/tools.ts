@@ -102,6 +102,8 @@ const looseFiltersSchema = {
     'Range-typed columns (e.g. tstzrange columns like "duration" or "schedule") have no separate start/end column to filter — ' +
     'to test overlap with a window, use operator "ov" with a Postgres range literal value, ' +
     'e.g. [{"column":"duration","operator":"ov","value":"[2026-07-09 00:00:00,2026-07-10 00:00:00)"}] to find events on 2026-07-09. ' +
+    'When filtering by a name or other free-text column on a value the person typed (not a value you already confirmed from a prior result), ' +
+    'use operator "ilike" with %wildcards% instead of "eq" — stored values may differ in case, language, or phrasing from what was typed. ' +
     'Prefer a real array of these objects; a JSON-encoded string of the same shape is also accepted.',
   items: {
     type: 'object',
