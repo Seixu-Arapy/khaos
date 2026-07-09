@@ -386,51 +386,55 @@ export default function TaskDetailModal({
   }
 
   return (
-    <Modal open onClose={onClose} title="Task" width="max-w-2xl">
+    <Modal
+      open
+      onClose={onClose}
+      title={
+        <TextInput
+          value={nameDraft}
+          onChange={(e) => setNameDraft(e.target.value)}
+          onBlur={flushName}
+          className="focus:bg-ink-900! w-full border-0! bg-transparent! px-0! py-0! text-lg! font-medium!"
+        />
+      }
+      width="max-w-2xl"
+    >
       <div className="space-y-4">
-        <div>
-          <TextInput
-            value={nameDraft}
-            onChange={(e) => setNameDraft(e.target.value)}
-            onBlur={flushName}
-            className="focus:bg-ink-900! border-0! bg-transparent! px-0! text-lg! font-medium!"
-          />
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <span className="text-ink-500 hover:text-ink-300 inline-flex min-w-0 items-center gap-1 text-xs">
-              <FieldBadge fieldName={currentFieldName} size="xs" />
-              <select
-                value={section?.project_id ?? ''}
-                onChange={(e) => {
-                  const projectId = e.target.value;
-                  const firstSection = sections.find(
-                    (s) => s.project_id === projectId
-                  );
-                  if (firstSection) patch({ section_id: firstSection.id });
-                }}
-                className="focus-visible:ring-copper-400 max-w-32 cursor-pointer truncate border-0 bg-transparent p-0 text-xs focus:outline-none focus-visible:ring-1"
-              >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </span>
-            <span className="text-ink-600 text-xs">›</span>
-            <Select
-              value={task.section_id ?? ''}
-              className="py-0.5! text-xs!"
-              onChange={(e) => patch({ section_id: e.target.value })}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-ink-500 hover:text-ink-300 inline-flex min-w-0 items-center gap-1 text-xs">
+            <FieldBadge fieldName={currentFieldName} size="xs" />
+            <select
+              value={section?.project_id ?? ''}
+              onChange={(e) => {
+                const projectId = e.target.value;
+                const firstSection = sections.find(
+                  (s) => s.project_id === projectId
+                );
+                if (firstSection) patch({ section_id: firstSection.id });
+              }}
+              className="focus-visible:ring-copper-400 max-w-32 cursor-pointer truncate border-0 bg-transparent p-0 text-xs focus:outline-none focus-visible:ring-1"
             >
-              {sections
-                .filter((s) => s.project_id === section?.project_id)
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-            </Select>
-          </div>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </span>
+          <span className="text-ink-600 text-xs">›</span>
+          <Select
+            value={task.section_id ?? ''}
+            className="py-0.5! text-xs!"
+            onChange={(e) => patch({ section_id: e.target.value })}
+          >
+            {sections
+              .filter((s) => s.project_id === section?.project_id)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+          </Select>
         </div>
 
         {/* Form Grid reorganizada em pares de duas colunas */}

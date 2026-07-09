@@ -287,7 +287,9 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="border-ink-700 flex items-center justify-between border-b px-5 py-3.5">
-          <h2 className="font-display text-ink-100 text-lg">{title}</h2>
+          <h2 className="font-display text-ink-100 min-w-0 flex-1 text-lg">
+            {title}
+          </h2>
           <IconButton label="Close" onClick={onClose}>
             <X size={18} />
           </IconButton>
