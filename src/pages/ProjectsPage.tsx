@@ -16,6 +16,18 @@ import {
   Select,
 } from '../components/common/ui';
 import ProjectCard from '../components/projects/ProjectCard';
+import type { Id } from '../lib/types';
+
+interface ProjectDraft {
+  name: string;
+  fieldId: string;
+}
+
+interface ProjectStats {
+  sectionCount: number;
+  taskCount: number;
+  doneCount: number;
+}
 
 export default function ProjectsPage() {
   const { data: fields = [] } = useFields();
@@ -26,10 +38,10 @@ export default function ProjectsPage() {
   const { create: createProject } = useProjectMutations();
 
   const [newProjectOpen, setNewProjectOpen] = useState(false);
-  const [draft, setDraft] = useState({ name: '', fieldId: '' });
+  const [draft, setDraft] = useState<ProjectDraft>({ name: '', fieldId: '' });
 
   const stats = useMemo(() => {
-    const map = new Map();
+    const map = new Map<Id, ProjectStats>();
     for (const project of projects) {
       const projectSections = sections.filter(
         (s) => s.project_id === project.id
@@ -46,7 +58,7 @@ export default function ProjectsPage() {
     return map;
   }, [projects, sections, tasks]);
 
-  function submitProject(e) {
+  function submitProject(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.name.trim()) return;
     createProject.mutate(

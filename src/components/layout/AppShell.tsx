@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import type { NavLinkRenderProps } from 'react-router-dom';
 import { useIsFetching, useIsMutating } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -12,6 +13,7 @@ import {
   X,
   FolderKanban,
   RefreshCw,
+  type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
 import {
@@ -29,8 +31,15 @@ import { StatusBadge, ProjectChip } from '../common/ui';
 import { useProcessingContext } from '../../lib/processingContext';
 import { useMomentDetector } from '../../hooks/useMomentDetector';
 
+interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  end?: boolean;
+}
+
 // Bottom tab bar items (mobile) — Mantido sem o link fixo do Assistant porque ele vive no balão flutuante
-const BOTTOM_NAV = [
+const BOTTOM_NAV: NavItem[] = [
   { to: '/', label: 'Today', icon: LayoutDashboard, end: true },
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
@@ -38,7 +47,7 @@ const BOTTOM_NAV = [
 ];
 
 // Full sidebar nav (desktop) — Mantido sem o link fixo do Assistant porque ele vive no painel lateral persistente
-const SIDEBAR_NAV = [
+const SIDEBAR_NAV: NavItem[] = [
   { to: '/', label: 'Today', icon: LayoutDashboard, end: true },
   { to: '/tasks', label: 'All tasks', icon: ListTodo },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
@@ -47,7 +56,7 @@ const SIDEBAR_NAV = [
   { to: '/tags', label: 'Tags', icon: Tags },
 ];
 
-function sidebarLinkClass({ isActive }) {
+function sidebarLinkClass({ isActive }: NavLinkRenderProps): string {
   return clsx(
     'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors',
     isActive
@@ -56,14 +65,14 @@ function sidebarLinkClass({ isActive }) {
   );
 }
 
-function bottomLinkClass({ isActive }) {
+function bottomLinkClass({ isActive }: NavLinkRenderProps): string {
   return clsx(
     'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors',
     isActive ? 'text-copper-400' : 'text-ink-500'
   );
 }
 
-function KhaosLogo({ spinning }) {
+function KhaosLogo({ spinning }: { spinning?: boolean }) {
   return (
     <div className="flex items-center gap-2">
       <KhaosIcon size="h-5 w-5" spin={spinning} />
@@ -74,7 +83,13 @@ function KhaosLogo({ spinning }) {
   );
 }
 
-function Sidebar({ onNavigate, onClose, spinning }) {
+interface SidebarProps {
+  onNavigate: () => void;
+  onClose?: () => void;
+  spinning?: boolean;
+}
+
+function Sidebar({ onNavigate, onClose, spinning }: SidebarProps) {
   const { data: fields = [] } = useFields();
   const { data: projects = [] } = useProjects();
   const { create } = useProjectMutations();
@@ -188,7 +203,7 @@ export default function AppShell() {
 
   // Cmd+K palette shortcut, Esc closes any overlay
   useEffect(() => {
-    function onKey(e) {
+    function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setDrawerOpen(false);

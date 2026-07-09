@@ -6,6 +6,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -29,14 +30,23 @@ import SectionColumn, {
 } from '../components/projects/SectionColumn';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import TargetEditor from '../components/common/TargetEditor';
+import type { Id, Priority, Section, Status, Task } from '../lib/types';
 
 // Ordem cronológica dentro de uma seção: target.start primeiro, senão due,
 // senão vai para o final (precisa "se encaixar" — mesmo critério do Gantt).
-function taskChronoKey(task) {
+function taskChronoKey(task: Task): number {
   const { start } = parseRange(task.target);
   if (start) return start.getTime();
   if (task.due) return new Date(task.due).getTime();
   return Infinity;
+}
+
+interface SectionBlockProps {
+  sectionId: Id;
+  section: Section;
+  tasks: Task[];
+  onOpenTask: (task: Task) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLSpanElement>;
 }
 
 function SectionBlock({
@@ -45,7 +55,7 @@ function SectionBlock({
   tasks,
   onOpenTask,
   dragHandleProps,
-}) {
+}: SectionBlockProps) {
   const orderedTasks = useMemo(() => {
     return tasks
       .filter((t) => t.section_id === sectionId)
@@ -63,8 +73,7 @@ function SectionBlock({
 }
 
 export default function ProjectDetailPage() {
-  const { id } = useParams();
-  const projectId = id;
+  const { id: projectId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -84,7 +93,7 @@ export default function ProjectDetailPage() {
 
   const project = projects.find((p) => p.id === projectId);
   const orderedSectionIds = useOrderedSectionIds(
-    projectId,
+    projectId ?? '',
     sections,
     sectionEdges
   );
@@ -96,7 +105,7 @@ export default function ProjectDetailPage() {
   const openTaskId = searchParams.get('taskId');
   const openTask = openTaskId ? tasks.find((t) => t.id === openTaskId) : null;
 
-  if (!project) {
+  if (!projectId || !project) {
     return (
       <div className="px-6 py-5">
         <EmptyState
@@ -108,18 +117,17 @@ export default function ProjectDetailPage() {
     );
   }
 
-  function handleSectionDragEnd(e) {
+  function handleSectionDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    const oldIndex = orderedSectionIds.indexOf(active.id);
-    const newIndex = orderedSectionIds.indexOf(over.id);
+    const oldIndex = orderedSectionIds.indexOf(active.id as Id);
+    const newIndex = orderedSectionIds.indexOf(over.id as Id);
     reorderSections.mutate({
-      projectId,
       orderedIds: arrayMove(orderedSectionIds, oldIndex, newIndex),
     });
   }
 
-  function addSection(e) {
+  function addSection(e: React.FormEvent) {
     e.preventDefault();
     if (!newSectionName.trim()) return;
     createSection.mutate({
@@ -130,7 +138,7 @@ export default function ProjectDetailPage() {
     setNewSectionName('');
   }
 
-  function openTask_(task) {
+  function openTask_(task: Task) {
     setSearchParams({ taskId: String(task.id) });
   }
   function closeTask() {
@@ -157,7 +165,7 @@ export default function ProjectDetailPage() {
             onChange={(e) =>
               updateProject.mutate({
                 id: projectId,
-                patch: { status: e.target.value },
+                patch: { status: e.target.value as Status },
               })
             }
           >
@@ -172,7 +180,7 @@ export default function ProjectDetailPage() {
             onChange={(e) =>
               updateProject.mutate({
                 id: projectId,
-                patch: { priority: e.target.value },
+                patch: { priority: e.target.value as Priority },
               })
             }
           >
@@ -227,7 +235,7 @@ export default function ProjectDetailPage() {
             </span>
           </label>
           <TargetEditor
-            value={project.target}
+            value={project.target as string | null}
             due={project.due}
             onChange={(v) =>
               updateProject.mutate({ id: projectId, patch: { target: v } })

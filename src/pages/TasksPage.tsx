@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { List, Columns3, BarChart3 } from 'lucide-react';
+import { List, Columns3, BarChart3, type LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 import {
   useTasks,
@@ -11,12 +11,15 @@ import {
 import { useTags, useTagLinks } from '../hooks/useTags';
 import { STATUSES, PRIORITIES, OPEN_STATUSES } from '../lib/constants';
 import { Select, TextInput } from '../components/common/ui';
-import TaskList from '../components/tasks/TaskList';
+import TaskList, { type ProjectInfo } from '../components/tasks/TaskList';
 import KanbanBoard from '../components/tasks/KanbanBoard';
 import PriorityBoard from '../components/tasks/PriorityBoard';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
+import type { Id, Priority, Status, Task } from '../lib/types';
 
-const VIEWS = [
+type ViewId = 'list' | 'kanban' | 'priority';
+
+const VIEWS: { id: ViewId; label: string; icon: LucideIcon }[] = [
   { id: 'list', label: 'List', icon: List },
   { id: 'kanban', label: 'Board', icon: Columns3 },
   { id: 'priority', label: 'Priority', icon: BarChart3 },
@@ -31,11 +34,15 @@ export default function TasksPage() {
   const { data: tagLinks = [] } = useTagLinks();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [view, setView] = useState('list');
-  const [statusFilter, setStatusFilter] = useState('open');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [projectFilter, setProjectFilter] = useState('all');
-  const [tagFilter, setTagFilter] = useState('all');
+  const [view, setView] = useState<ViewId>('list');
+  const [statusFilter, setStatusFilter] = useState<Status | 'open' | 'all'>(
+    'open'
+  );
+  const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>(
+    'all'
+  );
+  const [projectFilter, setProjectFilter] = useState<Id | 'all'>('all');
+  const [tagFilter, setTagFilter] = useState<Id | 'all'>('all');
   const [search, setSearch] = useState('');
 
   const sectionsById = useMemo(
@@ -55,7 +62,7 @@ export default function TasksPage() {
   // to" — computed once here and handed to every view (list/kanban/priority)
   // so the ProjectChip lookup logic doesn't get duplicated three times.
   const projectInfoById = useMemo(() => {
-    const map = new Map();
+    const map = new Map<Id, ProjectInfo>();
     tasks.forEach((t) => {
       const section = t.section_id ? sectionsById.get(t.section_id) : null;
       const project = section?.project_id
@@ -76,8 +83,8 @@ export default function TasksPage() {
     if (tagFilter === 'all') return null;
     return new Set(
       tagLinks
-        .filter((l) => l.entity_type === 'task' && l.work_tag_id === tagFilter)
-        .map((l) => l.entity_id)
+        .filter((l) => l.work_tag_id === tagFilter && l.task_id)
+        .map((l) => l.task_id as Id)
     );
   }, [tagLinks, tagFilter]);
 
@@ -97,7 +104,7 @@ export default function TasksPage() {
       )
         return false;
       if (projectFilter !== 'all') {
-        const section = sectionsById.get(t.section_id);
+        const section = t.section_id ? sectionsById.get(t.section_id) : null;
         if (!section || section.project_id !== projectFilter) return false;
       }
       if (taggedTaskIds && !taggedTaskIds.has(t.id)) return false;
@@ -121,7 +128,7 @@ export default function TasksPage() {
   const openTaskId = searchParams.get('taskId');
   const openTask = openTaskId ? tasks.find((t) => t.id === openTaskId) : null;
 
-  function openTask_(task) {
+  function openTask_(task: Task) {
     setSearchParams({ taskId: String(task.id) });
   }
   function closeTask() {
@@ -160,7 +167,9 @@ export default function TasksPage() {
         />
         <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) =>
+            setStatusFilter(e.target.value as Status | 'open' | 'all')
+          }
         >
           <option value="open">Open (not done/cancelled)</option>
           <option value="all">All statuses</option>
@@ -172,7 +181,9 @@ export default function TasksPage() {
         </Select>
         <Select
           value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
+          onChange={(e) =>
+            setPriorityFilter(e.target.value as Priority | 'all')
+          }
         >
           <option value="all">All priorities</option>
           {PRIORITIES.map((p) => (
@@ -237,6 +248,7 @@ export default function TasksPage() {
           taskId={openTask.id}
           task={openTask}
           onClose={closeTask}
+          onOpenTask={openTask_}
         />
       )}
     </div>
