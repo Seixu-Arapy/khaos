@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import type { Id, Routine, Event } from '../types';
+import type { Event, Id, NewRoutine, Routine, RoutinePatch } from '../types';
 
 function unwrap<T>({ data, error }: { data: T | null; error: unknown }): T {
   if (error) throw error;
@@ -20,7 +20,7 @@ export const routinesApi = {
     return unwrap(response);
   },
 
-  create: async (payload: Partial<Routine>): Promise<Routine> => {
+  create: async (payload: NewRoutine): Promise<Routine> => {
     const response = await supabase
       .from('routines')
       .insert(payload)
@@ -29,7 +29,7 @@ export const routinesApi = {
     return unwrap(response);
   },
 
-  update: async (id: Id, patch: Partial<Routine>): Promise<Routine> => {
+  update: async (id: Id, patch: RoutinePatch): Promise<Routine> => {
     const response = await supabase
       .from('routines')
       .update(patch)

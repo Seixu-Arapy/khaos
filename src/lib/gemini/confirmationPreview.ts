@@ -65,8 +65,11 @@ export async function buildConfirmationPreview(
     let before: Record<string, unknown> | null = null;
 
     if (entityType && id) {
+      // a.table is a union of every allowed table, and not all of them
+      // (e.g. sections_sequence) have an `id` column — but entityType is
+      // only set for tasks/projects, both of which do.
       const { data } = await supabase
-        .from(a.table)
+        .from(a.table as never)
         .select('*')
         .eq('id', id)
         .single();
