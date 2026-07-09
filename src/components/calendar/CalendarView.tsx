@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { addDays, format, isToday, startOfWeek } from 'date-fns';
 import { parseRange } from '../../lib/range';
@@ -13,6 +13,7 @@ import type { Event, Task, Project, Field, TaskLog } from '../../lib/types';
 
 const HOUR_HEIGHT = 48; // px
 const DAY_HEIGHT = HOUR_HEIGHT * 24;
+const DAY_COUNT_OPTIONS = [3, 5, 7] as const;
 
 export interface DueItem {
   type: 'task' | 'project';
@@ -95,14 +96,18 @@ export default function CalendarView({
   onEventClick,
   onMilestoneClick,
 }: CalendarViewProps) {
-  const [anchor, setAnchor] = useState(new Date());
+  const [anchor, setAnchor] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  );
+  const [daysToShow, setDaysToShow] = useState<number>(7);
   const [showLoggedTime, setShowLoggedTime] = useState(false);
   const now = useNow();
-  const weekStart = startOfWeek(anchor, { weekStartsOn: 1 });
+  const scrollRef = useRef<HTMLDivElement>(null);
   const days = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart]
+    () => Array.from({ length: daysToShow }, (_, i) => addDays(anchor, i)),
+    [anchor, daysToShow]
   );
+  const gridColsStyle = { gridTemplateColumns: `48px repeat(${daysToShow}, 1fr)` };
 
   const tasksById = useMemo(
     () => new Map(tasks.map((t) => [t.id, t])),
@@ -268,6 +273,26 @@ export default function CalendarView({
     return { logsByDay: logsMap, daySummaryByDay: summaryMap };
   }, [taskLogs, events, days, tasksById, eventsByDay, now]);
 
+  // Open on the earliest event in the visible range instead of midnight, so
+  // switching weeks or day-counts doesn't dump you on an empty-looking view.
+  // Falls back to a reasonable default when there's nothing scheduled at all.
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    let earliestMinutes = Infinity;
+    for (const evs of eventsByDay.values()) {
+      for (const ev of evs) {
+        earliestMinutes = Math.min(earliestMinutes, minutesFromMidnight(ev.start));
+      }
+    }
+    const targetMinutes = Number.isFinite(earliestMinutes)
+      ? earliestMinutes
+      : 8 * 60;
+    scrollRef.current.scrollTop = Math.max(
+      0,
+      (targetMinutes / 60) * HOUR_HEIGHT - HOUR_HEIGHT
+    );
+  }, [eventsByDay]);
+
   function handleColumnClick(day: Date, e: React.MouseEvent<HTMLDivElement>) {
     if (e.target !== e.currentTarget) return; // ignore clicks on event blocks (they stop propagation)
     const rect = e.currentTarget.getBoundingClientRect();
@@ -282,27 +307,48 @@ export default function CalendarView({
     <div className="flex h-full flex-col">
       <div className="mb-3 flex items-center gap-2">
         <button
-          onClick={() => setAnchor(addDays(anchor, -7))}
+          onClick={() => setAnchor(addDays(anchor, -daysToShow))}
           className="text-ink-400 hover:bg-ink-800 rounded p-1"
         >
           <ChevronLeft size={16} />
         </button>
         <button
-          onClick={() => setAnchor(addDays(anchor, 7))}
+          onClick={() => setAnchor(addDays(anchor, daysToShow))}
           className="text-ink-400 hover:bg-ink-800 rounded p-1"
         >
           <ChevronRight size={16} />
         </button>
         <button
-          onClick={() => setAnchor(new Date())}
+          onClick={() =>
+            setAnchor(
+              daysToShow === 7
+                ? startOfWeek(new Date(), { weekStartsOn: 1 })
+                : new Date()
+            )
+          }
           className="border-ink-700 text-ink-300 hover:bg-ink-800 rounded border px-2 py-0.5 text-xs"
         >
           Today
         </button>
         <span className="text-ink-300 ml-2 text-sm">
-          {format(weekStart, 'MMM d')} –{' '}
-          {format(addDays(weekStart, 6), 'MMM d, yyyy')}
+          {format(days[0], 'MMM d')} –{' '}
+          {format(days[days.length - 1], 'MMM d, yyyy')}
         </span>
+        <div className="border-ink-700 ml-2 flex overflow-hidden rounded border text-xs">
+          {DAY_COUNT_OPTIONS.map((n) => (
+            <button
+              key={n}
+              onClick={() => setDaysToShow(n)}
+              className={`px-2 py-0.5 ${
+                daysToShow === n
+                  ? 'bg-ink-700 text-ink-100'
+                  : 'text-ink-400 hover:bg-ink-800'
+              }`}
+            >
+              {n}d
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setShowLoggedTime((v) => !v)}
           className="text-ink-300 ml-auto flex items-center gap-2 text-xs"
@@ -318,8 +364,14 @@ export default function CalendarView({
         </button>
       </div>
 
-      <div className="border-ink-700 flex-1 overflow-y-auto rounded-t-lg border border-b-0">
-        <div className="border-ink-700 bg-ink-900 sticky top-0 z-10 grid grid-cols-[48px_repeat(7,1fr)] border-b">
+      <div
+        ref={scrollRef}
+        className="border-ink-700 flex-1 overflow-y-auto rounded-t-lg border border-b-0"
+      >
+        <div
+          style={gridColsStyle}
+          className="border-ink-700 bg-ink-900 sticky top-0 z-10 grid border-b"
+        >
           <div />
           {days.map((d) => {
             const dueItems = dueItemsByDay.get(format(d, 'yyyy-MM-dd')) || [];
@@ -358,7 +410,7 @@ export default function CalendarView({
           })}
         </div>
 
-        <div className="grid grid-cols-[48px_repeat(7,1fr)]">
+        <div style={gridColsStyle} className="grid">
           <div style={{ height: DAY_HEIGHT }} className="relative">
             {Array.from({ length: 24 }).map((_, h) => (
               <div
@@ -468,7 +520,10 @@ export default function CalendarView({
       </div>
 
       {showLoggedTime && (
-        <div className="border-ink-700 bg-ink-800 grid grid-cols-[48px_repeat(7,1fr)] rounded-b-lg border border-t-0">
+        <div
+          style={gridColsStyle}
+          className="border-ink-700 bg-ink-800 grid rounded-b-lg border border-t-0"
+        >
           <div />
           {days.map((day) => {
             const summary = daySummaryByDay.get(format(day, 'yyyy-MM-dd'));
