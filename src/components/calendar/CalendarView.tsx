@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { addDays, format, isToday, startOfWeek } from 'date-fns';
 import { parseRange } from '../../lib/range';
-import { minutesToHuman } from '../../lib/dateUtils';
+import { minutesToHuman, isOverdue } from '../../lib/dateUtils';
 import { EVENT_TYPE_META, OPEN_STATUSES } from '../../lib/constants';
 import { getTimezone } from '../../lib/timezone';
 import { getEventLabel } from '../../lib/eventLabel';
@@ -13,7 +13,7 @@ import type { Event, Task, Project, Field, TaskLog } from '../../lib/types';
 
 const HOUR_HEIGHT = 48; // px
 const DAY_HEIGHT = HOUR_HEIGHT * 24;
-const DAY_COUNT_OPTIONS = [3, 5, 7] as const;
+const DAY_COUNT_OPTIONS = [1, 3, 5, 7] as const;
 
 export interface DueItem {
   type: 'task' | 'project';
@@ -28,6 +28,9 @@ type PositionedEvent = Event & {
   projectName: string | null;
   projectField: string | null;
   progress: TaskProgress | null;
+  isDone: boolean;
+  isCancelled: boolean;
+  isLate: boolean;
 };
 
 interface PositionedLogSegment {
@@ -151,6 +154,9 @@ export default function CalendarView({
       const progress = task
         ? computeTaskProgress(task, logsByTask.get(task.id) ?? [])
         : null;
+      const isDone = task?.status === 'done' || task?.status === 'cancelled';
+      const isCancelled = task?.status === 'cancelled';
+      const isLate = task ? isOverdue(task.due, task.status) : false;
       if (map.has(key))
         map.get(key)!.push({
           ...ev,
@@ -159,6 +165,9 @@ export default function CalendarView({
           label: getEventLabel(ev, task?.name),
           projectName: project?.name ?? null,
           projectField,
+          isDone,
+          isCancelled,
+          isLate,
           progress,
         });
     }
@@ -293,6 +302,10 @@ export default function CalendarView({
     );
   }, [eventsByDay]);
 
+  function defaultAnchorFor(n: number): Date {
+    return n === 7 ? startOfWeek(new Date(), { weekStartsOn: 1 }) : new Date();
+  }
+
   function handleColumnClick(day: Date, e: React.MouseEvent<HTMLDivElement>) {
     if (e.target !== e.currentTarget) return; // ignore clicks on event blocks (they stop propagation)
     const rect = e.currentTarget.getBoundingClientRect();
@@ -319,13 +332,7 @@ export default function CalendarView({
           <ChevronRight size={16} />
         </button>
         <button
-          onClick={() =>
-            setAnchor(
-              daysToShow === 7
-                ? startOfWeek(new Date(), { weekStartsOn: 1 })
-                : new Date()
-            )
-          }
+          onClick={() => setAnchor(defaultAnchorFor(daysToShow))}
           className="border-ink-700 text-ink-300 hover:bg-ink-800 rounded border px-2 py-0.5 text-xs"
         >
           Today
@@ -338,7 +345,10 @@ export default function CalendarView({
           {DAY_COUNT_OPTIONS.map((n) => (
             <button
               key={n}
-              onClick={() => setDaysToShow(n)}
+              onClick={() => {
+                setDaysToShow(n);
+                setAnchor(defaultAnchorFor(n));
+              }}
               className={`px-2 py-0.5 ${
                 daysToShow === n
                   ? 'bg-ink-700 text-ink-100'
@@ -468,10 +478,16 @@ export default function CalendarView({
                         e.stopPropagation();
                         onEventClick(ev);
                       }}
-                      style={{ top, height }}
-                      className={`absolute left-1 flex flex-col overflow-hidden rounded border-l-2 px-1.5 py-0.5 text-left text-[11px] leading-tight ${showLoggedTime ? 'right-2.5' : 'right-1'} ${meta.bg} ${meta.text}`}
+                      style={{ top, height, opacity: ev.isDone ? 0.38 : 1 }}
+                      className={`absolute left-1 flex flex-col overflow-hidden rounded border-l-2 px-1.5 py-0.5 text-left text-[11px] leading-tight ${showLoggedTime ? 'right-2.5' : 'right-1'} ${meta.bg} ${meta.text} ${
+                        ev.isLate && !ev.isDone
+                          ? 'border-red-400 animate-pulse'
+                          : ''
+                      }`}
                     >
-                      <span className="shrink-0 truncate font-medium">
+                      <span
+                        className={`shrink-0 truncate font-medium ${ev.isCancelled ? 'line-through' : ''}`}
+                      >
                         {ev.label}
                       </span>
                       {ev.projectName && (
