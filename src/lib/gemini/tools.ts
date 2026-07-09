@@ -97,7 +97,9 @@ function cleanPayload(obj: any): any {
 const looseFiltersSchema = {
   type: ['array', 'string'],
   description:
-    'Row filters, combined with AND. Prefer a real array of {column, operator, value} objects; a JSON-encoded string of the same shape is also accepted.',
+    'Row filters, combined with AND. Each entry MUST have all three keys column, operator and value — never a plain {column: value} map. ' +
+    'Example: to filter event_type = scheduled, pass [{"column":"event_type","operator":"eq","value":"scheduled"}]. ' +
+    'Prefer a real array of these objects; a JSON-encoded string of the same shape is also accepted.',
   items: {
     type: 'object',
     properties: {
@@ -280,7 +282,7 @@ export async function executeTool(
 ): Promise<unknown> {
   switch (name) {
     case 'search_schema': {
-      return cleanPayload(searchSchema((args as any).query));
+      return cleanPayload(await searchSchema((args as any).query));
     }
     case 'query_rows': {
       const a = args as any;
