@@ -1,16 +1,36 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, format, isToday, startOfWeek } from 'date-fns';
 import { parseRange } from '../../lib/range';
 import { EVENT_TYPE_META } from '../../lib/constants';
 import { getTimezone } from '../../lib/timezone';
 import { getEventLabel } from '../../lib/eventLabel';
-import type { Event, Task } from '../../lib/types';
+import { ProjectChip, TaskProgressBar } from '../common/ui';
+import { computeTaskProgress, type TaskProgress } from '../../lib/taskProgress';
+import type { Event, Task, Project, Field, TaskLog } from '../../lib/types';
 
 const HOUR_HEIGHT = 48; // px
 const DAY_HEIGHT = HOUR_HEIGHT * 24;
 
-type PositionedEvent = Event & { start: Date; end: Date; label: string };
+type PositionedEvent = Event & {
+  start: Date;
+  end: Date;
+  label: string;
+  projectName: string | null;
+  projectField: string | null;
+  progress: TaskProgress | null;
+};
+
+// Ticks once a minute so the current-time line drifts without re-deriving
+// the whole calendar on every render.
+function useNow(intervalMs = 60_000): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
 
 function minutesFromMidnight(date: Date): number {
   const tz = getTimezone();
@@ -28,6 +48,9 @@ function minutesFromMidnight(date: Date): number {
 interface CalendarViewProps {
   events: Event[];
   tasks?: Task[];
+  projects?: Project[];
+  fields?: Field[];
+  taskLogs?: TaskLog[];
   onSlotClick: (date: Date) => void;
   onEventClick: (event: Event) => void;
 }
@@ -35,10 +58,14 @@ interface CalendarViewProps {
 export default function CalendarView({
   events,
   tasks = [],
+  projects = [],
+  fields = [],
+  taskLogs = [],
   onSlotClick,
   onEventClick,
 }: CalendarViewProps) {
   const [anchor, setAnchor] = useState(new Date());
+  const now = useNow();
   const weekStart = startOfWeek(anchor, { weekStartsOn: 1 });
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -49,6 +76,23 @@ export default function CalendarView({
     () => new Map(tasks.map((t) => [t.id, t])),
     [tasks]
   );
+  const projectsById = useMemo(
+    () => new Map(projects.map((p) => [p.id, p])),
+    [projects]
+  );
+  const fieldsById = useMemo(
+    () => new Map(fields.map((f) => [f.id, f])),
+    [fields]
+  );
+  const logsByTask = useMemo(() => {
+    const map = new Map<string, TaskLog[]>();
+    for (const log of taskLogs) {
+      if (!log.task_id) continue;
+      if (!map.has(log.task_id)) map.set(log.task_id, []);
+      map.get(log.task_id)!.push(log);
+    }
+    return map;
+  }, [taskLogs]);
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, PositionedEvent[]>(
@@ -62,17 +106,27 @@ export default function CalendarView({
       const key = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(
         start
       ); // "YYYY-MM-DD"
-      const taskName = ev.task_id ? tasksById.get(ev.task_id)?.name : null;
+      const task = ev.task_id ? tasksById.get(ev.task_id) : null;
+      const project = ev.project_id ? projectsById.get(ev.project_id) : null;
+      const projectField = project?.field_id
+        ? (fieldsById.get(project.field_id)?.name ?? null)
+        : null;
+      const progress = task
+        ? computeTaskProgress(task, logsByTask.get(task.id) ?? [])
+        : null;
       if (map.has(key))
         map.get(key)!.push({
           ...ev,
           start,
           end: end || new Date(start.getTime() + 30 * 60000),
-          label: getEventLabel(ev, taskName),
+          label: getEventLabel(ev, task?.name),
+          projectName: project?.name ?? null,
+          projectField,
+          progress,
         });
     }
     return map;
-  }, [events, days, tasksById]);
+  }, [events, days, tasksById, projectsById, fieldsById, logsByTask]);
 
   function handleColumnClick(day: Date, e: React.MouseEvent<HTMLDivElement>) {
     if (e.target !== e.currentTarget) return; // ignore clicks on event blocks (they stop propagation)
@@ -117,7 +171,7 @@ export default function CalendarView({
           {days.map((d) => (
             <div
               key={d.toISOString()}
-              className="border-ink-700 border-l px-1.5 py-2 text-center"
+              className={`border-ink-700 border-l px-1.5 py-2 text-center ${isToday(d) ? 'bg-copper-500/10' : ''}`}
             >
               <p className="text-ink-500 text-[11px] tracking-wide uppercase">
                 {format(d, 'EEE')}
@@ -147,12 +201,13 @@ export default function CalendarView({
           </div>
           {days.map((day) => {
             const dayEvents = eventsByDay.get(format(day, 'yyyy-MM-dd')) || [];
+            const todayColumn = isToday(day);
             return (
               <div
                 key={day.toISOString()}
                 onClick={(e) => handleColumnClick(day, e)}
                 style={{ height: DAY_HEIGHT }}
-                className="border-ink-700 relative cursor-pointer border-l"
+                className={`border-ink-700 relative cursor-pointer border-l ${todayColumn ? 'bg-copper-500/5' : ''}`}
               >
                 {Array.from({ length: 24 }).map((_, h) => (
                   <div
@@ -161,6 +216,14 @@ export default function CalendarView({
                     className="bg-ink-800 pointer-events-none absolute h-px w-full"
                   />
                 ))}
+                {todayColumn && (
+                  <div
+                    style={{ top: (minutesFromMidnight(now) / 60) * HOUR_HEIGHT }}
+                    className="pointer-events-none absolute z-20 h-0.5 w-full bg-copper-400"
+                  >
+                    <span className="bg-copper-400 absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rounded-full" />
+                  </div>
+                )}
                 {dayEvents.map((ev) => {
                   const top =
                     (minutesFromMidnight(ev.start) / 60) * HOUR_HEIGHT;
@@ -179,9 +242,24 @@ export default function CalendarView({
                         onEventClick(ev);
                       }}
                       style={{ top, height }}
-                      className={`absolute right-1 left-1 overflow-hidden rounded border-l-2 px-1.5 py-0.5 text-left text-[11px] leading-tight ${meta.bg} ${meta.text}`}
+                      className={`absolute right-1 left-1 flex flex-col overflow-hidden rounded border-l-2 px-1.5 py-0.5 text-left text-[11px] leading-tight ${meta.bg} ${meta.text}`}
                     >
-                      <span className="font-medium">{ev.label}</span>
+                      <span className="shrink-0 truncate font-medium">
+                        {ev.label}
+                      </span>
+                      {ev.projectName && (
+                        <ProjectChip
+                          name={ev.projectName}
+                          fieldName={ev.projectField}
+                          className="mt-0.5 shrink-0"
+                        />
+                      )}
+                      {ev.progress && (
+                        <TaskProgressBar
+                          progress={ev.progress}
+                          className="mt-0.5 shrink-0"
+                        />
+                      )}
                     </button>
                   );
                 })}

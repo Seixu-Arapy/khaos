@@ -1,17 +1,41 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useEvents } from '../hooks/useEvents';
-import { useTasks } from '../hooks/useHierarchy';
+import { useTasks, useProjects, useFields } from '../hooks/useHierarchy';
+import { useAllTaskLogs } from '../hooks/useTimeTracking';
 import { Button } from '../components/common/ui';
 import CalendarView from '../components/calendar/CalendarView';
 import EventModal from '../components/calendar/EventModal';
-import type { Event, Task } from '../lib/types';
+import type { Event, Task, Project, Field, TaskLog } from '../lib/types';
 
 export default function CalendarPage() {
   const { data: events = [] } = useEvents() as { data: Event[] };
   const { data: tasks = [] } = useTasks() as { data: Task[] };
+  const { data: projects = [] } = useProjects() as { data: Project[] };
+  const { data: fields = [] } = useFields() as { data: Field[] };
+  const { data: taskLogs = [] } = useAllTaskLogs() as { data: TaskLog[] };
+  const [searchParams, setSearchParams] = useSearchParams();
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [creatingAt, setCreatingAt] = useState<Date | null>(null);
+
+  // Deep-link support for the [[event:id]] chat chip — mirrors the
+  // ?taskId= pattern used by TasksPage/DashboardPage: derive the open
+  // event straight from the URL at render time rather than syncing it
+  // into local state via an effect.
+  const deepLinkedEventId = searchParams.get('eventId');
+  const deepLinkedEvent = deepLinkedEventId
+    ? (events.find((e) => e.id === deepLinkedEventId) ?? null)
+    : null;
+  const openEvent = editingEvent ?? deepLinkedEvent;
+
+  function closeEditing() {
+    setEditingEvent(null);
+    if (deepLinkedEventId) {
+      searchParams.delete('eventId');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }
 
   return (
     <div className="flex h-full flex-col px-6 py-5">
@@ -25,6 +49,9 @@ export default function CalendarPage() {
       <CalendarView
         events={events}
         tasks={tasks}
+        projects={projects}
+        fields={fields}
+        taskLogs={taskLogs}
         onSlotClick={setCreatingAt}
         onEventClick={setEditingEvent}
       />
@@ -35,12 +62,7 @@ export default function CalendarPage() {
           onClose={() => setCreatingAt(null)}
         />
       )}
-      {editingEvent && (
-        <EventModal
-          event={editingEvent}
-          onClose={() => setEditingEvent(null)}
-        />
-      )}
+      {openEvent && <EventModal event={openEvent} onClose={closeEditing} />}
     </div>
   );
 }
