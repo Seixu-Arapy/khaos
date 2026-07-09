@@ -1,6 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { formatRange } from '../range';
-import type { Event, EventType, Id } from '../types';
+import type { Event, EventPatch, EventType, Id } from '../types';
 
 function unwrap<T>({
   data,
@@ -71,7 +71,7 @@ export const eventsApi = {
       projectId,
       fieldId,
     } = patch;
-    const dbPatch: Record<string, unknown> = {};
+    const dbPatch: EventPatch = {};
     if (name !== undefined) dbPatch.name = name;
     if (eventType !== undefined) dbPatch.event_type = eventType;
     if (recurrent !== undefined) dbPatch.recurrent = recurrent;

@@ -1,12 +1,22 @@
 import { supabase } from '../supabaseClient';
 import { edgesFromOrder } from '../reorder';
 import type {
+  FieldPatch,
   Id,
+  NewField,
+  NewProject,
+  NewSection,
+  NewTask,
+  NewTaskItem,
   Project,
+  ProjectPatch,
   Section,
+  SectionPatch,
   SectionsSequence,
   Task,
   TaskItem,
+  TaskItemPatch,
+  TaskPatch,
   TasksSequence,
 } from '../types';
 
@@ -24,7 +34,7 @@ export const fieldsApi = {
       .order('order', { ascending: true });
     return unwrap(response);
   },
-  create: async (payload: Record<string, unknown>): Promise<unknown> => {
+  create: async (payload: NewField): Promise<unknown> => {
     const response = await supabase
       .from('fields')
       .insert(payload)
@@ -32,7 +42,7 @@ export const fieldsApi = {
       .single();
     return unwrap(response);
   },
-  update: async (id: Id, patch: Record<string, unknown>): Promise<unknown> => {
+  update: async (id: Id, patch: FieldPatch): Promise<unknown> => {
     const response = await supabase
       .from('fields')
       .update(patch)
@@ -66,7 +76,7 @@ export const projectsApi = {
       .single();
     return unwrap(response);
   },
-  create: async (payload: Partial<Project>): Promise<Project> => {
+  create: async (payload: NewProject): Promise<Project> => {
     const response = await supabase
       .from('projects')
       .insert(payload)
@@ -74,7 +84,7 @@ export const projectsApi = {
       .single();
     return unwrap(response);
   },
-  update: async (id: Id, patch: Partial<Project>): Promise<Project> => {
+  update: async (id: Id, patch: ProjectPatch): Promise<Project> => {
     const response = await supabase
       .from('projects')
       .update(patch)
@@ -112,7 +122,7 @@ export const sectionsApi = {
       .order('id', { ascending: true });
     return unwrap(response);
   },
-  create: async (payload: Partial<Section>): Promise<Section> => {
+  create: async (payload: NewSection): Promise<Section> => {
     const response = await supabase
       .from('sections')
       .insert(payload)
@@ -120,7 +130,7 @@ export const sectionsApi = {
       .single();
     return unwrap(response);
   },
-  update: async (id: Id, patch: Partial<Section>): Promise<Section> => {
+  update: async (id: Id, patch: SectionPatch): Promise<Section> => {
     const response = await supabase
       .from('sections')
       .update(patch)
@@ -148,11 +158,14 @@ export const sectionsApi = {
       .from('sections_sequence')
       .delete()
       .in('section_next', orderedSectionIds);
+    // edgesFromOrder (reorder.js) builds these via a computed key, so TS
+    // can't see the result as the named { section_previous, section_next }
+    // shape it actually has — remove this cast once reorder.js is TS.
     const rows = edgesFromOrder(
       orderedSectionIds,
       'section_previous',
       'section_next'
-    );
+    ) as { section_previous: Id; section_next: Id }[];
     if (rows.length) {
       const response = await supabase.from('sections_sequence').insert(rows);
       unwrap(response);
@@ -184,7 +197,7 @@ export const tasksApi = {
       .is('deleted_at', null);
     return unwrap(response);
   },
-  create: async (payload: Partial<Task>): Promise<Task> => {
+  create: async (payload: NewTask): Promise<Task> => {
     const response = await supabase
       .from('tasks')
       .insert(payload)
@@ -192,7 +205,7 @@ export const tasksApi = {
       .single();
     return unwrap(response);
   },
-  update: async (id: Id, patch: Partial<Task>): Promise<Task> => {
+  update: async (id: Id, patch: TaskPatch): Promise<Task> => {
     const response = await supabase
       .from('tasks')
       .update(patch)
@@ -234,7 +247,7 @@ export const taskItemsApi = {
       .order('order', { ascending: true });
     return unwrap(response);
   },
-  create: async (payload: Partial<TaskItem>): Promise<TaskItem> => {
+  create: async (payload: NewTaskItem): Promise<TaskItem> => {
     const response = await supabase
       .from('task_items')
       .insert(payload)
@@ -242,7 +255,7 @@ export const taskItemsApi = {
       .single();
     return unwrap(response);
   },
-  update: async (id: Id, patch: Partial<TaskItem>): Promise<TaskItem> => {
+  update: async (id: Id, patch: TaskItemPatch): Promise<TaskItem> => {
     const response = await supabase
       .from('task_items')
       .update(patch)
