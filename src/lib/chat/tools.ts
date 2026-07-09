@@ -249,20 +249,74 @@ function applyFilters<
   return q;
 }
 
+// The model occasionally collapses filters into a plain {column: value} map
+// (e.g. {"id": "Chicago"}) instead of the documented array-of-objects shape.
+// Treat every entry as an equality filter rather than dropping it — silently
+// coercing an unrecognized shape to [] here would strip the WHERE clause
+// entirely, turning an update/delete meant for one row into one that hits
+// every row in the table.
+function objectToFilters(obj: Record<string, unknown>): RowFilter[] {
+  return Object.entries(obj).map(([column, value]) => ({
+    column,
+    operator: 'eq' as const,
+    value,
+  }));
+}
+
 // Filters may legitimately arrive as a real array, or (because the model
 // sometimes emits them that way, and Groq's schema now permits it) as a
-// JSON-encoded string. Normalize to an array here, once, for every tool.
-function coerceFilters(raw: unknown): RowFilter[] {
+// JSON-encoded string, or as a plain object map. Normalize to an array here,
+// once, for every tool.
+export function coerceFilters(raw: unknown): RowFilter[] {
   if (Array.isArray(raw)) return raw as RowFilter[];
+  if (raw !== null && typeof raw === 'object') {
+    return objectToFilters(raw as Record<string, unknown>);
+  }
   if (typeof raw === 'string') {
     try {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed !== null && typeof parsed === 'object') {
+        return objectToFilters(parsed);
+      }
+      return [];
     } catch {
       return [];
     }
   }
   return [];
+}
+
+// The model sometimes calls the singular/plural variant of a tool name, or
+// uses "set" instead of the documented "values" key for insert_row/
+// update_rows. Normalize both before dispatch so a cosmetic mismatch doesn't
+// surface as "Unknown tool" or silently drop the payload.
+const TOOL_NAME_ALIASES: Record<string, string> = {
+  update_row: 'update_rows',
+  insert_rows: 'insert_row',
+  delete_row: 'delete_rows',
+  query_row: 'query_rows',
+};
+
+export function normalizeToolName(name: string): string {
+  return TOOL_NAME_ALIASES[name] ?? name;
+}
+
+// Like filters, "values" (or the "set" alias) may arrive as a real object or
+// as a JSON-encoded string.
+export function coerceValues(
+  raw: Record<string, unknown>
+): Record<string, unknown> {
+  const candidate = raw.values ?? raw.set ?? {};
+  if (typeof candidate === 'string') {
+    try {
+      const parsed = JSON.parse(candidate);
+      return parsed !== null && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return candidate as Record<string, unknown>;
 }
 
 function coerceBoolean(raw: unknown, fallback: boolean): boolean {
@@ -281,9 +335,10 @@ function coerceInt(raw: unknown, fallback: number): number {
 }
 
 export async function executeTool(
-  name: string,
+  rawName: string,
   args: Record<string, unknown>
 ): Promise<unknown> {
+  const name = normalizeToolName(rawName);
   switch (name) {
     case 'search_schema': {
       return cleanPayload(searchSchema((args as any).query));
@@ -308,11 +363,11 @@ export async function executeTool(
       return { rows: cleanPayload(data ?? []), count: data?.length ?? 0 };
     }
     case 'insert_row': {
-      const a = args as unknown as InsertRowArgs;
+      const a = args as any;
       assertAllowedTable(a.table);
       const { data, error } = await supabase
         .from(a.table)
-        .insert(a.values as never)
+        .insert(coerceValues(a) as never)
         .select();
       if (error) throw new Error(error.message);
       return { inserted: cleanPayload(data ?? []) };
@@ -320,7 +375,7 @@ export async function executeTool(
     case 'update_rows': {
       const a = args as any;
       assertAllowedTable(a.table);
-      let q = supabase.from(a.table).update(a.values as never);
+      let q = supabase.from(a.table).update(coerceValues(a) as never);
       q = applyFilters(q, coerceFilters(a.filters));
       const { data, error } = await q.select();
       if (error) throw new Error(error.message);
