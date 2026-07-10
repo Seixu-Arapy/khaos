@@ -29,6 +29,7 @@ import {
   minutesToHuman,
   formatDue,
   parseMomentTime,
+  isOverdue,
 } from '../../lib/dateUtils';
 import { parseRange, rangeDurationMinutes } from '../../lib/range';
 import { computeTaskProgress } from '../../lib/taskProgress';
@@ -526,7 +527,15 @@ export default function TaskDetailModal({
 
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-ink-500 block text-xs font-medium">
+                <label className="text-ink-500 flex items-center gap-1 text-xs font-medium">
+                  <Flag
+                    size={11}
+                    className={
+                      isOverdue(task.due, task.status)
+                        ? 'text-rust-500'
+                        : 'text-copper-400'
+                    }
+                  />
                   Due
                 </label>
                 {dueValues.date && (
