@@ -7,6 +7,8 @@ import {
   Trash2,
   CalendarRange,
   Info,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -40,6 +42,17 @@ export default function SectionColumn({
   const [menuOpen, setMenuOpen] = useState(false);
   const [targetOpen, setTargetOpen] = useState(false);
 
+  const settled = section.status === 'done' || section.status === 'cancelled';
+  const [collapsed, setCollapsed] = useState(() => settled);
+  // Auto-collapse the moment a section is marked done/cancelled, adjusted
+  // during render (not an effect) — doesn't force it back open if the user
+  // re-activates it while already collapsed.
+  const [prevSettled, setPrevSettled] = useState(settled);
+  if (settled !== prevSettled) {
+    setPrevSettled(settled);
+    if (settled) setCollapsed(true);
+  }
+
   function addTask(e: React.FormEvent) {
     e.preventDefault();
     if (!newTaskName.trim()) return;
@@ -60,6 +73,17 @@ export default function SectionColumn({
         >
           <GripVertical size={14} />
         </span>
+        <button
+          onClick={() => setCollapsed((c) => !c)}
+          className="text-ink-500 hover:text-ink-200 flex shrink-0 items-center"
+          title={collapsed ? 'Expand section' : 'Collapse section'}
+        >
+          {collapsed ? (
+            <ChevronRight size={14} />
+          ) : (
+            <ChevronDown size={14} />
+          )}
+        </button>
         <input
           value={section.name}
           onChange={(e) =>
@@ -70,6 +94,11 @@ export default function SectionColumn({
           }
           className="text-ink-100 flex-1 bg-transparent text-sm font-medium focus:outline-none"
         />
+        {collapsed && (
+          <span className="text-ink-600 shrink-0 font-mono text-xs">
+            {orderedTasks.length}
+          </span>
+        )}
         <span
           className="text-ink-600 hover:text-ink-300 flex shrink-0 items-center"
           title="Tasks below are ordered by target start date, then due date — tasks with neither go last."
@@ -126,26 +155,28 @@ export default function SectionColumn({
         </div>
       </div>
 
-      <div className="p-2">
-        <div className="space-y-0.5">
-          {orderedTasks.map((task) => (
-            <TaskRow key={task.id} task={task} onOpen={onOpenTask} />
-          ))}
-        </div>
+      {!collapsed && (
+        <div className="p-2">
+          <div className="space-y-0.5">
+            {orderedTasks.map((task) => (
+              <TaskRow key={task.id} task={task} onOpen={onOpenTask} />
+            ))}
+          </div>
 
-        <form
-          onSubmit={addTask}
-          className="mt-1 flex items-center gap-1.5 px-2 py-1"
-        >
-          <Plus size={13} className="text-ink-600" />
-          <input
-            value={newTaskName}
-            onChange={(e) => setNewTaskName(e.target.value)}
-            placeholder="Add a task…"
-            className="text-ink-300 placeholder:text-ink-600 flex-1 bg-transparent py-0.5 text-sm focus:outline-none"
-          />
-        </form>
-      </div>
+          <form
+            onSubmit={addTask}
+            className="mt-1 flex items-center gap-1.5 px-2 py-1"
+          >
+            <Plus size={13} className="text-ink-600" />
+            <input
+              value={newTaskName}
+              onChange={(e) => setNewTaskName(e.target.value)}
+              placeholder="Add a task…"
+              className="text-ink-300 placeholder:text-ink-600 flex-1 bg-transparent py-0.5 text-sm focus:outline-none"
+            />
+          </form>
+        </div>
+      )}
 
       <Modal
         open={targetOpen}
