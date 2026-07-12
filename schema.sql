@@ -1607,7 +1607,7 @@ CREATE TABLE IF NOT EXISTS "public"."work_tags" (
 ALTER TABLE "public"."work_tags" OWNER TO "postgres";
 
 
-COMMENT ON TABLE "public"."work_tags" IS 'AI-generated taxonomy reflecting the core operational nature of the work. Used by the AI to detect execution patterns, analyze structural metrics (e.g., how long task types usually take), and auto-suggest sub-tasks or project templates based on previous similar initiatives.';
+COMMENT ON TABLE "public"."work_tags" IS 'Taxonomy reflecting the core operational nature of the work, settable by the user directly or assigned by the AI. Used by the AI to detect execution patterns, analyze structural metrics (e.g., how long task types usually take), and auto-suggest sub-tasks or project templates based on previous similar initiatives.';
 
 
 
