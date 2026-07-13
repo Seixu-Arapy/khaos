@@ -11,10 +11,11 @@ and dropped for this; there's no way to delete a previously-published one
 from this side, so treat any old backlog Artifact link as stale/unused going
 forward, not authoritative). The file is the canonical record.
 
-Format: plain document, not a table. Each item is its **title in bold** (code
-+ marker + short title on one line), followed immediately by a full
-description paragraph underneath — the paragraph is the actual content, not
-a caption. Group into `## Open` and `## Resolved`.
+Format: a quick-scan markdown table first (code · marker · title · date),
+immediately followed by the full write-up for every item — each one's
+**title in bold** (code + marker + short title on one line), then a full
+description paragraph underneath, not a caption. Group into `## Open` and
+`## Resolved`, table-then-details within each group.
 
 Each open item in the backlog:
 
@@ -42,7 +43,10 @@ Each open item in the backlog:
 
 Write real detail in each item's status, not a one-line stub — enough that the
 user can tell what actually happened without re-reading the chat. Not a full
-transcript, but not a cryptic fragment either.
+transcript, but not a cryptic fragment either. Break each description into
+several short paragraphs (2-4 sentences, blank line between) rather than one
+dense block — a single wall of text is hard to scan even when the content is
+good.
 
 ## Self-verify pushes with a pull
 
