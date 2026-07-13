@@ -89,7 +89,7 @@ export default function FoundationsSection() {
 
   return (
     <>
-      <section className="border-ink-700 mb-8 rounded-lg border p-5">
+      <section className="border-ink-700 mb-8 border p-5">
         <GroupTitle>Fonts</GroupTitle>
         <div className="flex flex-col gap-5">
           {fontRows.map(({ token, stack, family, loaded }) => (
@@ -123,7 +123,7 @@ export default function FoundationsSection() {
         </div>
       </section>
 
-      <section className="border-ink-700 mb-8 rounded-lg border p-5">
+      <section className="border-ink-700 mb-8 border p-5">
         <GroupTitle>Colors</GroupTitle>
         <div className="flex flex-col gap-4">
           {Object.entries(COLOR_GROUPS).map(([group, steps]) => (
@@ -138,7 +138,7 @@ export default function FoundationsSection() {
                   return (
                     <div key={step} className="flex flex-col items-center gap-1">
                       <div
-                        className="border-ink-700 h-12 w-16 rounded-md border"
+                        className="border-ink-700 h-12 w-16 border"
                         style={{ backgroundColor: value || undefined }}
                         title={`${varName}: ${value}`}
                       />
@@ -157,7 +157,7 @@ export default function FoundationsSection() {
         </div>
       </section>
 
-      <section className="border-ink-700 mb-8 rounded-lg border p-5">
+      <section className="border-ink-700 mb-8 border p-5">
         <GroupTitle>Radii &amp; shadows</GroupTitle>
         <div className="flex flex-wrap items-end gap-6">
           {RADIUS_TOKENS.map((r) => {
@@ -181,7 +181,7 @@ export default function FoundationsSection() {
             return (
               <div key={varName} className="flex flex-col items-center gap-1.5">
                 <div
-                  className="bg-ink-800 h-16 w-24 rounded-lg"
+                  className="bg-ink-800 h-16 w-24"
                   style={{ boxShadow: value || undefined }}
                 />
                 <span className="text-ink-500 font-mono text-[10px]">
@@ -193,7 +193,7 @@ export default function FoundationsSection() {
         </div>
       </section>
 
-      <section className="border-ink-700 mb-8 rounded-lg border p-5">
+      <section className="border-ink-700 mb-8 border p-5">
         <GroupTitle>Text as used today (ad hoc)</GroupTitle>
         <p className="text-ink-500 mb-4 max-w-prose text-xs">
           There is no defined type scale yet — pages pick sizes by hand. These

@@ -50,7 +50,7 @@ export function Section({
 }) {
   return (
     <section className="border-ink-800 mb-10 border-t pt-6">
-      <h2 className="text-ink-600 mb-5 font-mono text-[10px] tracking-[0.25em] uppercase">
+      <h2 className="text-ink-400 mb-5 font-mono text-[10px] tracking-[0.25em] uppercase">
         {title}
       </h2>
       <div className="flex flex-wrap items-center gap-5">{children}</div>
@@ -67,7 +67,7 @@ export function Swatch({
 }) {
   return (
     <div className="flex flex-col items-start gap-2">
-      <span className="text-ink-600 font-mono text-[10px]">{label}</span>
+      <span className="text-ink-400 font-mono text-[10px]">{label}</span>
       {children}
     </div>
   );
@@ -88,7 +88,7 @@ export function Chamber({ index, name, tagline, children }: ChamberProps) {
           <h1 className="text-ink-100">
             <KhaoticText text={name} family="serif" className="text-3xl" />
           </h1>
-          <p className="text-ink-600 mt-2 font-mono text-[11px] tracking-widest uppercase">
+          <p className="text-ink-400 mt-2 font-mono text-[11px] tracking-widest uppercase">
             {tagline}
           </p>
         </div>

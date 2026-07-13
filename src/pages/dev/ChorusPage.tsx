@@ -8,6 +8,10 @@ import { Chamber } from './vaultUI';
 // that same ~1.11-1.25 range, which is also exactly what Tailwind's own
 // default text-* scale already uses. Nothing here is invented — it's the
 // app's existing ad hoc sizes, named and made deliberate.
+//
+// No rounded corners anywhere on this page, and the scale is shown as
+// actual proportionally-sized glyphs, not a horizontal bar -- font-size
+// is a size, not a length, so a bar chart was the wrong shape for it.
 
 interface Step {
   token: string;
@@ -36,7 +40,7 @@ const STEPS: Step[] = [
     family: 'mono',
     deity: 'Hypnos',
     icon: CloudMoon,
-    color: '#7a5fa0',
+    color: '#9478b8',
   },
   {
     token: 'text-caption',
@@ -48,7 +52,7 @@ const STEPS: Step[] = [
     family: 'body',
     deity: 'Aether',
     icon: Sparkles,
-    color: '#e7e9e6',
+    color: '#f1f2f0',
   },
   {
     token: 'text-body',
@@ -60,7 +64,7 @@ const STEPS: Step[] = [
     family: 'body',
     deity: 'Nyx',
     icon: Moon,
-    color: '#7a8599',
+    color: '#aeb6c4',
   },
   {
     token: 'text-display',
@@ -72,7 +76,7 @@ const STEPS: Step[] = [
     family: 'display',
     deity: 'Pontus',
     icon: Waves,
-    color: '#3a7d7a',
+    color: '#4d928e',
   },
   {
     token: 'text-display-lg',
@@ -84,17 +88,22 @@ const STEPS: Step[] = [
     family: 'display',
     deity: 'Eros',
     icon: Heart,
-    color: '#c0793d',
+    color: '#d08f4e',
   },
 ];
 
-// Requested: circle diameter = ~4 lines of the row's own specimen text,
-// so the badges visibly grow across the scale the same way the type does.
-function coinSize(px: number) {
+// Badge side length = ~4 lines of the row's own specimen text, so the
+// marks visibly grow across the scale the same way the type does.
+function badgeSize(px: number) {
   return Math.round(px * 1.3 * 4);
 }
 
-const MAX_PX = STEPS[STEPS.length - 1].px;
+// The glyph on "the strings" is shown at a magnified but still
+// proportional size (x5) so a 10px vs 24px difference is legible at a
+// glance without needing a 24px string to literally be 24px tall.
+function glyphSize(px: number) {
+  return Math.round(px * 5);
+}
 
 export default function ChorusPage() {
   return (
@@ -103,48 +112,40 @@ export default function ChorusPage() {
       name="The Chorus"
       tagline="The type scale, sung as a set of harmonic intervals"
     >
-      <div className="border-ink-700 bg-ink-800/40 mb-6 rounded-lg border p-5">
+      <div className="border-ink-700 bg-ink-800/40 mb-6 border p-5">
         <h2 className="text-ink-200 font-display mb-3 text-sm tracking-wide uppercase">
           What the scale is built on
         </h2>
-        <p className="text-ink-300 max-w-prose text-sm leading-relaxed">
+        <p className="text-ink-200 max-w-prose text-sm leading-relaxed">
           Pythagoras tied musical harmony to small-integer ratios — an
           octave is 2:1, a fifth is 3:2, a major third is 5:4. This
           scale&apos;s five steps grow by ratios in that same family (1.17
           – 1.33), which is also, not by accident, what Tailwind&apos;s
-          default
-          text sizes already use. Nothing below is a new invention — it is
-          the sizes already in use across the app, given one deliberate
-          shape instead of five separate guesses.
+          default text sizes already use. Nothing below is a new
+          invention — it is the sizes already in use across the app,
+          given one deliberate shape instead of five separate guesses.
         </p>
       </div>
 
-      <div className="border-ink-700 bg-ink-800/40 rounded-lg border p-6">
-        <h2 className="text-ink-200 font-display mb-6 text-sm tracking-wide uppercase">
+      <div className="border-ink-700 bg-ink-800/40 border p-6">
+        <h2 className="text-ink-200 font-display mb-8 text-sm tracking-wide uppercase">
           The strings
         </h2>
-        <div className="flex flex-col gap-5">
-          {STEPS.map((s, i) => (
-            <div key={s.token} className="flex items-center gap-4">
-              <div className="w-28 shrink-0 text-right">
-                <p className="text-ink-100 font-mono text-xs">{s.token}</p>
-                <p className="text-ink-600 font-mono text-[10px]">{s.px}px</p>
-              </div>
-
-              <div className="relative flex h-8 flex-1 items-center">
-                <div
-                  className="from-copper-600 to-copper-400 h-[3px] rounded-full bg-gradient-to-r"
-                  style={{ width: `${(s.px / MAX_PX) * 100}%` }}
-                />
-                <div
-                  className="border-copper-400 bg-ink-900 absolute h-3 w-3 -translate-x-1/2 rounded-full border-2"
-                  style={{ left: `${(s.px / MAX_PX) * 100}%` }}
-                />
-              </div>
-
-              <span className="text-ink-600 w-20 shrink-0 font-mono text-[10px]">
-                {i === 0 ? '—' : s.ratioFromPrev}
+        <div className="flex items-end justify-between gap-3 overflow-x-auto pb-2">
+          {STEPS.map((s) => (
+            <div key={s.token} className="flex flex-col items-center gap-3">
+              <span
+                className={`font-${s.family} leading-none`}
+                style={{ fontSize: glyphSize(s.px), color: s.color }}
+              >
+                Aa
               </span>
+              <div className="text-center">
+                <p className="text-ink-100 font-mono text-xs">{s.token}</p>
+                <p className="text-ink-400 font-mono text-[10px]">
+                  {s.px}px · {s.ratioFromPrev}
+                </p>
+              </div>
             </div>
           ))}
         </div>
@@ -152,18 +153,18 @@ export default function ChorusPage() {
 
       <div className="mt-6 flex flex-col gap-4">
         {STEPS.map((s) => {
-          const size = coinSize(s.px);
+          const size = badgeSize(s.px);
           return (
             <div
               key={s.token}
-              className="border-ink-700 bg-ink-800/40 flex items-center gap-5 rounded-lg border p-4"
+              className="border-ink-700 bg-ink-800/40 flex items-center gap-5 border p-4"
             >
               <div
-                className="flex shrink-0 items-center justify-center rounded-full"
+                className="flex shrink-0 items-center justify-center"
                 style={{
                   width: size,
                   height: size,
-                  backgroundColor: `${s.color}22`,
+                  backgroundColor: `${s.color}1a`,
                   border: `1px solid ${s.color}55`,
                 }}
                 title={s.deity}
@@ -182,7 +183,7 @@ export default function ChorusPage() {
                 >
                   {s.sample}
                 </p>
-                <span className="text-ink-500 mt-1 block font-mono text-[10px]">
+                <span className="text-ink-300 mt-1 block font-mono text-[10px]">
                   {s.role} · {s.deity}
                 </span>
               </div>
