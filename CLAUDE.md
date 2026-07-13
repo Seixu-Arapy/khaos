@@ -5,43 +5,16 @@
 Superseded the old inline-numbered-topic scheme (`1a`, `2`, `NEW`, etc. spoken in
 chat) — chat-only tracking doesn't survive context compaction. Instead:
 
-For every big feature or round of work, maintain a backlog as a published
-Artifact (dark-themed HTML, not a plain-rendered .md file) — no file lives in
-the repo for this; the Artifact is the canonical record. Still use the
-three-character code in chat replies (see below) even though the file backing
-it is gone — the code is how the user calls up an item without repeating the
-whole request, independent of where the detail lives.
+For every big feature or round of work, maintain a backlog file in the repo
+at `docs/backlog/<feature-slug>.md` (not an Artifact — Artifacts were tried
+and dropped for this; there's no way to delete a previously-published one
+from this side, so treat any old backlog Artifact link as stale/unused going
+forward, not authoritative). The file is the canonical record.
 
-Record the Artifact's URL here in CLAUDE.md per feature, along with a real
-description of what's actually still open — not just a title — so a future
-session (or a `git log` reader) can tell what's pending without opening the
-Artifact or scrolling back through chat. Update both the URL and the
-description whenever the Artifact is republished or an item's status changes.
-
-- **Round 1 — Foundations**
-  Artifact: https://claude.ai/code/artifact/f86000b6-f6e2-4735-b2a9-4e063a7fdcd8
-  Open:
-  - `TYP` 🟡 — five-token type scale (`text-label` 10px through
-    `text-display-lg` 24px) built and documented at `/dev/vault/chorus`, but
-    not yet wired into any real component `text-*` class — exists only as a
-    Vault reference so far.
-  - `PAN` 🟡 — Pantheon page's mythology naming/copy is approved; reopened
-    for a visual pass (icon size/placement, page padding) which has been
-    pushed but not yet reviewed. The underlying color CSS variables
-    (`--color-teal-*` etc.) and ~35+ files using them are still unrenamed —
-    this item covers display only, not the real token rename.
-  - `VLT` 🟡 — display name changed from "The Khaos Vault" to "Khaos Vortex"
-    everywhere it's shown; route paths and internal file/component names
-    were deliberately left as "vault" (ask before doing a full rename).
-  - `MUS` 🟡 — Vault pulled out of `AppShell` (no sidebar/chat), replaced
-    with a single corner placard + one exit mark; pushed, awaiting review.
-  - `KTX` 🟡 — `ChaoticText` renamed to `KhaoticText`, fixed (see resolved
-    items below), and applied to every title in the Vault; pushed, awaiting
-    review.
-  - `CMP` 🟢 — not started. Fold `EntityChip`/`ChangeBadge`/the badge
-    components in `common/ui.tsx` into one shared `Chip` primitive. Waiting
-    on `PAN` and `TYP` to settle first since it should build on finished
-    tokens.
+Format: plain document, not a table. Each item is its **title in bold** (code
++ marker + short title on one line), followed immediately by a full
+description paragraph underneath — the paragraph is the actual content, not
+a caption. Group into `## Open` and `## Resolved`.
 
 Each open item in the backlog:
 
