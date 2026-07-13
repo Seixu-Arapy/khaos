@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
-import KhaoticText from '../../components/common/KhaoticText';
 import KhaosIcon from '../../components/common/KhaosIcon';
 
 // Shared chrome for the Khaos Vault (/dev/vortex/*) — deliberately outside
@@ -33,8 +32,8 @@ export function MuseumFrame({
         className="text-ink-700 hover:text-ink-300 fixed top-6 left-6 z-10 flex items-center gap-2 font-mono text-[10px] tracking-[0.35em] uppercase transition-colors duration-300"
       >
         <KhaosIcon
-          size="h-4 w-4"
-          fontSize="text-sm"
+          size="h-7 w-7"
+          fontSize="text-2xl"
           color="text-ink-400"
           spin
           className="animate-pulse"
@@ -91,9 +90,7 @@ export function Chamber({ index, name, tagline, children }: ChamberProps) {
     <MuseumFrame eyebrow={`khaos vortex · ${index}`} exitTo="/dev/vortex">
       <div className="mx-auto max-w-3xl px-6 pt-20 pb-24">
         <div className="mb-10">
-          <h1 className="text-ink-100">
-            <KhaoticText text={name} family="serif" className="text-3xl" />
-          </h1>
+          <h1 className="font-serif text-ink-100 text-3xl">{name}</h1>
           <p className="text-ink-400 mt-2 font-mono text-[11px] tracking-widest uppercase">
             {tagline}
           </p>
