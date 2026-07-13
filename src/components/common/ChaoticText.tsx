@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-const FAMILIES = ['display', 'serif', 'mono'];
+// Only 'display' (Roboto Flex Variable) actually ships width/weight/slant
+// axes — Roboto Slab and Roboto Mono are loaded weight-only, so any
+// character assigned to them can never stretch or lean, which is what
+// made this component read as "broken" rather than "chaotic."
 const WEIGHTS = [
   'thin',
   'extralight',
@@ -23,50 +26,44 @@ const STRETCHES = [
   'extra-expanded',
   'ultra-expanded',
 ];
-const STYLES = ['italic', 'no-italic'];
+const STYLES = ['italic', 'not-italic'];
 
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function generateStyles(
-  length: number,
-  family?: string,
-  style?: string
-): string[] {
+function generateStyles(length: number, style?: string): string[] {
   return Array.from(
     { length },
     () =>
-      `font-${family ?? pick(FAMILIES)} font-${pick(WEIGHTS)} font-stretch-${pick(STRETCHES)} ${style ?? pick(STYLES)}`
+      `font-display font-${pick(WEIGHTS)} font-stretch-${pick(STRETCHES)} ${style ?? pick(STYLES)}`
   );
 }
 
 interface ChaoticTextProps {
   text?: string;
   className?: string;
-  family?: string;
   style?: string;
 }
 
 export default function ChaoticText({
   text,
   className = '',
-  family = '',
   style = '',
 }: ChaoticTextProps) {
   const [styles, setStyles] = useState(() =>
-    generateStyles(text?.length ?? 0, family, style)
+    generateStyles(text?.length ?? 0, style)
   );
 
   useEffect(() => {
     if (!text) return;
 
     const interval = setInterval(() => {
-      setStyles(generateStyles(text.length, family));
+      setStyles(generateStyles(text.length, style));
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [text, family]);
+  }, [text, style]);
 
   if (!text) return null;
 

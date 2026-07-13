@@ -26,10 +26,10 @@ const FONT_TOKENS = ['display', 'body', 'serif', 'mono'] as const;
 // actually renders in the app, with real digits and symbols mixed in
 // rather than a plain pangram.
 const FONT_SAMPLES: Record<(typeof FONT_TOKENS)[number], string> = {
-  display: 'Sprint #12 wraps in 3 days — 87% done, 2 blockers left.',
-  body: 'The lazy dog watched 14 quick foxes race past gate #7.',
-  serif: 'Twelve lazy dogs slept while 9 foxes crossed at dawn — #3.',
-  mono: '14:32:07 -> 3.5h logged @ $42/hr (+18%) #task-092',
+  display: 'Nyx holds the ink; 7 sigils wait in the Vault — #1 opens.',
+  body: 'Eros lit the forge at dawn; 3 embers drift past gate #9.',
+  serif: 'Pontus carried 12 tales west while Gaia counted the days.',
+  mono: 'tartarus[500] -> hue 345deg +18% @ L47% #b43c5a',
 };
 
 const RADIUS_TOKENS = ['sm', '', 'lg'];

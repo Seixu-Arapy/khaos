@@ -10,6 +10,7 @@ import AssistantPage from './pages/AssistantPage';
 import RoutinesPage from './pages/RoutinesPage';
 import VaultIndexPage from './pages/dev/VaultIndexPage';
 import PantheonPage from './pages/dev/PantheonPage';
+import ChorusPage from './pages/dev/ChorusPage';
 import WellspringPage from './pages/dev/WellspringPage';
 import SigilsPage from './pages/dev/SigilsPage';
 import ForgePage from './pages/dev/ForgePage';
@@ -31,6 +32,7 @@ export default function App() {
           <>
             <Route path="/dev/vault" element={<VaultIndexPage />} />
             <Route path="/dev/vault/pantheon" element={<PantheonPage />} />
+            <Route path="/dev/vault/chorus" element={<ChorusPage />} />
             <Route path="/dev/vault/wellspring" element={<WellspringPage />} />
             <Route path="/dev/vault/sigils" element={<SigilsPage />} />
             <Route path="/dev/vault/forge" element={<ForgePage />} />

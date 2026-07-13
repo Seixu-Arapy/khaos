@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Droplets, Sparkles, Hammer, DoorOpen, Moon } from 'lucide-react';
+import { Droplets, Sparkles, Hammer, DoorOpen, Moon, Music } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // Entrance to the Khaos Vault — the live reference for every design token
@@ -22,6 +22,13 @@ const CHAMBERS: ChamberCard[] = [
     name: 'The Pantheon',
     tagline: 'Every color, named for what it descends from',
     contains: 'Nyx, Aether, Eros, Pontus, Gaia, Tartarus, Hypnos',
+  },
+  {
+    to: '/dev/vault/chorus',
+    icon: Music,
+    name: 'The Chorus',
+    tagline: 'The type scale, sung as harmonic intervals',
+    contains: 'Label, caption, body, display, display-lg',
   },
   {
     to: '/dev/vault/wellspring',
