@@ -45,6 +45,12 @@ Each open item in the backlog:
 - A new item is added when the user's message starts with **`NEW`** — assign
   the next unused code, an initial severity marker (ask if unclear), and
   today's date as the start date.
+- **Also add items proactively, not only on `NEW`.** Anything that becomes a
+  real pending task — something waiting on the user (a file to upload, a
+  decision, a review), or a genuine open thread that isn't resolved in the
+  same turn it comes up — gets added to the backlog table right away, on its
+  own initiative, even without the literal word `NEW`. Don't let real open
+  work go untracked just because it wasn't announced with the keyword.
 - If the user replies with a code, treat that as their call on what it refers
   to even if it doesn't exactly match the file — note the mismatch briefly
   rather than blocking on it.

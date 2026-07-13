@@ -32,7 +32,13 @@ export function MuseumFrame({
         to="/dev/vortex"
         className="text-ink-700 hover:text-ink-300 fixed top-6 left-6 z-10 flex items-center gap-2 font-mono text-[10px] tracking-[0.35em] uppercase transition-colors duration-300"
       >
-        <KhaosIcon size="h-4 w-4" fontSize="text-sm" color="text-black" />
+        <KhaosIcon
+          size="h-4 w-4"
+          fontSize="text-sm"
+          color="text-ink-400"
+          spin
+          className="animate-pulse"
+        />
         {eyebrow}
       </Link>
 

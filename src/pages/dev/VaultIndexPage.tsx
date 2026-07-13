@@ -72,9 +72,9 @@ export default function VaultIndexPage() {
           <KhaosIcon
             size="h-28 w-28"
             fontSize="text-8xl"
-            color="text-black"
+            color="text-ink-400"
             spin
-            className="pointer-events-none absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 opacity-20"
+            className="animate-pulse pointer-events-none absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 opacity-40"
           />
           <h1 className="font-serif text-ink-100 text-4xl">Khaos Vortex</h1>
           <p className="text-ink-600 mx-auto mt-4 max-w-sm font-mono text-[11px] tracking-widest uppercase">
