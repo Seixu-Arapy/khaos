@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, X } from 'lucide-react';
-import { TextInput } from './ui';
+import { Target, X } from 'lucide-react';
+import { TextInput, TimeToggle } from './ui';
 import { parseRange, formatRange } from '../../lib/range';
 
 interface TargetEditorProps {
@@ -132,167 +132,142 @@ export default function TargetEditor({
   }
 
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-3">
-        {/* Start Bound Input */}
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-ink-500 text-[11px] font-medium tracking-wider uppercase">
-              Start Date
-            </span>
-            {startValues.date && (
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => {
-                  const nextState = !showStartTime;
-                  setShowStartTime(nextState);
-                  commitRange(
-                    startValues.date,
-                    nextState ? startValues.time || '09:00' : '00:00',
-                    nextState,
-                    endValues.date,
-                    endValues.time,
-                    showEndTime
-                  );
-                }}
-                className={`flex items-center gap-0.5 rounded border px-1 text-[10px] transition-colors ${
-                  showStartTime
-                    ? 'border-copper-500 text-copper-400 bg-copper-500/10'
-                    : 'border-ink-700 text-ink-500 hover:text-ink-300'
-                }`}
-              >
-                <Clock size={10} /> {showStartTime ? 'Remove time' : 'Add time'}
-              </button>
-            )}
-          </div>
-          <div className="flex gap-1">
-            <TextInput
-              type="date"
-              value={startValues.date}
-              disabled={disabled}
-              onChange={(e) => {
-                commitRange(
-                  e.target.value,
-                  startValues.time,
-                  showStartTime,
-                  endValues.date,
-                  endValues.time,
-                  showEndTime
-                );
-              }}
-              className="w-full"
-            />
-            {showStartTime && startValues.date && (
-              <TextInput
-                type="time"
-                value={startValues.time || '09:00'}
-                disabled={disabled}
-                onChange={(e) => {
-                  commitRange(
-                    startValues.date,
-                    e.target.value,
-                    true,
-                    endValues.date,
-                    endValues.time,
-                    showEndTime
-                  );
-                }}
-                className="w-20 shrink-0 text-center"
-              />
-            )}
-          </div>
-        </div>
+    <div className="space-y-1.5">
+      {/* one bordered pill, matching TargetBadge exactly — icon on the
+          left, dates auto-sized (not stretched full width), no "Start
+          Date"/"End Date" labels */}
+      <div className="border-ink-600 text-ink-400 flex w-fit flex-wrap items-center gap-1.5 rounded-full border py-1 pr-2 pl-3 font-mono text-xs">
+        <Target size={13} className="shrink-0" />
 
-        {/* End Bound Input */}
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-ink-500 text-[11px] font-medium tracking-wider uppercase">
-              End Date
-            </span>
-            {showEndInput && endValues.date && (
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => {
-                  const nextState = !showEndTime;
-                  setShowEndTime(nextState);
-                  commitRange(
-                    startValues.date,
-                    startValues.time,
-                    showStartTime,
-                    endValues.date,
-                    nextState ? endValues.time || '18:00' : '00:00',
-                    nextState
-                  );
-                }}
-                className={`flex items-center gap-0.5 rounded border px-1 text-[10px] transition-colors ${
-                  showEndTime
-                    ? 'border-copper-500 text-copper-400 bg-copper-500/10'
-                    : 'border-ink-700 text-ink-500 hover:text-ink-300'
-                }`}
-              >
-                <Clock size={10} /> {showEndTime ? 'Remove time' : 'Add time'}
-              </button>
-            )}
-          </div>
-          {showEndInput ? (
-            <div className="flex gap-1">
-              <TextInput
-                type="date"
-                value={endValues.date}
-                disabled={disabled}
-                onChange={(e) => {
-                  commitRange(
-                    startValues.date,
-                    startValues.time,
-                    showStartTime,
-                    e.target.value,
-                    endValues.time,
-                    showEndTime
-                  );
-                }}
-                className="w-full"
-              />
-              {showEndTime && endValues.date && (
-                <TextInput
-                  type="time"
-                  value={endValues.time || '18:00'}
-                  disabled={disabled}
-                  onChange={(e) => {
-                    commitRange(
-                      startValues.date,
-                      startValues.time,
-                      showStartTime,
-                      endValues.date,
-                      e.target.value,
-                      true
-                    );
-                  }}
-                  className="w-20 shrink-0 text-center"
-                />
-              )}
-            </div>
-          ) : (
-            <div className="border-ink-700 text-ink-600 flex h-[34px] items-center rounded border border-dashed px-3 text-xs italic">
-              Open-ended
-            </div>
-          )}
-        </div>
-      </div>
+        <TimeToggle
+          active={showStartTime}
+          disabled={disabled}
+          onClick={() => {
+            const nextState = !showStartTime;
+            setShowStartTime(nextState);
+            commitRange(
+              startValues.date,
+              nextState ? startValues.time || '09:00' : '00:00',
+              nextState,
+              endValues.date,
+              endValues.time,
+              showEndTime
+            );
+          }}
+        />
+        <TextInput
+          type="date"
+          value={startValues.date}
+          disabled={disabled}
+          onChange={(e) => {
+            commitRange(
+              e.target.value,
+              startValues.time,
+              showStartTime,
+              endValues.date,
+              endValues.time,
+              showEndTime
+            );
+          }}
+          className="text-ink-400! w-[9.5rem]! shrink-0 border-0! bg-transparent! p-0! text-center text-xs!"
+        />
+        {showStartTime && startValues.date && (
+          <TextInput
+            type="time"
+            value={startValues.time || '09:00'}
+            disabled={disabled}
+            onChange={(e) => {
+              commitRange(
+                startValues.date,
+                e.target.value,
+                true,
+                endValues.date,
+                endValues.time,
+                showEndTime
+              );
+            }}
+            className="text-ink-400! w-20! shrink-0 border-0! bg-transparent! p-0! text-center text-xs!"
+          />
+        )}
 
-      <div className="flex items-center justify-between pt-0.5">
+        <span className="text-ink-600 shrink-0">→</span>
+
+        {/* checkbox always renders once a start date exists, so the user
+            can toggle back to open-ended even after setting an end date —
+            it just shows the ∞ glyph instead of the date fields when
+            unchecked */}
         {startValues.date && (
-          <label className="text-ink-500 flex items-center gap-1.5 text-xs select-none">
+          <label
+            className="flex shrink-0 items-center gap-1 select-none"
+            title={
+              showEndInput
+                ? 'Check to make open-ended'
+                : 'Uncheck to set an end date'
+            }
+          >
             <input
               type="checkbox"
               checked={!showEndInput}
               disabled={disabled}
               onChange={handleNoEndToggle}
-              className="border-ink-600 bg-ink-800 checked:bg-copper-500 accent-copper-500 h-3.5 w-3.5 rounded"
+              className="accent-violet-400 h-3.5 w-3.5 shrink-0"
             />
-            No end date yet
+            {!showEndInput && <span className="text-lg">∞</span>}
           </label>
+        )}
+        {showEndInput && (
+          <>
+            <TextInput
+              type="date"
+              value={endValues.date}
+              disabled={disabled}
+              onChange={(e) => {
+                commitRange(
+                  startValues.date,
+                  startValues.time,
+                  showStartTime,
+                  e.target.value,
+                  endValues.time,
+                  showEndTime
+                );
+              }}
+              className="text-ink-400! w-[9.5rem]! shrink-0 border-0! bg-transparent! p-0! text-center text-xs!"
+            />
+            {showEndTime && endValues.date && (
+              <TextInput
+                type="time"
+                value={endValues.time || '18:00'}
+                disabled={disabled}
+                onChange={(e) => {
+                  commitRange(
+                    startValues.date,
+                    startValues.time,
+                    showStartTime,
+                    endValues.date,
+                    e.target.value,
+                    true
+                  );
+                }}
+                className="text-ink-400! w-20! shrink-0 border-0! bg-transparent! p-0! text-center text-xs!"
+              />
+            )}
+            <TimeToggle
+              active={showEndTime}
+              disabled={disabled}
+              onClick={() => {
+                const nextState = !showEndTime;
+                setShowEndTime(nextState);
+                commitRange(
+                  startValues.date,
+                  startValues.time,
+                  showStartTime,
+                  endValues.date,
+                  nextState ? endValues.time || '18:00' : '00:00',
+                  nextState
+                );
+              }}
+            />
+          </>
         )}
 
         {(start || end) && (
@@ -300,16 +275,15 @@ export default function TargetEditor({
             type="button"
             disabled={disabled}
             onClick={handleClear}
-            className="text-ink-500 hover:text-rust-500 ml-auto flex items-center gap-1 text-xs"
+            title="Clear target"
+            className="text-ink-500 hover:text-rust-500 ml-1 flex shrink-0 items-center"
           >
-            <X size={12} /> Clear window
+            <X size={12} />
           </button>
         )}
       </div>
 
-      {error && (
-        <p className="text-rust-500 mt-1 text-xs font-medium">{error}</p>
-      )}
+      {error && <p className="text-rust-500 text-xs font-medium">{error}</p>}
     </div>
   );
 }
