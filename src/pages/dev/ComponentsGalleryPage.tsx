@@ -19,6 +19,7 @@ import {
   TaskProgressBar,
 } from '../../components/common/ui';
 import { ChangeBadge } from '../../components/assistant/ChangeBadge';
+import FoundationsSection from './FoundationsSection';
 import { STATUSES, PRIORITIES } from '../../lib/constants';
 import { FIELDS_CONFIG } from '../../lib/fieldsConfig';
 import type { Status, Priority } from '../../lib/types';
@@ -72,6 +73,8 @@ export default function ComponentsGalleryPage() {
         <Bug size={18} className="text-copper-400" />
         <h1 className="text-ink-100 font-display text-xl">Component Gallery</h1>
       </div>
+
+      <FoundationsSection />
 
       <Section title="Buttons">
         <Swatch label="default">
