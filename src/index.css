@@ -5,7 +5,10 @@
 @import '@fontsource-variable/roboto-slab/wght.css';
 
 /* ── Design tokens ─────────────────────────────────────────────────────── */
-@theme {
+/* `static` so every token is emitted as a CSS variable even before any
+   class uses it — the dev Foundations gallery reads them at runtime, and
+   tree-shaken tokens would otherwise read as empty/missing there. */
+@theme static {
   /* Colors */
   --color-ink-900: #161b22;
   --color-ink-800: #1f2530;
@@ -52,7 +55,7 @@
 
   /* Fonts */
   --font-display: 'Roboto Flex Variable', system-ui, sans-serif;
-  --font-serif: 'Roboto Serif', Georgia, serif;
+  --font-serif: 'Roboto Slab Variable', Georgia, serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'Roboto Mono Variable', monospace;
 
