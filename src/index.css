@@ -3,6 +3,7 @@
 @import '@fontsource-variable/roboto-flex/full.css';
 @import '@fontsource-variable/roboto-mono/wght.css';
 @import '@fontsource-variable/roboto-slab/wght.css';
+@import '@fontsource-variable/inter/wght.css';
 
 /* ── Design tokens ─────────────────────────────────────────────────────── */
 /* `static` so every token is emitted as a CSS variable even before any
@@ -56,7 +57,7 @@
   /* Fonts */
   --font-display: 'Roboto Flex Variable', system-ui, sans-serif;
   --font-serif: 'Roboto Slab Variable', Georgia, serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, sans-serif;
   --font-mono: 'Roboto Mono Variable', monospace;
 
   /* Shadows */
