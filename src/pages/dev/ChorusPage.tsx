@@ -13,6 +13,29 @@ import { Chamber } from './vaultUI';
 // actual proportionally-sized glyphs, not a horizontal bar -- font-size
 // is a size, not a length, so a bar chart was the wrong shape for it.
 
+interface Interval {
+  name: string;
+  ratio: string;
+  factor: number;
+}
+
+const INTERVALS: Interval[] = [
+  { name: 'Octave', ratio: '2:1', factor: 2 },
+  { name: 'Fifth', ratio: '3:2', factor: 1.5 },
+  { name: 'Third', ratio: '5:4', factor: 1.25 },
+];
+
+const UNIT = 48;
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// One random character per interval, picked once at module load (not on
+// every render) so the pair stays stable while you look at it -- the
+// point is the size relationship between the two squares, not the
+// letter itself, so both squares in a pair share the same character.
+const INTERVAL_CHARS = INTERVALS.map(
+  () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+);
+
 interface Step {
   token: string;
   px: number;
@@ -126,6 +149,41 @@ export default function ChorusPage() {
           invention — it is the sizes already in use across the app,
           given one deliberate shape instead of five separate guesses.
         </p>
+
+        <div className="mt-6 flex flex-wrap gap-x-10 gap-y-6">
+          {INTERVALS.map((interval, i) => {
+            const char = INTERVAL_CHARS[i];
+            return (
+              <div key={interval.name} className="flex flex-col gap-2">
+                <div className="flex items-end">
+                  <div
+                    className="border-ink-700 text-ink-100 flex items-center justify-center border"
+                    style={{
+                      width: UNIT,
+                      height: UNIT,
+                      fontSize: UNIT * 0.55,
+                    }}
+                  >
+                    {char}
+                  </div>
+                  <div
+                    className="border-ink-700 text-ink-100 flex items-center justify-center border border-l-0"
+                    style={{
+                      width: UNIT * interval.factor,
+                      height: UNIT * interval.factor,
+                      fontSize: UNIT * interval.factor * 0.55,
+                    }}
+                  >
+                    {char}
+                  </div>
+                </div>
+                <span className="text-ink-400 font-mono text-[10px]">
+                  {interval.name} · {interval.ratio}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="border-ink-700 rounded-lg border p-6">
