@@ -17,12 +17,15 @@ interface Interval {
   name: string;
   ratio: string;
   factor: number;
+  color: string;
 }
 
+// Colors borrowed from three Pantheon deities, same logic as STEPS below --
+// one color per interval, not per square, so the pair reads as one idea.
 const INTERVALS: Interval[] = [
-  { name: 'Octave', ratio: '2:1', factor: 2 },
-  { name: 'Fifth', ratio: '3:2', factor: 1.5 },
-  { name: 'Third', ratio: '5:4', factor: 1.25 },
+  { name: 'Octave', ratio: '2:1', factor: 2, color: '#d08f4e' },
+  { name: 'Fifth', ratio: '3:2', factor: 1.5, color: '#4d928e' },
+  { name: 'Third', ratio: '5:4', factor: 1.25, color: '#9478b8' },
 ];
 
 const UNIT = 48;
@@ -136,7 +139,7 @@ export default function ChorusPage() {
       tagline="The type scale, sung as a set of harmonic intervals"
       chaotic
     >
-      <div className="mb-6 p-5">
+      <div className="mb-10">
         <h2 className="text-ink-200 font-display mb-3 text-sm tracking-wide uppercase">
           What the scale is built on
         </h2>
@@ -149,44 +152,9 @@ export default function ChorusPage() {
           invention — it is the sizes already in use across the app,
           given one deliberate shape instead of five separate guesses.
         </p>
-
-        <div className="mt-6 flex flex-wrap gap-x-10 gap-y-6">
-          {INTERVALS.map((interval, i) => {
-            const char = INTERVAL_CHARS[i];
-            return (
-              <div key={interval.name} className="flex flex-col gap-2">
-                <div className="flex items-end">
-                  <div
-                    className="border-ink-700 text-ink-100 flex items-center justify-center border"
-                    style={{
-                      width: UNIT,
-                      height: UNIT,
-                      fontSize: UNIT * 0.55,
-                    }}
-                  >
-                    {char}
-                  </div>
-                  <div
-                    className="border-ink-700 text-ink-100 flex items-center justify-center border border-l-0"
-                    style={{
-                      width: UNIT * interval.factor,
-                      height: UNIT * interval.factor,
-                      fontSize: UNIT * interval.factor * 0.55,
-                    }}
-                  >
-                    {char}
-                  </div>
-                </div>
-                <span className="text-ink-400 font-mono text-[10px]">
-                  {interval.name} · {interval.ratio}
-                </span>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
-      <div className="p-6">
+      <div className="mb-10">
         <h2 className="text-ink-200 font-display mb-8 text-sm tracking-wide uppercase">
           The strings
         </h2>
@@ -208,9 +176,52 @@ export default function ChorusPage() {
             </div>
           ))}
         </div>
+
+        <div className="mt-10 flex flex-wrap gap-x-10 gap-y-6">
+          {INTERVALS.map((interval, i) => {
+            const char = INTERVAL_CHARS[i];
+            return (
+              <div key={interval.name} className="flex flex-col gap-2">
+                <div className="flex items-end">
+                  <div
+                    className="flex items-center justify-end"
+                    style={{
+                      width: UNIT,
+                      height: UNIT,
+                      fontSize: UNIT * 0.55,
+                      color: interval.color,
+                      backgroundColor: `${interval.color}1a`,
+                      border: `1px solid ${interval.color}55`,
+                      paddingRight: 6,
+                    }}
+                  >
+                    {char}
+                  </div>
+                  <div
+                    className="flex items-center justify-start border-l-0"
+                    style={{
+                      width: UNIT * interval.factor,
+                      height: UNIT * interval.factor,
+                      fontSize: UNIT * interval.factor * 0.55,
+                      color: interval.color,
+                      backgroundColor: `${interval.color}1a`,
+                      border: `1px solid ${interval.color}55`,
+                      paddingLeft: 6,
+                    }}
+                  >
+                    {char}
+                  </div>
+                </div>
+                <span className="text-ink-400 font-mono text-[10px]">
+                  {interval.name} · {interval.ratio}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="border-ink-700 mt-6 flex flex-col border">
+      <div className="border-ink-700 flex flex-col border">
         {STEPS.map((s) => {
           const size = badgeSize(s.px);
           return (
@@ -237,8 +248,8 @@ export default function ChorusPage() {
 
               <div className="min-w-0 flex-1">
                 <p
-                  className={`font-${s.family} ${s.weight} text-ink-100 truncate`}
-                  style={{ fontSize: s.px }}
+                  className={`font-${s.family} ${s.weight} truncate`}
+                  style={{ fontSize: s.px, color: s.color }}
                 >
                   {s.sample}
                 </p>
