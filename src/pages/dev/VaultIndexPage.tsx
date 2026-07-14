@@ -67,7 +67,7 @@ const CHAMBERS: ChamberEntry[] = [
 
 export default function VaultIndexPage() {
   return (
-    <MuseumFrame eyebrow="khaos vortex">
+    <MuseumFrame>
       <div className="mx-auto max-w-4xl px-6 pt-40 pb-32">
         <div className="relative mb-24 text-center">
           <div

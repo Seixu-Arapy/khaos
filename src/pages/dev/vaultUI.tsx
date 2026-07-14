@@ -6,15 +6,24 @@ import KhaoticText from '../../components/common/KhaoticText';
 
 // Shared chrome for the Khaos Vault (/dev/vortex/*) — deliberately outside
 // AppShell (no sidebar, no chat, no nav bar). The only wayfinding is a
-// corner placard, museum-label style, and one subtle exit mark. Moving
-// between chambers happens through the index page's cards, not a menu.
+// corner placard (logo + roman-numeral nav) and one subtle exit mark.
+// Kept in sync by hand with VaultIndexPage's own CHAMBERS list -- six
+// fixed items, low churn, not worth a shared-import refactor yet.
+const CHAMBER_NAV = [
+  { index: 'I', name: 'The Pantheon', to: '/dev/vortex/pantheon' },
+  { index: 'II', name: 'The Chorus', to: '/dev/vortex/chorus' },
+  { index: 'III', name: 'The Wellspring', to: '/dev/vortex/wellspring' },
+  { index: 'IV', name: 'The Sigils', to: '/dev/vortex/sigils' },
+  { index: 'V', name: 'The Forge', to: '/dev/vortex/forge' },
+  { index: 'VI', name: 'The Threshold', to: '/dev/vortex/threshold' },
+];
 
 export function MuseumFrame({
-  eyebrow,
+  currentIndex,
   exitTo = '/',
   children,
 }: {
-  eyebrow: string;
+  currentIndex?: string;
   exitTo?: string;
   children: ReactNode;
 }) {
@@ -28,19 +37,41 @@ export function MuseumFrame({
         <X size={18} strokeWidth={1.5} />
       </Link>
 
-      <Link
-        to="/dev/vortex"
-        className="text-ink-700 hover:text-ink-300 fixed top-6 left-6 z-10 flex items-center gap-2 font-mono text-[10px] tracking-[0.35em] uppercase transition-colors duration-300"
-      >
-        <KhaosIcon
-          size="h-7 w-7"
-          fontSize="text-2xl"
-          color="text-ink-400"
-          spin
-          className="animate-pulse"
-        />
-        {eyebrow}
-      </Link>
+      <div className="fixed top-6 left-6 z-10 flex items-center gap-4">
+        <Link
+          to="/dev/vortex"
+          className="text-ink-700 hover:text-ink-300 flex items-center gap-2 font-mono text-[10px] tracking-[0.35em] uppercase transition-colors duration-300"
+        >
+          <KhaosIcon
+            size="h-7 w-7"
+            fontSize="text-2xl"
+            color="text-ink-400"
+            spin
+            className="animate-pulse"
+          />
+          khaos vortex
+        </Link>
+
+        <nav className="flex items-center gap-3">
+          {CHAMBER_NAV.map((c) => (
+            <div key={c.index} className="group relative">
+              <Link
+                to={c.to}
+                className={`font-mono text-xs transition-colors duration-300 ${
+                  c.index === currentIndex
+                    ? 'text-ink-300'
+                    : 'text-ink-700 hover:text-ink-400'
+                }`}
+              >
+                {c.index}
+              </Link>
+              <span className="text-ink-300 bg-ink-800 border-ink-700 pointer-events-none absolute top-full left-1/2 mt-2 -translate-x-1/2 rounded border px-2 py-1 text-xs whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                {c.name}
+              </span>
+            </div>
+          ))}
+        </nav>
+      </div>
 
       {children}
     </div>
@@ -84,9 +115,9 @@ interface ChamberProps {
   name: string;
   tagline: string;
   children: ReactNode;
-  // Opt-in only -- most chambers use a plain static title. Chorus is the
-  // one exception right now (per request), so this stays a per-chamber
-  // switch rather than a blanket default.
+  // Opt-in only -- most chambers use a plain static title. Chorus and
+  // Pantheon are the exceptions right now (per request), so this stays a
+  // per-chamber switch rather than a blanket default.
   chaotic?: boolean;
 }
 
@@ -98,7 +129,7 @@ export function Chamber({
   chaotic = false,
 }: ChamberProps) {
   return (
-    <MuseumFrame eyebrow={`khaos vortex · ${index}`} exitTo="/dev/vortex">
+    <MuseumFrame currentIndex={index} exitTo="/dev/vortex">
       <div className="mx-auto max-w-5xl px-6 pt-28 pb-32">
         <div className="mb-14">
           <h1 className="font-serif text-ink-100 text-3xl">
