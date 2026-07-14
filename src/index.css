@@ -143,4 +143,27 @@
       transparent 4px
     );
   }
+
+  /* Slow drifting backdrop for the Vortex hero -- ink-700 (the logo's
+     color) bleeding into ink-900 (the page background), panned instead
+     of static so it reads as alive without calling attention to itself. */
+  .vortex-gradient {
+    background-image: radial-gradient(
+      circle,
+      var(--color-ink-700) 0%,
+      var(--color-ink-900) 65%
+    );
+    background-size: 200% 200%;
+    animation: vortex-drift 12s ease-in-out infinite;
+  }
+
+  @keyframes vortex-drift {
+    0%,
+    100% {
+      background-position: 30% 30%;
+    }
+    50% {
+      background-position: 70% 70%;
+    }
+  }
 }

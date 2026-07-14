@@ -69,7 +69,11 @@ export default function VaultIndexPage() {
   return (
     <MuseumFrame eyebrow="khaos vortex">
       <div className="mx-auto max-w-4xl px-6 pt-40 pb-32">
-        <div className="mb-24 text-center">
+        <div className="relative mb-24 text-center">
+          <div
+            className="vortex-gradient pointer-events-none absolute inset-[-6rem] -z-10 opacity-70 blur-3xl"
+            aria-hidden="true"
+          />
           <KhaosIcon
             size="h-24 w-24"
             fontSize="text-8xl"
@@ -78,7 +82,11 @@ export default function VaultIndexPage() {
             className="animate-pulse mx-auto mb-2"
           />
           <h1 className="text-ink-300">
-            <KhaoticText text="Khaos Vortex" family="serif" className="text-4xl" />
+            <KhaoticText
+              text="Khaos Vortex"
+              family={['display', 'serif', 'mono']}
+              className="text-4xl"
+            />
           </h1>
           <p className="text-ink-600 mx-auto mt-4 max-w-sm font-mono text-[11px] tracking-widest uppercase">
             every token, every component, exactly as it renders

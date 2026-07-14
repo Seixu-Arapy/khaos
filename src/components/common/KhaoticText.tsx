@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 
-// Only 'display' (Roboto Flex Variable) actually ships width/weight/slant
-// axes — Roboto Slab and Roboto Mono are loaded weight-only, so any
-// character assigned to them can never stretch or lean, which is what
-// made this component read as "broken" rather than "chaotic."
+type Family = 'display' | 'serif' | 'mono';
+
+// Only 'display' (Roboto Flex Variable) ships a width axis, so
+// font-stretch-* is a no-op on 'serif'/'mono'. Italic still shows on all
+// three -- real on 'display' (has a slnt axis) and 'mono' (has a real
+// ital axis), browser-synthesized ("faux") slant on 'serif', which has
+// neither. Chaotic either way, just a narrower range off 'display'.
 const WEIGHTS = [
   'thin',
   'extralight',
@@ -31,30 +34,25 @@ const STRETCHES = [
 // KhaoticText titles on screen at once.
 const STYLES = ['italic', 'not-italic', 'not-italic', 'not-italic'];
 
-function pick(arr: string[]): string {
+function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// 'serif' (Roboto Slab Variable) has no width axis, so font-stretch-* is a
-// no-op on it — weight still animates, and font-style: italic still shows
-// as a browser-synthesized ("faux") slant since Slab has no italic face
-// either. Chaotic, just a narrower range than 'display'.
 function generateStyles(
   length: number,
-  family: 'display' | 'serif',
+  family: Family | Family[],
   style?: string
 ): string[] {
-  return Array.from(
-    { length },
-    () =>
-      `font-${family} font-${pick(WEIGHTS)} font-stretch-${pick(STRETCHES)} ${style ?? pick(STYLES)}`
-  );
+  return Array.from({ length }, () => {
+    const f = Array.isArray(family) ? pick(family) : family;
+    return `font-${f} font-${pick(WEIGHTS)} font-stretch-${pick(STRETCHES)} ${style ?? pick(STYLES)}`;
+  });
 }
 
 interface KhaoticTextProps {
   text?: string;
   className?: string;
-  family?: 'display' | 'serif';
+  family?: Family | Family[];
   style?: string;
 }
 
@@ -76,7 +74,11 @@ export default function KhaoticText({
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [text, family, style]);
+    // `family` may be a fresh array literal from the caller every render;
+    // comparing by identity would restart the interval constantly.
+    // Callers pass a stable family choice in practice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, style]);
 
   if (!text) return null;
 
