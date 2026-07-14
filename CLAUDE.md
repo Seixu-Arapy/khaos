@@ -54,10 +54,12 @@ Each open item in the backlog:
 - If the user replies with a code, treat that as their call on what it refers
   to even if it doesn't exactly match the file — note the mismatch briefly
   rather than blocking on it.
-- **Row order stays stable.** When an item gets worked on again (reopened,
-  updated, discussed), it goes back to its original row position in the
-  table — don't move it to the top or bottom just because it was touched
-  most recently. The same code should always be findable in the same place.
+- **Treated items move to the end of the list.** When an item gets worked
+  on (reopened, updated, discussed) in a turn, move its row to the bottom
+  of its table (Open or Resolved) once that turn's work is done — this
+  reflects "most recently touched" order, not first-added order. (This
+  reverses an earlier version of the rule that said row order stays
+  fixed — that was wrong, this is the correct one.)
 
 Write real detail in each item's status, not a one-line stub — enough that the
 user can tell what actually happened without re-reading the chat. Not a full

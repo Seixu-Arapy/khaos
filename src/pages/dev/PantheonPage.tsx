@@ -241,7 +241,7 @@ export default function PantheonPage() {
           </div>
         ))}
 
-        <div className="border-ink-700 bg-ink-800/40 rounded-lg border p-5">
+        <div className="border-ink-700 mt-4 border-t pt-10">
           <h3 className="text-ink-200 font-display mb-4 text-sm tracking-wide uppercase">
             How they read together
           </h3>

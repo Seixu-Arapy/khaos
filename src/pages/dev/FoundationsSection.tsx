@@ -89,7 +89,7 @@ export default function FoundationsSection() {
 
   return (
     <>
-      <section className="border-ink-700 mb-8 border p-5">
+      <section className="mb-8">
         <GroupTitle>Fonts</GroupTitle>
         <div className="flex flex-col gap-5">
           {fontRows.map(({ token, stack, family, loaded }) => (
@@ -123,7 +123,7 @@ export default function FoundationsSection() {
         </div>
       </section>
 
-      <section className="border-ink-700 mb-8 border p-5">
+      <section className="mb-8">
         <GroupTitle>Colors</GroupTitle>
         <div className="flex flex-col gap-4">
           {Object.entries(COLOR_GROUPS).map(([group, steps]) => (
@@ -157,7 +157,7 @@ export default function FoundationsSection() {
         </div>
       </section>
 
-      <section className="border-ink-700 mb-8 border p-5">
+      <section className="mb-8">
         <GroupTitle>Radii &amp; shadows</GroupTitle>
         <div className="flex flex-wrap items-end gap-6">
           {RADIUS_TOKENS.map((r) => {
@@ -193,7 +193,7 @@ export default function FoundationsSection() {
         </div>
       </section>
 
-      <section className="border-ink-700 mb-8 border p-5">
+      <section className="mb-8">
         <GroupTitle>Text as used today (ad hoc)</GroupTitle>
         <p className="text-ink-500 mb-4 max-w-prose text-xs">
           There is no defined type scale yet — pages pick sizes by hand. These
