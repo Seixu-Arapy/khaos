@@ -130,7 +130,7 @@ export function Chamber({
 }: ChamberProps) {
   return (
     <MuseumFrame currentIndex={index} exitTo="/dev/vortex">
-      <div className="mx-auto max-w-5xl px-6 pt-28 pb-32">
+      <div className="mx-auto max-w-5xl px-6 pt-16 pb-12">
         <div className="mb-14">
           <h1 className="font-serif text-ink-100 text-3xl">
             {chaotic ? (
