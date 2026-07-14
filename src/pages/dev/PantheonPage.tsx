@@ -215,7 +215,7 @@ export default function PantheonPage() {
       <div className="flex flex-col gap-10">
         {DEITIES.map((d) => (
           <div key={d.name} className="border-ink-700 flex gap-10 border-t pt-10">
-            <div className="flex w-36 shrink-0 items-start justify-center">
+            <div className="flex w-56 shrink-0 items-start justify-start">
               <d.icon size={72} strokeWidth={1} style={{ color: d.color }} />
             </div>
             <div className="min-w-0 flex-1">
