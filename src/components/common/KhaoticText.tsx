@@ -66,6 +66,11 @@ interface KhaoticTextProps {
   className?: string;
   family?: Family | Family[];
   style?: string;
+  // Adds the moving gradient-fill treatment (see .vortex-text-gradient in
+  // index.css). Applied per-character, not on the wrapping span --
+  // background-image doesn't inherit, so each character's own text box
+  // needs the class for background-clip: text to have anything to clip.
+  shimmer?: boolean;
 }
 
 export default function KhaoticText({
@@ -73,6 +78,7 @@ export default function KhaoticText({
   className = '',
   family = 'display',
   style = '',
+  shimmer = false,
 }: KhaoticTextProps) {
   const [styles, setStyles] = useState(() =>
     generateStyles(text?.length ?? 0, family, style)
@@ -122,7 +128,7 @@ export default function KhaoticText({
         return (
           <span
             key={`${char}-${index}`}
-            className={`${styles[index] ?? ''} transition-all duration-500`}
+            className={`${styles[index] ?? ''} transition-all duration-500${shimmer ? ' vortex-text-gradient' : ''}`}
           >
             {char}
           </span>

@@ -68,7 +68,7 @@ const CHAMBERS: ChamberEntry[] = [
 export default function VaultIndexPage() {
   return (
     <MuseumFrame>
-      <div className="mx-auto max-w-4xl px-6 pt-40 pb-32">
+      <div className="mx-auto max-w-2xl px-6 pt-40 pb-32">
         <div className="relative mb-24 text-center">
           <div
             className="vortex-gradient pointer-events-none absolute inset-[-6rem] -z-10 opacity-70 blur-3xl"
@@ -86,6 +86,7 @@ export default function VaultIndexPage() {
               text="Khaos Vortex"
               family={['display', 'serif', 'mono']}
               className="text-4xl"
+              shimmer
             />
           </h1>
           <p className="text-ink-600 mx-auto mt-4 max-w-sm font-mono text-[11px] tracking-widest uppercase">
@@ -100,7 +101,7 @@ export default function VaultIndexPage() {
               to={c.to}
               className="group border-ink-700 hover:border-ink-600 flex items-start gap-6 border-t py-8 transition-colors duration-300 last:border-b"
             >
-              <span className="text-ink-700 group-hover:text-ink-400 w-20 shrink-0 font-serif text-6xl leading-none transition-colors duration-300">
+              <span className="text-ink-700 group-hover:text-ink-400 w-20 shrink-0 font-serif text-right text-6xl leading-none transition-colors duration-300">
                 {c.index}
               </span>
               <div className="min-w-0 flex-1">
