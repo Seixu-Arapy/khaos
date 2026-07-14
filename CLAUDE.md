@@ -54,6 +54,10 @@ Each open item in the backlog:
 - If the user replies with a code, treat that as their call on what it refers
   to even if it doesn't exactly match the file — note the mismatch briefly
   rather than blocking on it.
+- **Row order stays stable.** When an item gets worked on again (reopened,
+  updated, discussed), it goes back to its original row position in the
+  table — don't move it to the top or bottom just because it was touched
+  most recently. The same code should always be findable in the same place.
 
 Write real detail in each item's status, not a one-line stub — enough that the
 user can tell what actually happened without re-reading the chat. Not a full
