@@ -54,7 +54,7 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="border-ink-800 mb-10 border-t pt-6">
+    <section className="border-ink-700 mb-10 border-t pt-6">
       <h2 className="text-ink-400 mb-5 font-mono text-[10px] tracking-[0.25em] uppercase">
         {title}
       </h2>

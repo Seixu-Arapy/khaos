@@ -213,7 +213,7 @@ export default function PantheonPage() {
     >
       <div className="flex flex-col gap-4">
         {DEITIES.map((d) => (
-          <div key={d.name} className="border-ink-800 flex gap-6 border-t pt-6">
+          <div key={d.name} className="border-ink-700 flex gap-6 border-t pt-6">
             <div
               className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full"
               style={{

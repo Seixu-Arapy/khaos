@@ -87,13 +87,13 @@ export default function VaultIndexPage() {
             <Link
               key={c.to}
               to={c.to}
-              className="group border-ink-800 hover:border-ink-600 flex items-start gap-6 border-t py-8 transition-colors duration-300 last:border-b"
+              className="group border-ink-700 hover:border-ink-600 flex items-start gap-6 border-t py-8 transition-colors duration-300 last:border-b"
             >
               <span className="text-ink-700 group-hover:text-ink-400 w-20 shrink-0 font-serif text-6xl leading-none transition-colors duration-300">
                 {c.index}
               </span>
               <div className="min-w-0 flex-1">
-                <h2 className="font-serif text-ink-200 group-hover:text-ink-100 text-2xl transition-colors duration-300">
+                <h2 className="font-serif text-ink-100 text-2xl">
                   {c.name}
                 </h2>
                 <p className="text-ink-600 mt-1 text-sm">{c.tagline}</p>
