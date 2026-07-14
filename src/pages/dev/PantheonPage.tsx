@@ -176,24 +176,23 @@ function ContrastPair({
   fgHex,
   bgLabel,
   fgLabel,
+  sample,
   verdict,
 }: {
   bgHex: string;
   fgHex: string;
   bgLabel: string;
   fgLabel: string;
+  sample: ReactNode;
   verdict: string;
 }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="relative">
-        <Coin hex={bgHex} size={52} />
-        <div
-          className="absolute inset-0 flex items-center justify-center rounded-full"
-          style={{ color: fgHex }}
-        >
-          <span className="text-[10px] font-bold">Aa</span>
-        </div>
+    <div className="flex items-center gap-4">
+      <div
+        className="flex shrink-0 items-center justify-center px-3 py-1.5 text-sm font-medium"
+        style={{ backgroundColor: bgHex, color: fgHex }}
+      >
+        {sample}
       </div>
       <div>
         <p className="text-ink-300 text-xs">
@@ -225,7 +224,7 @@ export default function PantheonPage() {
               </h3>
               <p className="text-ink-500 mb-3 text-xs">{d.role}</p>
 
-              <p className="text-ink-300 mb-4 max-w-prose text-sm leading-relaxed">
+              <p className="text-ink-300 mb-8 max-w-prose text-sm leading-relaxed">
                 {d.story}
               </p>
 
@@ -253,6 +252,7 @@ export default function PantheonPage() {
               fgHex="#e9ecf1"
               bgLabel="Nyx 900"
               fgLabel="Nyx 100 text"
+              sample="Every screen begins in Nyx's dark."
               verdict="14.6:1 — the app's default reading pair"
             />
             <ContrastPair
@@ -260,6 +260,7 @@ export default function PantheonPage() {
               fgHex="#7a8599"
               bgLabel="Nyx 900"
               fgLabel="Nyx 500 text"
+              sample="last seen in Nyx's shadow, 2m ago"
               verdict="4.65:1 — captions, after the round 1 fix"
             />
             <ContrastPair
@@ -267,6 +268,7 @@ export default function PantheonPage() {
               fgHex="#161b22"
               bgLabel="Eros 500"
               fgLabel="Nyx 900 text"
+              sample="Court Eros"
               verdict="4.98:1 — the one correct way to label an Eros button"
             />
             <ContrastPair
@@ -274,6 +276,7 @@ export default function PantheonPage() {
               fgHex="#161b22"
               bgLabel="Tartarus 500"
               fgLabel="Nyx 900 text"
+              sample="Cast into Tartarus"
               verdict="reads as danger, and reads as red — not Eros"
             />
           </div>
