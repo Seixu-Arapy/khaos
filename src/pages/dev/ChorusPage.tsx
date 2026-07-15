@@ -229,23 +229,8 @@ export default function ChorusPage() {
       </div>
 
       <div className="mb-10">
-        <h2 className="text-ink-200 font-display mb-3 text-sm tracking-wide uppercase">
-          What the scale is built on
-        </h2>
-        <p className="text-ink-200 max-w-prose text-sm leading-relaxed">
-          Pythagoras tied musical harmony to small-integer ratios — an
-          octave is 2:1, a fifth is 3:2, a major third is 5:4. This
-          scale&apos;s five steps grow by ratios in that same family (1.17
-          – 1.33), which is also, not by accident, what Tailwind&apos;s
-          default text sizes already use. Nothing below is a new
-          invention — it is the sizes already in use across the app,
-          given one deliberate shape instead of five separate guesses.
-        </p>
-      </div>
-
-      <div className="mb-10">
         <h2 className="text-ink-200 font-display mb-8 text-sm tracking-wide uppercase">
-          The strings
+          What the scale is built on
         </h2>
         <div className="flex items-end justify-between gap-3 overflow-x-auto pb-2">
           {STEPS.map((s) => (
@@ -254,7 +239,7 @@ export default function ChorusPage() {
                 className={`font-${s.family} leading-none`}
                 style={{ fontSize: glyphSize(s.px), color: s.color }}
               >
-                A
+                {s.deity[0]}
               </span>
               <div className="text-center">
                 <p className="text-ink-100 font-mono text-xs">{s.token}</p>
@@ -265,6 +250,16 @@ export default function ChorusPage() {
             </div>
           ))}
         </div>
+
+        <p className="text-ink-200 max-w-prose text-sm leading-relaxed mt-10">
+          Pythagoras tied musical harmony to small-integer ratios — an
+          octave is 2:1, a fifth is 3:2, a major third is 5:4. This
+          scale&apos;s five steps grow by ratios in that same family (1.17
+          – 1.33), which is also, not by accident, what Tailwind&apos;s
+          default text sizes already use. Nothing below is a new
+          invention — it is the sizes already in use across the app,
+          given one deliberate shape instead of five separate guesses.
+        </p>
 
         <div className="mt-10 flex flex-wrap gap-x-10 gap-y-6">
           {INTERVALS.map((interval, i) => {
