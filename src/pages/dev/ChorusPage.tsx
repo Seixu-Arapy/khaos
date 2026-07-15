@@ -193,17 +193,24 @@ export default function ChorusPage() {
       index="II"
       name="The Chorus"
       tagline="The type scale, sung as a set of harmonic intervals"
+      wide
     >
       <div className="mb-10">
         <h2 className="text-ink-200 font-display mb-3 text-sm tracking-wide uppercase">
           Fonts
         </h2>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-8">
           {fontRows.map(({ token, stack, family, loaded }) => (
             <div key={token}>
-              <div className="mb-1 flex items-center gap-2">
+              <p
+                className="text-ink-100 text-3xl leading-snug"
+                style={{ fontFamily: stack }}
+              >
+                {FONT_SAMPLES[token]}
+              </p>
+              <div className="mt-2 flex items-center gap-3">
                 <span className="text-ink-500 font-mono text-[10px]">
-                  --font-{token}
+                  --font-{token} · {stack}
                 </span>
                 {loaded ? (
                   <span className="text-sage-500 inline-flex items-center gap-1 font-mono text-[10px]">
@@ -216,12 +223,6 @@ export default function ChorusPage() {
                   </span>
                 )}
               </div>
-              <p className="text-ink-100 text-xl" style={{ fontFamily: stack }}>
-                {FONT_SAMPLES[token]}
-              </p>
-              <p className="text-ink-600 mt-0.5 font-mono text-[10px]">
-                {stack}
-              </p>
             </div>
           ))}
         </div>

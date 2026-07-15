@@ -119,6 +119,9 @@ interface ChamberProps {
   // prop (rather than removed) only in case a future chamber needs to
   // opt out.
   chaotic?: boolean;
+  // Opt-in wider content column, for chambers whose content (e.g. large
+  // font specimens) needs more room than the standard max-w-5xl.
+  wide?: boolean;
 }
 
 export function Chamber({
@@ -127,10 +130,13 @@ export function Chamber({
   tagline,
   children,
   chaotic = true,
+  wide = false,
 }: ChamberProps) {
   return (
     <MuseumFrame currentIndex={index} exitTo="/dev/vortex">
-      <div className="mx-auto max-w-5xl px-6 pt-16 pb-12">
+      <div
+        className={`mx-auto px-6 pt-16 pb-12 ${wide ? 'max-w-6xl' : 'max-w-5xl'}`}
+      >
         <div className="mb-14">
           <h1 className="font-serif text-ink-100 text-3xl">
             {chaotic ? (
