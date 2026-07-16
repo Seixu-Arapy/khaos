@@ -28,76 +28,133 @@ function GroupTitle({ children }: { children: string }) {
 
 interface UsageRule {
   token: string;
+  swatchClass: string;
+  value: string;
   rule: string;
-  examples: string;
+  usedIn: string;
+  deity: string;
+  color: string;
 }
 
 // Practice, not theory -- each rule below reflects how the token is
 // already used across the real app (checked directly, not guessed), so
 // this is a description of existing convention as much as a standard
-// to follow going forward.
+// to follow going forward. Deity colors borrowed from The Pantheon,
+// same logic as The Chorus -- one color per row, ties all three
+// chambers into one system instead of three separate palettes.
 const RADIUS_RULES: UsageRule[] = [
   {
     token: 'rounded-sm',
-    rule: "Tailwind's own default (4px) -- no app override. Small inline accents only.",
-    examples: 'e.g. the logged-time indicator bar in CalendarView',
+    swatchClass: 'rounded-sm',
+    value: "Tailwind default, 4px -- no app override",
+    rule: 'Small inline accents only -- the smallest step, rarely reached for.',
+    usedIn: 'the logged-time indicator bar in CalendarView',
+    deity: 'Hypnos',
+    color: '#9478b8',
   },
   {
-    token: 'rounded (bare)',
-    rule: '--radius, 6px. The default for standard interactive controls and small surfaces.',
-    examples: 'icon buttons, checkboxes, text inputs, small badges',
+    token: 'rounded',
+    swatchClass: 'rounded',
+    value: '--radius, 6px',
+    rule: 'The default for standard interactive controls and small surfaces.',
+    usedIn: 'icon buttons, checkboxes, text inputs, small badges',
+    deity: 'Nyx',
+    color: '#7a8599',
   },
   {
     token: 'rounded-md',
-    rule: "Tailwind's own default (6px, same value as this app's bare rounded). Most buttons and menu items use this explicitly rather than the bare class.",
-    examples: 'primary/secondary buttons, dropdown menu items, kanban cards',
+    swatchClass: 'rounded-md',
+    value: "Tailwind default, 6px -- same value as rounded above",
+    rule: 'Most buttons and menu items use this explicitly rather than the bare class.',
+    usedIn: 'primary/secondary buttons, dropdown menu items, kanban cards',
+    deity: 'Pontus',
+    color: '#4d928e',
   },
   {
     token: 'rounded-lg',
-    rule: '--radius-lg, 10px. Larger surfaces that hold other content.',
-    examples: 'modals, dropdown panels, empty states, the command palette',
+    swatchClass: 'rounded-lg',
+    value: '--radius-lg, 10px',
+    rule: 'Larger surfaces that hold other content -- the one radius this app genuinely customized.',
+    usedIn: 'modals, dropdown panels, empty states, the command palette',
+    deity: 'Gaia',
+    color: '#5b8c5a',
   },
   {
     token: 'rounded-full',
-    rule: "Tailwind's own default. Anything meant to read as circular or capsule-shaped, independent of the radius scale above.",
-    examples: 'avatars, status dots, pills/chips, toggle switches, the FAB',
+    swatchClass: 'rounded-full',
+    value: 'Tailwind default, fully circular',
+    rule: 'Anything meant to read as circular or capsule-shaped, independent of the scale above.',
+    usedIn: 'avatars, status dots, pills/chips, toggle switches, the FAB',
+    deity: 'Eros',
+    color: '#c0793d',
   },
 ];
 
 const SHADOW_RULES: UsageRule[] = [
   {
-    token: '--shadow-card',
-    rule: 'Subtle, low elevation. Individual items sitting flat on the page that still need to feel slightly liftable (e.g. draggable).',
-    examples: 'Kanban and Priority board cards',
+    token: 'shadow-card',
+    swatchClass: 'shadow-card',
+    value: '--shadow-card, low elevation',
+    rule: 'Individual items sitting flat on the page that still need to feel slightly liftable.',
+    usedIn: 'Kanban and Priority board cards',
+    deity: 'Pontus',
+    color: '#4d928e',
   },
   {
-    token: '--shadow-panel',
-    rule: 'Stronger, higher elevation. Anything floating above other content.',
-    examples: 'dropdown menus, the select control, the command palette, the FAB, the mobile chat drawer',
+    token: 'shadow-panel',
+    swatchClass: 'shadow-panel',
+    value: '--shadow-panel, high elevation',
+    rule: 'Stronger shadow, reserved for anything genuinely floating above other content.',
+    usedIn: 'dropdown menus, the select control, the command palette, the FAB, the mobile chat drawer',
+    deity: 'Hypnos',
+    color: '#9478b8',
   },
   {
-    token: '(no shadow)',
-    rule: "Most flat content -- lists, rows, static cards -- uses a border-ink-700 border instead of a shadow. Shadows are reserved for things that genuinely float; a bordered flat surface doesn't need one.",
-    examples: 'task lists, project cards, section columns',
+    token: 'border only',
+    swatchClass: 'border-ink-600 border',
+    value: 'no shadow token',
+    rule: "The common case. Flat content uses a border instead of a shadow -- shadows are reserved for things that genuinely float, a bordered flat surface doesn't need one.",
+    usedIn: 'task lists, project cards, section columns',
+    deity: 'Nyx',
+    color: '#7a8599',
   },
 ];
 
 function UsageTable({ title, rows }: { title: string; rows: UsageRule[] }) {
   return (
-    <div className="mt-6">
-      <span className="text-ink-500 mb-2 block font-mono text-[10px]">
+    <div className="mt-8">
+      <span className="text-ink-500 mb-3 block font-mono text-[10px] tracking-wide uppercase">
         {title}
       </span>
-      <div className="flex flex-col gap-3">
+      <div className="border-ink-700 flex flex-col border">
         {rows.map((r) => (
-          <div key={r.token} className="flex flex-col gap-0.5">
-            <code className="text-copper-400 font-mono text-xs">
-              {r.token}
-            </code>
-            <p className="text-ink-300 text-xs leading-relaxed">{r.rule}</p>
-            <p className="text-ink-600 font-mono text-[10px]">
-              {r.examples}
-            </p>
+          <div
+            key={r.token}
+            className="border-ink-700 flex items-center gap-5 border-t p-4 first:border-t-0"
+          >
+            <div
+              className={`bg-ink-700 h-14 w-14 shrink-0 ${r.swatchClass}`}
+              title={r.deity}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-baseline gap-2">
+                <code className="font-mono text-sm font-semibold" style={{ color: r.color }}>
+                  {r.token}
+                </code>
+                <span className="text-ink-600 font-mono text-[10px]">
+                  {r.value}
+                </span>
+              </div>
+              <p className="text-ink-300 mb-1.5 text-xs leading-relaxed">
+                {r.rule}
+              </p>
+              <p className="text-ink-500 text-[11px]">
+                <span className="text-ink-600 font-mono text-[10px] uppercase tracking-wide">
+                  Used in:
+                </span>{' '}
+                {r.usedIn}
+              </p>
+            </div>
           </div>
         ))}
       </div>
