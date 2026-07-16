@@ -213,9 +213,9 @@ export default function PantheonPage() {
     >
       <div className="flex flex-col gap-10">
         {DEITIES.map((d) => (
-          <div key={d.name} className="border-ink-700 flex gap-10 border-t pt-10">
-            <div className="flex w-56 shrink-0 items-start justify-start">
-              <d.icon size={72} strokeWidth={1} style={{ color: d.color }} />
+          <div key={d.name} className="flex">
+            <div className="flex w-32 shrink-0 items-start justify-start">
+              <d.icon size={120} strokeWidth={1} style={{ color: d.color }} />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="mb-2" style={{ color: d.color }}>
@@ -241,7 +241,7 @@ export default function PantheonPage() {
           </div>
         ))}
 
-        <div className="border-ink-700 mt-4 border-t pt-10">
+        <div className="mt-4">
           <h3 className="text-ink-200 font-display mb-4 text-sm tracking-wide uppercase">
             How they read together
           </h3>
