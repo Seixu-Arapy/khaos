@@ -184,6 +184,12 @@ function badgeSize(px: number) {
   return Math.round(px * 1.3 * 4);
 }
 
+// Badges grow with each step, but the sample text after them still needs
+// to land in a straight column -- right-align every badge inside a fixed
+// column as wide as the largest one, instead of letting text drift right
+// as the badge grows.
+const maxBadgeSize = Math.max(...STEPS.map((s) => badgeSize(s.px)));
+
 // The glyph on "the strings" is shown at a magnified but still
 // proportional size (x5) so a 10px vs 24px difference is legible at a
 // glance without needing a 24px string to literally be 24px tall.
@@ -269,7 +275,7 @@ export default function ChorusPage() {
           given one deliberate shape instead of five separate guesses.
         </p>
 
-        <div className="mt-10 flex flex-wrap justify-end gap-x-10 gap-y-6">
+        <div className="mt-10 grid grid-cols-3 items-end gap-x-10 gap-y-6">
           {INTERVAL_PAIRS.map((pair) => {
             const sizeA = intervalBoxSize(pair.a.px);
             const sizeB = intervalBoxSize(pair.b.px);
@@ -277,11 +283,12 @@ export default function ChorusPage() {
               <div key={pair.name} className="flex flex-col items-end gap-2">
                 <div className="flex items-end">
                   <div
-                    className="flex items-center justify-center"
+                    className="flex items-center justify-center overflow-hidden"
                     style={{
                       width: sizeA,
                       height: sizeA,
-                      fontSize: sizeA * 0.55,
+                      fontSize: sizeA,
+                      lineHeight: 1,
                       color: pair.a.color,
                       backgroundColor: `${pair.a.color}1a`,
                       border: `1px solid ${pair.a.color}55`,
@@ -290,11 +297,12 @@ export default function ChorusPage() {
                     {pair.a.deity[0]}
                   </div>
                   <div
-                    className="flex items-center justify-center"
+                    className="flex items-center justify-center overflow-hidden"
                     style={{
                       width: sizeB,
                       height: sizeB,
-                      fontSize: sizeB * 0.55,
+                      fontSize: sizeB,
+                      lineHeight: 1,
                       color: pair.b.color,
                       backgroundColor: `${pair.b.color}1a`,
                       border: `1px solid ${pair.b.color}55`,
@@ -321,20 +329,25 @@ export default function ChorusPage() {
               className="border-ink-700 flex items-center gap-5 border-t p-4 first:border-t-0"
             >
               <div
-                className="flex shrink-0 items-center justify-center"
-                style={{
-                  width: size,
-                  height: size,
-                  backgroundColor: `${s.color}1a`,
-                  border: `1px solid ${s.color}55`,
-                }}
-                title={s.deity}
+                className="flex shrink-0 items-center justify-end"
+                style={{ width: maxBadgeSize }}
               >
-                <s.icon
-                  size={Math.round(size * 0.4)}
-                  strokeWidth={1.25}
-                  style={{ color: s.color }}
-                />
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    width: size,
+                    height: size,
+                    backgroundColor: `${s.color}1a`,
+                    border: `1px solid ${s.color}55`,
+                  }}
+                  title={s.deity}
+                >
+                  <s.icon
+                    size={Math.round(size * 0.4)}
+                    strokeWidth={1.25}
+                    style={{ color: s.color }}
+                  />
+                </div>
               </div>
 
               <div className="min-w-0 flex-1">
