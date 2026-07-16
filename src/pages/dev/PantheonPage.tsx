@@ -118,6 +118,7 @@ const DEITIES: Deity[] = [
     role: 'The abyss — reserved for things going wrong',
     shades: [
       { label: '50', hex: '#fbeff2' },
+      { label: '300', hex: '#dc8fa5' },
       { label: '500', hex: '#b43c5a' },
       { label: '600', hex: '#97304a' },
     ],
@@ -125,7 +126,8 @@ const DEITIES: Deity[] = [
       <>
         Tartarus was moved further from Eros on the wheel on purpose — an
         accent and a warning should never be one glance away from each
-        other.
+        other. His lighter shade, <b>300</b>, is the warning: caution is
+        a milder dose of the same abyss, not a different color.
       </>
     ),
   },
@@ -266,7 +268,7 @@ export default function PantheonPage() {
 
         <div className="mt-4">
           <h3 className="text-ink-200 font-display mb-4 text-sm tracking-wide uppercase">
-            How they read together
+            When the gods share a screen
           </h3>
           <div className="flex flex-col gap-3">
             <ContrastPair
@@ -290,6 +292,16 @@ export default function PantheonPage() {
               verdict="4.65:1 — captions, after the round 1 fix"
             />
             <ContrastPair
+              role="Lifted"
+              roleColor="#e7e9e6"
+              bgHex="#f1f2f0"
+              fgHex="#161b22"
+              bgLabel="Aether 100"
+              fgLabel="Nyx 900 text"
+              sample="Aether lifts this one into the light"
+              verdict="15.4:1 — the rare bright surface, spent sparingly"
+            />
+            <ContrastPair
               role="Action"
               roleColor="#c0793d"
               bgHex="#c0793d"
@@ -300,6 +312,26 @@ export default function PantheonPage() {
               verdict="4.98:1 — Eros is the action color: the only warm, saturated color allowed to compete for attention"
             />
             <ContrastPair
+              role="Info"
+              roleColor="#4d928e"
+              bgHex="#161b22"
+              fgHex="#4d928e"
+              bgLabel="Nyx 900"
+              fgLabel="Pontus 400 text"
+              sample="Pontus logged 2h against the tide"
+              verdict="4.79:1 — the workhorse accent: tags, links, logged time"
+            />
+            <ContrastPair
+              role="Quiet"
+              roleColor="#9478b8"
+              bgHex="#161b22"
+              fgHex="#9478b8"
+              bgLabel="Nyx 900"
+              fgLabel="Hypnos 400 text"
+              sample="scheduled for a later dream"
+              verdict="4.64:1 — Hypnos speaks only when nothing else does: planned, someday, asleep"
+            />
+            <ContrastPair
               role="Success"
               roleColor="#5b8c5a"
               bgHex="#5b8c5a"
@@ -308,6 +340,16 @@ export default function PantheonPage() {
               fgLabel="Nyx 900 text"
               sample="Marked as done"
               verdict="reads as growth/completion — distinct hue from both Eros and Tartarus"
+            />
+            <ContrastPair
+              role="Warning"
+              roleColor="#dc8fa5"
+              bgHex="#dc8fa5"
+              fgHex="#161b22"
+              bgLabel="Tartarus 300"
+              fgLabel="Nyx 900 text"
+              sample="Drifting toward the abyss"
+              verdict="7.0:1 — caution is a milder dose of Tartarus, not a new hue: severity reads as lightness"
             />
             <ContrastPair
               role="Danger"
@@ -321,13 +363,12 @@ export default function PantheonPage() {
             />
           </div>
           <p className="text-ink-500 mt-4 max-w-prose text-xs leading-relaxed">
-            <b className="text-ink-300">No dedicated warning color yet</b> —
-            base/action/success/danger each have a clear deity, but a
-            middle &ldquo;caution, not yet dangerous&rdquo; state has no
-            home in the palette. Eros is already claimed by Action;
-            reusing it for warnings would blur the one color meant to
-            mean &ldquo;click me.&rdquo; Open gap, not a decision made
-            yet.
+            <b className="text-ink-300">Warning settled:</b> caution is
+            Tartarus at 300 — a lighter dose of the same abyss, so
+            severity reads as lightness (which survives every kind of
+            color vision) instead of a new amber hue that would sit one
+            glance away from Eros. The escalation gradient is Gaia →
+            Tartarus 300 → Tartarus 500: growth, drifting, gone.
           </p>
         </div>
       </div>

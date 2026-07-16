@@ -44,6 +44,12 @@
 
   --color-rust: #b43c5a;
   --color-rust-50: #fbeff2;
+  /* 300 is the warning step: same Tartarus hue, lighter -- caution is
+     a milder dose of danger, not a separate (amber) hue. An amber at
+     ~45deg would sit ~18deg from copper/Eros and recreate the exact
+     colorblind collision the rust hue-shift already fixed. 7.0:1 with
+     ink-900 text; a full 2.3x luminance step above rust-500. */
+  --color-rust-300: #dc8fa5;
   --color-rust-500: #b43c5a;
   --color-rust-600: #97304a;
 
