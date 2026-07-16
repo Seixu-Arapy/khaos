@@ -20,7 +20,7 @@ interface Step {
   role: string;
   ratioFromPrev: string;
   weight: string;
-  sample: string;
+  samples: string[];
   family: 'display' | 'body' | 'mono';
   deity: string;
   icon: LucideIcon;
@@ -29,7 +29,9 @@ interface Step {
 
 // Deity assignment follows each step's actual role, reusing the exact
 // icons/colors from The Pantheon rather than inventing a new set (per
-// request — these two chambers should read as one system).
+// request — these two chambers should read as one system). Two sample
+// sentences per step, not one -- proves the size/weight combination
+// holds up across more than a single lucky sentence.
 const STEPS: Step[] = [
   {
     token: 'text-label',
@@ -37,7 +39,7 @@ const STEPS: Step[] = [
     role: 'micro-labels',
     ratioFromPrev: 'root',
     weight: 'font-semibold uppercase tracking-wide',
-    sample: 'sleeping in Hypnos',
+    samples: ['sleeping in Hypnos', 'quietest signal, 10px'],
     family: 'mono',
     deity: 'Hypnos',
     icon: CloudMoon,
@@ -49,7 +51,7 @@ const STEPS: Step[] = [
     role: 'hints, metadata',
     ratioFromPrev: '6:5 · 1.20',
     weight: 'font-normal',
-    sample: 'last seen in Aether, 2m ago',
+    samples: ['last seen in Aether, 2m ago', "synced with Aether's light"],
     family: 'body',
     deity: 'Aether',
     icon: Sparkles,
@@ -61,7 +63,10 @@ const STEPS: Step[] = [
     role: 'task names, primary rows',
     ratioFromPrev: '7:6 · 1.17',
     weight: 'font-medium',
-    sample: "Chart Nyx's darkest shade before dawn",
+    samples: [
+      "Chart Nyx's darkest shade before dawn",
+      "Every task begins in Nyx's dark",
+    ],
     family: 'body',
     deity: 'Nyx',
     icon: Moon,
@@ -73,7 +78,7 @@ const STEPS: Step[] = [
     role: 'modal / section titles',
     ratioFromPrev: '9:7 · 1.29',
     weight: 'font-semibold',
-    sample: "Pontus's tide report",
+    samples: ["Pontus's tide report", 'Cast off with Pontus'],
     family: 'display',
     deity: 'Pontus',
     icon: Waves,
@@ -85,7 +90,7 @@ const STEPS: Step[] = [
     role: 'page titles',
     ratioFromPrev: '4:3 · 1.33',
     weight: 'font-bold',
-    sample: 'Khaos Vortex',
+    samples: ['Khaos Vortex', 'Court Eros'],
     family: 'display',
     deity: 'Eros',
     icon: Heart,
@@ -320,14 +325,11 @@ export default function ChorusPage() {
         </div>
       </div>
 
-      <div className="border-ink-700 flex max-w-4xl flex-col border">
+      <div className="flex max-w-4xl flex-col gap-8">
         {STEPS.map((s) => {
           const size = badgeSize(s.px);
           return (
-            <div
-              key={s.token}
-              className="border-ink-700 flex items-center gap-5 border-t p-4 first:border-t-0"
-            >
+            <div key={s.token} className="flex items-center gap-5">
               <div
                 className="flex shrink-0 items-center justify-end"
                 style={{ width: maxBadgeSize }}
@@ -351,13 +353,18 @@ export default function ChorusPage() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p
-                  className={`font-${s.family} ${s.weight} truncate`}
-                  style={{ fontSize: s.px, color: s.color }}
-                >
-                  {s.sample}
-                </p>
-                <span className="text-ink-300 mt-1 block font-mono text-[10px]">
+                <div className="flex flex-col gap-1">
+                  {s.samples.map((sample) => (
+                    <p
+                      key={sample}
+                      className={`font-${s.family} ${s.weight} truncate`}
+                      style={{ fontSize: s.px, color: s.color }}
+                    >
+                      {sample}
+                    </p>
+                  ))}
+                </div>
+                <span className="text-ink-300 mt-1.5 block font-mono text-[10px]">
                   {s.role} · {s.deity}
                 </span>
               </div>
