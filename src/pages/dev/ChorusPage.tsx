@@ -316,9 +316,14 @@ export default function ChorusPage() {
                     {pair.b.deity[0]}
                   </div>
                 </div>
-                <span className="text-ink-400 text-right font-mono text-[10px]">
-                  {pair.name} · {pair.ratio} — {pair.a.token} : {pair.b.token}
-                </span>
+                <div className="text-right font-mono text-[10px]">
+                  <p className="text-ink-400">
+                    {pair.name} · {pair.ratio}
+                  </p>
+                  <p className="text-ink-600">
+                    {pair.a.token} : {pair.b.token}
+                  </p>
+                </div>
               </div>
             );
           })}
