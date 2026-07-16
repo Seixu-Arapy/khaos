@@ -66,7 +66,9 @@
   --shadow-panel: 0 4px 16px rgba(22, 27, 34, 0.08);
 
   /* Radii */
-  --radius-sm: 4px;
+  /* No --radius-sm override: it matched Tailwind's own built-in
+     --radius-sm (4px) exactly, so the app now just uses Tailwind's
+     default rounded-sm directly instead of maintaining a duplicate. */
   --radius: 6px;
   --radius-lg: 10px;
 }

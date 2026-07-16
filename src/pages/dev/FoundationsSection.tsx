@@ -7,7 +7,9 @@
 // Fonts moved to The Chorus (type-scale chamber) — this section is left
 // with just radii and shadows.
 
-const RADIUS_TOKENS = ['sm', '', 'lg'];
+// No 'sm' entry: --radius-sm was dropped as a redundant override of
+// Tailwind's own identical built-in value (see index.css).
+const RADIUS_TOKENS = ['', 'lg'];
 const SHADOW_TOKENS = ['card', 'panel'];
 
 function readVar(name: string): string {
