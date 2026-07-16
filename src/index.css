@@ -3,7 +3,6 @@
 @import '@fontsource-variable/roboto-flex/full.css';
 @import '@fontsource-variable/roboto-mono/wght.css';
 @import '@fontsource-variable/roboto-slab/wght.css';
-@import '@fontsource-variable/inter/wght.css';
 
 /* ── Design tokens ─────────────────────────────────────────────────────── */
 /* `static` so every token is emitted as a CSS variable even before any
@@ -55,9 +54,15 @@
   --color-violet-600: #634b81;
 
   /* Fonts */
+  /* --font-body used to be Inter Variable -- dropped per FNT: side by
+     side at 12/14px the two read as near-identical neo-grotesque sans
+     faces, and Flex's own variable axes already cover the distinction
+     (display leans wider/bolder, body stays at normal weight/width --
+     no font-stretch-condensed here, that read as too tight for real
+     body copy in the live test). One less package, one less font. */
   --font-display: 'Roboto Flex Variable', system-ui, sans-serif;
   --font-serif: 'Roboto Slab Variable', Georgia, serif;
-  --font-body: 'Inter Variable', system-ui, sans-serif;
+  --font-body: 'Roboto Flex Variable', system-ui, sans-serif;
   --font-mono: 'Roboto Mono Variable', monospace;
 
   /* Shadows */
