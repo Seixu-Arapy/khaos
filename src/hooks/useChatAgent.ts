@@ -136,13 +136,10 @@ export function useChatAgent() {
     [activeEntity, isSending, runWithUserContent]
   );
 
-  // Fires once per browser session (guarded by BOOTSTRAPPED_KEY, not just a
-  // ref, since the desktop chat panel is always mounted — even hidden on
-  // mobile — and could otherwise race a freshly-opened mobile sheet). Skips
-  // entirely if there's already history: a session here means "since the
-  // history was last empty," not "since this component mounted."
-  useEffect(() => {
-    if (messagesRef.current.length > 0) return;
+  // Guarded by BOOTSTRAPPED_KEY, not just a ref, since the desktop chat
+  // panel is always mounted — even hidden on mobile — and could otherwise
+  // race a freshly-opened mobile sheet into firing twice.
+  const fireBootstrapTurn = useCallback(() => {
     if (localStorage.getItem(BOOTSTRAPPED_KEY)) return;
     localStorage.setItem(BOOTSTRAPPED_KEY, '1');
 
@@ -155,6 +152,13 @@ export function useChatAgent() {
         markOpenerUnseen();
       }
     });
+  }, [runWithUserContent, markOpenerUnseen]);
+
+  // Skips entirely if there's already history: a session here means "since
+  // the history was last empty," not "since this component mounted."
+  useEffect(() => {
+    if (messagesRef.current.length > 0) return;
+    fireBootstrapTurn();
     // Runs once on mount, using messagesRef to read the initial history
     // rather than reacting to it — see the comment above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,9 +167,12 @@ export function useChatAgent() {
   const clearHistory = useCallback(() => {
     setMessages([]);
     localStorage.removeItem(STORAGE_KEY);
-    // A cleared history is a new session — let the next mount open again.
     localStorage.removeItem(BOOTSTRAPPED_KEY);
-  }, []);
+    // A cleared history is a new session — open it right away rather than
+    // waiting for a future mount that may never come (the panel doesn't
+    // unmount just because history was cleared).
+    fireBootstrapTurn();
+  }, [fireBootstrapTurn]);
 
   const uiMessages: ChatMessage[] = messages
     .map((m, index) => ({ m, index }))
