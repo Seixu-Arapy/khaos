@@ -173,6 +173,9 @@ function Coin({
   );
 }
 
+// One role per block: title + description on top, the sample itself
+// rendered big in the middle (the color pair is the exhibit, so it gets
+// the size), and the contrast math as a small subtitle underneath.
 function ContrastPair({
   role,
   roleColor,
@@ -181,7 +184,8 @@ function ContrastPair({
   bgLabel,
   fgLabel,
   sample,
-  verdict,
+  description,
+  contrast,
 }: {
   role: string;
   roleColor: string;
@@ -190,28 +194,30 @@ function ContrastPair({
   bgLabel: string;
   fgLabel: string;
   sample: ReactNode;
-  verdict: string;
+  description: string;
+  contrast?: string;
 }) {
   return (
-    <div className="flex items-center gap-4">
-      <span
-        className="w-20 shrink-0 font-mono text-[10px] tracking-wide uppercase"
+    <div>
+      <p
+        className="text-sm font-semibold tracking-wide uppercase"
         style={{ color: roleColor }}
       >
         {role}
-      </span>
+      </p>
+      <p className="text-ink-300 max-w-prose text-sm">{description}</p>
+
       <div
-        className="flex shrink-0 items-center justify-center px-3 py-1.5 text-sm font-medium whitespace-nowrap"
+        className="mt-3 w-fit px-6 py-3 text-3xl font-medium"
         style={{ backgroundColor: bgHex, color: fgHex }}
       >
         {sample}
       </div>
-      <div className="min-w-0">
-        <p className="text-ink-300 text-xs">
-          {fgLabel} on {bgLabel}
-        </p>
-        <p className="text-ink-600 font-mono text-[10px]">{verdict}</p>
-      </div>
+
+      <p className="text-ink-600 mt-2 font-mono text-[10px]">
+        {contrast ? `${contrast} · ` : ''}
+        {fgLabel} on {bgLabel}
+      </p>
     </div>
   );
 }
@@ -270,7 +276,7 @@ export default function PantheonPage() {
           <h3 className="text-ink-200 font-display mb-4 text-sm tracking-wide uppercase">
             When the gods share a screen
           </h3>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-10">
             <ContrastPair
               role="Base"
               roleColor="#7a8599"
@@ -279,7 +285,8 @@ export default function PantheonPage() {
               bgLabel="Nyx 900"
               fgLabel="Nyx 100 text"
               sample="Every screen begins in Nyx's dark."
-              verdict="14.6:1 — the app's default reading pair"
+              description="The app's default reading pair"
+              contrast="14.6:1"
             />
             <ContrastPair
               role="Caption"
@@ -289,7 +296,8 @@ export default function PantheonPage() {
               bgLabel="Nyx 900"
               fgLabel="Nyx 500 text"
               sample="last seen in Nyx's shadow, 2m ago"
-              verdict="4.65:1 — captions, after the round 1 fix"
+              description="Hints and metadata, after the round 1 contrast fix"
+              contrast="4.65:1"
             />
             <ContrastPair
               role="Lifted"
@@ -299,7 +307,8 @@ export default function PantheonPage() {
               bgLabel="Aether 100"
               fgLabel="Nyx 900 text"
               sample="Aether lifts this one into the light"
-              verdict="15.4:1 — the rare bright surface, spent sparingly"
+              description="The rare bright surface, spent sparingly"
+              contrast="15.4:1"
             />
             <ContrastPair
               role="Action"
@@ -309,7 +318,8 @@ export default function PantheonPage() {
               bgLabel="Eros 500"
               fgLabel="Nyx 900 text"
               sample="Create task"
-              verdict="4.98:1 — Eros is the action color: the only warm, saturated color allowed to compete for attention"
+              description="Eros is the action color — the only warm, saturated color allowed to compete for attention"
+              contrast="4.98:1"
             />
             <ContrastPair
               role="Info"
@@ -319,7 +329,8 @@ export default function PantheonPage() {
               bgLabel="Nyx 900"
               fgLabel="Pontus 400 text"
               sample="Pontus logged 2h against the tide"
-              verdict="4.79:1 — the workhorse accent: tags, links, logged time"
+              description="The workhorse accent — tags, links, logged time"
+              contrast="4.79:1"
             />
             <ContrastPair
               role="Quiet"
@@ -329,7 +340,8 @@ export default function PantheonPage() {
               bgLabel="Nyx 900"
               fgLabel="Hypnos 400 text"
               sample="scheduled for a later dream"
-              verdict="4.64:1 — Hypnos speaks only when nothing else does: planned, someday, asleep"
+              description="Hypnos speaks only when nothing else does — planned, someday, asleep"
+              contrast="4.64:1"
             />
             <ContrastPair
               role="Success"
@@ -339,7 +351,8 @@ export default function PantheonPage() {
               bgLabel="Gaia 500"
               fgLabel="Nyx 900 text"
               sample="Marked as done"
-              verdict="reads as growth/completion — distinct hue from both Eros and Tartarus"
+              description="Growth and completion — a distinct hue from both Eros and Tartarus"
+              contrast="4.4:1"
             />
             <ContrastPair
               role="Warning"
@@ -349,7 +362,8 @@ export default function PantheonPage() {
               bgLabel="Tartarus 300"
               fgLabel="Nyx 900 text"
               sample="Drifting toward the abyss"
-              verdict="7.0:1 — caution is a milder dose of Tartarus, not a new hue: severity reads as lightness"
+              description="Caution is a milder dose of Tartarus, not a new hue — severity reads as lightness"
+              contrast="7.0:1"
             />
             <ContrastPair
               role="Danger"
@@ -359,11 +373,12 @@ export default function PantheonPage() {
               bgLabel="Tartarus 500"
               fgLabel="Nyx 900 text"
               sample="Delete project"
-              verdict="reads as danger, and reads as red — not Eros"
+              description="Reads as danger, and reads as red — not Eros"
+              contrast="3.08:1"
             />
           </div>
-          <p className="text-ink-500 mt-4 max-w-prose text-xs leading-relaxed">
-            <b className="text-ink-300">Warning settled:</b> caution is
+          <p className="text-ink-300 mt-10 max-w-prose text-sm leading-relaxed">
+            <b className="text-ink-100">Warning settled:</b> caution is
             Tartarus at 300 — a lighter dose of the same abyss, so
             severity reads as lightness (which survives every kind of
             color vision) instead of a new amber hue that would sit one

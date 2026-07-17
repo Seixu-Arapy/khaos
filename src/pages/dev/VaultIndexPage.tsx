@@ -40,7 +40,7 @@ const CHAMBERS: ChamberEntry[] = [
     index: 'III',
     name: 'The Wellspring',
     tagline: 'Where every token is born',
-    contains: 'Radii · Shadows',
+    contains: 'Radii · Shadows · Spacing',
   },
   {
     to: '/dev/vortex/sigils',
