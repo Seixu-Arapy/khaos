@@ -1,12 +1,17 @@
 // Trilho estilo git-graph à esquerda das tarefas de uma seção: um nó por
-// tarefa encadeada, linha vertical ligando a cadeia. O layout (lanes/cores)
-// vem de buildSequenceRail; cada linha da lista desenha só a sua fatia do
-// trilho, então alturas variáveis de TaskRow não precisam ser medidas.
-import type { RailSegment } from '../../lib/sequenceGraph';
+// tarefa encadeada, linhas verticais ligando a cadeia, curvas de bifurcação
+// (uma tarefa com vários "next") e de junção (vários "previous"). O layout
+// (lanes/cores/curvas) vem de buildSequenceRail; cada linha da lista desenha
+// só a sua fatia do trilho, então alturas variáveis de TaskRow não precisam
+// ser medidas.
+import type { RailBend, RailRow } from '../../lib/sequenceGraph';
 
 export const LANE_WIDTH = 10;
 // Centro vertical da primeira linha de texto do TaskRow (py-1.5 + text-sm).
 const NODE_Y = 16;
+// Altura da curva de bifurcação logo abaixo do nó — NODE_Y + BEND_H não
+// pode passar da altura mínima de uma row (32px).
+const BEND_H = 14;
 // space-y-0.5 entre as linhas — os segmentos vazam 2px para cima/baixo para
 // a linha ficar contínua através do vão.
 const ROW_GAP = 2;
@@ -19,24 +24,60 @@ const LANE_COLORS = [
   'var(--color-rust-500)',
 ];
 
+const laneColor = (colorIndex: number) =>
+  LANE_COLORS[colorIndex % LANE_COLORS.length];
+const laneCenter = (lane: number) => lane * LANE_WIDTH + LANE_WIDTH / 2;
+
+// Curva entre duas lanes dentro de uma faixa horizontal de altura fixa.
+function Bend({
+  bend,
+  top,
+  height,
+  width,
+}: {
+  bend: RailBend;
+  top: number;
+  height: number;
+  width: number;
+}) {
+  // merge: desce de fromLane (topo da faixa) até toLane (base = nó);
+  // fork: sai de fromLane (topo = nó) e abre para toLane (base).
+  const x1 = laneCenter(bend.fromLane);
+  const x2 = laneCenter(bend.toLane);
+  const mid = height / 2;
+  return (
+    <svg
+      className="absolute"
+      style={{ left: 0, top }}
+      width={width}
+      height={height}
+      aria-hidden
+    >
+      <path
+        d={`M ${x1} 0 C ${x1} ${mid + 2}, ${x2} ${mid - 2}, ${x2} ${height}`}
+        fill="none"
+        stroke={laneColor(bend.colorIndex)}
+        strokeWidth={2}
+      />
+    </svg>
+  );
+}
+
 interface SequenceRailCellProps {
-  segments: RailSegment[];
+  row: RailRow;
   laneCount: number;
 }
 
 export default function SequenceRailCell({
-  segments,
+  row,
   laneCount,
 }: SequenceRailCellProps) {
+  const width = laneCount * LANE_WIDTH;
   return (
-    <div
-      className="relative shrink-0"
-      style={{ width: laneCount * LANE_WIDTH }}
-      aria-hidden
-    >
-      {segments.map((s) => {
-        const color = LANE_COLORS[s.colorIndex % LANE_COLORS.length];
-        const cx = s.lane * LANE_WIDTH + LANE_WIDTH / 2;
+    <div className="relative shrink-0" style={{ width }} aria-hidden>
+      {row.lines.map((s) => {
+        const color = laneColor(s.colorIndex);
+        const cx = laneCenter(s.lane);
         return (
           <div key={s.lane}>
             {s.drawTop && (
@@ -74,6 +115,32 @@ export default function SequenceRailCell({
           </div>
         );
       })}
+
+      {row.merges.map((m) => (
+        <Bend
+          key={`m${m.fromLane}`}
+          bend={m}
+          top={0}
+          height={NODE_Y}
+          width={width}
+        />
+      ))}
+
+      {row.forks.map((f) => (
+        <div key={`f${f.toLane}`}>
+          <Bend bend={f} top={NODE_Y} height={BEND_H} width={width} />
+          {/* continuação vertical da lane nova até a base da row */}
+          <div
+            className="absolute w-0.5"
+            style={{
+              left: laneCenter(f.toLane) - 1,
+              top: NODE_Y + BEND_H,
+              bottom: -ROW_GAP,
+              backgroundColor: laneColor(f.colorIndex),
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 }
