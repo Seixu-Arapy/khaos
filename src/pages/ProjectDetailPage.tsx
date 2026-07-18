@@ -47,14 +47,16 @@ import type {
   LinkingState,
 } from '../components/projects/sequenceLinking';
 import { useSequenceMutations } from '../hooks/useSequence';
-import { wouldCreateCycle } from '../lib/sequenceGraph';
+import { topoChronoOrder, wouldCreateCycle } from '../lib/sequenceGraph';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import TargetEditor from '../components/common/TargetEditor';
 import { useSyncActiveEntity } from '../lib/activeEntityContext';
 import type { Id, Priority, Section, Status, Task } from '../lib/types';
 
-// Ordem cronológica dentro de uma seção: target.start primeiro, senão due,
-// senão vai para o final (precisa "se encaixar" — mesmo critério do Gantt).
+// Critério cronológico dentro de uma seção: target.start primeiro, senão
+// due, senão vai para o final. É o desempate da ordem topológica — a
+// sequência (tasks_sequence) manda primeiro, datas decidem entre tarefas
+// disponíveis ao mesmo tempo (ver topoChronoOrder).
 function taskChronoKey(task: Task): number {
   const { start } = parseRange(task.target);
   if (start) return start.getTime();
@@ -89,11 +91,11 @@ function SectionBlock({
   linking,
   onToggleLink,
 }: SectionBlockProps) {
+  const { data: seqEdges = [] } = useTasksSequence();
   const orderedTasks = useMemo(() => {
-    return tasks
-      .filter((t) => t.section_id === sectionId)
-      .sort((a, b) => taskChronoKey(a) - taskChronoKey(b));
-  }, [tasks, sectionId]);
+    const sectionTasks = tasks.filter((t) => t.section_id === sectionId);
+    return topoChronoOrder(sectionTasks, seqEdges, taskChronoKey);
+  }, [tasks, sectionId, seqEdges]);
 
   return (
     <SectionColumn

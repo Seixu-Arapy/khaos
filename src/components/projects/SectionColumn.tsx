@@ -184,7 +184,7 @@ export default function SectionColumn({
           <div className="flex flex-wrap items-center gap-2">
             <span
               className="text-ink-600 hover:text-ink-300 flex shrink-0 items-center"
-              title="Tasks below are ordered by target start date, then due date — tasks with neither go last."
+              title="Tasks below follow their sequence order first; outside a sequence they're ordered by target start date, then due date — tasks with neither go last."
             >
               <Info size={13} />
             </span>
@@ -239,7 +239,7 @@ export default function SectionColumn({
                 <div className="group/row flex items-stretch">
                   {rail.laneCount > 0 && (
                     <SequenceRailCell
-                      segments={rail.rows[index]}
+                      row={rail.rows[index]}
                       laneCount={rail.laneCount}
                     />
                   )}
