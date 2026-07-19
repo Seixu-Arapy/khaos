@@ -188,7 +188,7 @@ A \`moment\` is automatically registered when a task, section, project or event 
 
 Routine tasks are stored in \`routines\`. These are habits and recurrent tasks that are not connected to projects. When planning the week, they must be considered.
 
-Tasks, sections and projects have DUE and TARGET. Due date is a timestamptz that's fixed, by a client or a contract. A target is a tstzrange that represents the desired window that the user wants to execute that, and not an external deadline.
+Tasks, sections and projects have DUE and TARGET. Due date is a timestamptz that's fixed, by a client or a contract. A target is a tstzrange that represents the desired window that the user wants to execute that, and not an external deadline. Every target has an end target — there is no open-ended target. When the dates carry no explicit time, the end target is the end of the relevant day (23:59): a target with a single date means "do it that day" and ends at 23:59 of that day, and a target with an end date ends at 23:59 of that end date. An explicit time on a date is honoured as-is.
 
 Always consult the schema in the database to get detailed information about tables, columns and enums.
 
