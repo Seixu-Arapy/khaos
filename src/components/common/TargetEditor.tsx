@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Target, X } from 'lucide-react';
 import clsx from 'clsx';
 import { TextInput, TimeToggle } from './ui';
-import { parseRange, formatRange } from '../../lib/range';
+import { parseRange, formatRange, endOfLocalDay } from '../../lib/range';
 
 interface TargetEditorProps {
   value?: string | null;
@@ -21,7 +21,15 @@ function validate(start: Date | null, end: Date | null, due?: string | null) {
   if (due) {
     const dueDate = new Date(due);
     if (start >= dueDate) return 'Start must be before the due date.';
-    if (end && end > dueDate) return 'End must be on or before the due date.';
+    // Compare the effective end target: an untimed end date lands at the end
+    // of its day (23:59), not midnight, so that's what must fit before the due.
+    if (end) {
+      const endTarget =
+        end.getHours() === 0 && end.getMinutes() === 0
+          ? endOfLocalDay(end)
+          : end;
+      if (endTarget > dueDate) return 'End must be on or before the due date.';
+    }
   }
   return null;
 }
