@@ -13,13 +13,16 @@ import { useActiveEntity } from '../lib/activeEntityContext';
 import { useChatActivity } from '../lib/chat/chatActivityContext';
 import { getTimezone } from '../lib/timezone';
 
-const STORAGE_KEY = 'logbook.chatHistory.v1';
-// Separate from STORAGE_KEY so a per-tab race between the always-mounted
-// desktop panel and a freshly-opened mobile sheet can't both fire the
-// opener — whichever instance claims this key first is the one that runs.
-const BOOTSTRAPPED_KEY = 'logbook.chatBootstrapped.v1';
 const BOOTSTRAP_INSTRUCTION =
-  '[Session Bootstrap: This is the first turn of a new session — nobody has typed anything yet. Follow your OPENING TURN rules: a brief greeting is fine, but do not offer to help or ask an open-ended question — check current state for something worth surfacing before saying anything else.]';
+  '[Session Bootstrap: This is the first turn of a new session — nobody has typed anything yet. Follow your OPENING TURN rules: a brief greeting is fine, but do not offer to help or ask an open-ended question — check current state for something worth surfacing before saying anything else, including anything recall_oversight_notes turns up.]';
+
+// A session is one page load, full stop — history isn't persisted across
+// reloads, and this flag lives in module scope (not localStorage) for the
+// same reason: it needs to reset every time the JS itself reloads, not
+// survive it. It still does real work within a single load, though —
+// preventing the always-mounted desktop panel and a freshly-opened mobile
+// sheet from both firing the opener.
+let bootstrapClaimedThisLoad = false;
 
 // UI-facing shape — this is what ChatPanel and the rest of the app render.
 // Kept separate from AgentMessage, whose content is Anthropic's own
@@ -38,31 +41,15 @@ export interface PendingWrite {
   resolve: (approved: boolean) => void;
 }
 
-// A stored message is only usable if `content` survived the JSON
-// round-trip — a message ever persisted with `content: undefined` (e.g. an
-// API response that came back malformed) loses that key entirely under
-// JSON.stringify, and re-parsing it back would otherwise crash the very
-// first render (extractText assumes a string or an array).
-function isWellFormedMessage(m: unknown): m is AgentMessage {
-  if (!m || typeof m !== 'object') return false;
-  const content = (m as { content?: unknown }).content;
-  return typeof content === 'string' || Array.isArray(content);
-}
-
-function loadHistory(): AgentMessage[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isWellFormedMessage);
-  } catch {
-    return [];
-  }
-}
-
+// No loadHistory()/isWellFormedMessage() sanitization here — main added that
+// to harden localStorage-persisted history against malformed `content`
+// surviving a JSON round-trip, but this branch removes that persistence
+// entirely (a session is one page load; messages always start empty), so
+// there's nothing stored to sanitize. extractText()'s own defensive
+// undefined-content handling (src/lib/chat/agent.ts) still applies regardless
+// of where a malformed message came from, and is kept.
 export function useChatAgent() {
-  const [messages, setMessages] = useState<AgentMessage[]>(loadHistory);
+  const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [pending, setPending] = useState<PendingWrite | null>(null);
   const [isSending, setIsSending] = useState(false);
   const { setAssistantProcessing } = useProcessingContext();
@@ -70,14 +57,6 @@ export function useChatAgent() {
   const { markOpenerUnseen } = useChatActivity();
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-100)));
-    } catch {
-      // storage full or unavailable
-    }
-  }, [messages]);
 
   const requestConfirmation = useCallback(
     async (name: string, args: Record<string, unknown>) => {
@@ -150,12 +129,10 @@ export function useChatAgent() {
     [activeEntity, isSending, runWithUserContent]
   );
 
-  // Guarded by BOOTSTRAPPED_KEY, not just a ref, since the desktop chat
-  // panel is always mounted — even hidden on mobile — and could otherwise
-  // race a freshly-opened mobile sheet into firing twice.
-  const fireBootstrapTurn = useCallback(() => {
-    if (localStorage.getItem(BOOTSTRAPPED_KEY)) return;
-    localStorage.setItem(BOOTSTRAPPED_KEY, '1');
+  // Runs once per page load, on mount — see bootstrapClaimedThisLoad above.
+  useEffect(() => {
+    if (bootstrapClaimedThisLoad) return;
+    bootstrapClaimedThisLoad = true;
 
     const timeCtx = `[Temporal Context: current_time is ${new Date().toISOString()}, timezone is ${getTimezone()}]\n`;
     runWithUserContent(`${timeCtx}${BOOTSTRAP_INSTRUCTION}`, {
@@ -166,27 +143,14 @@ export function useChatAgent() {
         markOpenerUnseen();
       }
     });
-  }, [runWithUserContent, markOpenerUnseen]);
-
-  // Skips entirely if there's already history: a session here means "since
-  // the history was last empty," not "since this component mounted."
-  useEffect(() => {
-    if (messagesRef.current.length > 0) return;
-    fireBootstrapTurn();
-    // Runs once on mount, using messagesRef to read the initial history
-    // rather than reacting to it — see the comment above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Just a wipe — reopening the conversation is what a reload is for, not
+  // something Clear should do on its own.
   const clearHistory = useCallback(() => {
     setMessages([]);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(BOOTSTRAPPED_KEY);
-    // A cleared history is a new session — open it right away rather than
-    // waiting for a future mount that may never come (the panel doesn't
-    // unmount just because history was cleared).
-    fireBootstrapTurn();
-  }, [fireBootstrapTurn]);
+  }, []);
 
   const uiMessages: ChatMessage[] = messages
     .map((m, index) => ({ m, index }))
