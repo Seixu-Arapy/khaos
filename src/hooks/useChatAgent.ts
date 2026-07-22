@@ -41,6 +41,13 @@ export interface PendingWrite {
   resolve: (approved: boolean) => void;
 }
 
+// No loadHistory()/isWellFormedMessage() sanitization here — main added that
+// to harden localStorage-persisted history against malformed `content`
+// surviving a JSON round-trip, but this branch removes that persistence
+// entirely (a session is one page load; messages always start empty), so
+// there's nothing stored to sanitize. extractText()'s own defensive
+// undefined-content handling (src/lib/chat/agent.ts) still applies regardless
+// of where a malformed message came from, and is kept.
 export function useChatAgent() {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [pending, setPending] = useState<PendingWrite | null>(null);
