@@ -425,20 +425,61 @@ export default function ChorusPage() {
           pixel-neutral by construction, since each token carries the
           same size and line-height as the class it replaced.
         </p>
-        <div className="flex flex-col gap-2 font-mono text-caption">
+        <div className="flex flex-col gap-7">
+          {/* Each mapping with a live sample rendered in the token
+              itself -- real app copy in real app styling, so the row
+              proves the utility works, not just names it. */}
           {[
-            ['text-2xl', 'text-display-lg', 'page titles'],
-            ['text-lg', 'text-display', 'modal / section titles'],
-            ['text-sm', 'text-body', 'task names, controls, body copy'],
-            ['text-xs', 'text-caption', 'hints, metadata'],
-            ['text-[10px]', 'text-label', 'micro-labels'],
-          ].map(([from, to, role]) => (
-            <p key={to} className="text-ink-400">
-              <span className="text-ink-600">{from}</span>
-              {' → '}
-              <span className="text-copper-400">{to}</span>
-              <span className="text-ink-600"> · {role}</span>
-            </p>
+            [
+              'text-2xl',
+              'text-display-lg',
+              'page titles',
+              <h3 key="s" className="font-display text-ink-100 text-display-lg font-bold">
+                All tasks
+              </h3>,
+            ],
+            [
+              'text-lg',
+              'text-display',
+              'modal / section titles',
+              <h4 key="s" className="font-display text-ink-100 text-display">
+                Edit task
+              </h4>,
+            ],
+            [
+              'text-sm',
+              'text-body',
+              'task names, controls, body copy',
+              <p key="s" className="text-ink-100 text-body font-medium">
+                Chart Nyx&rsquo;s darkest shade before dawn
+              </p>,
+            ],
+            [
+              'text-xs',
+              'text-caption',
+              'hints, metadata',
+              <p key="s" className="text-ink-500 text-caption">
+                Last synced 2 minutes ago
+              </p>,
+            ],
+            [
+              'text-[10px]',
+              'text-label',
+              'micro-labels',
+              <span key="s" className="text-ink-500 font-mono text-label font-semibold tracking-wide uppercase">
+                in progress
+              </span>,
+            ],
+          ].map(([from, to, role, sample]) => (
+            <div key={to as string}>
+              <p className="font-mono text-caption text-ink-400">
+                <span className="text-ink-600">{from as string}</span>
+                {' → '}
+                <span className="text-copper-400">{to as string}</span>
+                <span className="text-ink-600"> · {role as string}</span>
+              </p>
+              <div className="mt-1.5">{sample}</div>
+            </div>
           ))}
         </div>
         <p className="text-ink-500 mt-6 max-w-prose text-caption leading-relaxed">
