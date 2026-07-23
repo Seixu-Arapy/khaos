@@ -21,7 +21,9 @@ interface SectionRowProps {
 // renders at the exact same height as TaskRow. border-r closes the frame
 // on the right, neutral Nyx (only the left spine carries field identity).
 // Padding is symmetric px-2 (SPC "element" rung) -- was pl-2.5, a
-// half-step off the spacing ladder.
+// half-step off the spacing ladder. Every gap in the row -- outer stack,
+// both inner groups -- is the same gap-1.5, so no element reads as more
+// or less related to its neighbor than any other.
 export default function SectionRow({
   section,
   projectName,
@@ -34,7 +36,7 @@ export default function SectionRow({
     <button
       onClick={onClick}
       style={{ borderLeftColor: fieldColor }}
-      className="group hover:bg-nyx-900 border-nyx-700 flex w-full flex-col gap-0.5 rounded-md border-y border-r border-l-2 py-1.5 px-2 text-left md:flex-row md:items-center md:gap-1.5"
+      className="group hover:bg-nyx-900 border-nyx-700 flex w-full flex-col gap-1.5 rounded-md border-y border-r border-l-2 py-1.5 px-2 text-left md:flex-row md:items-center"
     >
       <span className="flex min-w-0 items-center gap-1.5 md:flex-1">
         <FieldBadge fieldName={fieldName} size="xs" />
@@ -47,7 +49,7 @@ export default function SectionRow({
           {section.name}
         </span>
       </span>
-      <span className="flex shrink-0 flex-wrap items-center gap-1">
+      <span className="flex shrink-0 flex-wrap items-center gap-1.5">
         <PriorityBadge priority={section.priority} />
         <TargetBadge target={section.target as string | null} />
         <DueBadge due={section.due} status={section.status} />
