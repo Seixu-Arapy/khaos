@@ -21,6 +21,7 @@ import SectionRow from '../../components/projects/SectionRow';
 import TaskRow from '../../components/tasks/TaskRow';
 import DueEditor from '../../components/common/DueEditor';
 import TargetEditor from '../../components/common/TargetEditor';
+import { minutesToHuman } from '../../lib/dateUtils';
 import { STATUSES, PRIORITIES } from '../../lib/constants';
 import { FIELDS_CONFIG, FIELD_EMOJI } from '../../lib/fieldsConfig';
 import type { Status, Priority, Project, Section as SectionRecord, Task } from '../../lib/types';
@@ -84,6 +85,7 @@ export default function SigilsPage() {
   const [targetRangeTime, setTargetRangeTime] = useState<string | null>(
     '["2026-08-01 09:00:00+00","2026-08-15 18:00:00+00")'
   );
+  const [estimateDraft, setEstimateDraft] = useState('120');
   const fieldNames = Object.keys(FIELDS_CONFIG);
   const sampleField = fieldNames[0];
 
@@ -471,58 +473,57 @@ export default function SigilsPage() {
           </Swatch>
         </Section>
 
-        <Section title="Dates, estimate &amp; progress" nowrap>
-          <Swatch label="due (upcoming)">
+        <Section title="Due" nowrap>
+          <Swatch label="badge">
             <DueBadge due="2026-08-01" status="todo" />
           </Swatch>
-          <Swatch label="due (overdue)">
+          <Swatch label="badge, overdue">
             <DueBadge due="2026-01-01" status="todo" />
           </Swatch>
-          <Swatch label="target range">
-            <TargetBadge target='["2026-07-01 00:00:00+00","2026-07-15 00:00:00+00")' />
+          <Swatch label="input">
+            <DueEditor value={dueDraft} status="todo" onChange={setDueDraft} />
           </Swatch>
-          <Swatch label="scheduled">
+          <Swatch label="scheduled marker">
             {/* Added to TaskRow in the recent redesign -- a small marker
                 for "already has a calendar event", not a full badge. */}
             <ScheduledBadge scheduled />
           </Swatch>
-          <Swatch label="progress (compact)">
-            <TaskProgressBar
-              progress={{ loggedMinutes: 90, estimateMinutes: 120, pct: 75, level: 'ok' }}
-            />
-          </Swatch>
-          <Swatch label="progress (over)">
-            <TaskProgressBar
-              progress={{ loggedMinutes: 150, estimateMinutes: 120, pct: 125, level: 'over' }}
-            />
-          </Swatch>
         </Section>
 
-        <Section title="Due &amp; target inputs" nowrap>
-          <Swatch label="due, editable">
-            <DueEditor value={dueDraft} status="todo" onChange={setDueDraft} />
+        <Section title="Target" nowrap>
+          <Swatch label="badge, simple">
+            <TargetBadge target='["2026-08-01 00:00:00+00",)' />
           </Swatch>
-          <Swatch label="target, simple">
+          <Swatch label="badge, simple + time">
+            <TargetBadge target='["2026-08-01 09:00:00+00",)' />
+          </Swatch>
+          <Swatch label="badge, range">
+            <TargetBadge target='["2026-07-01 00:00:00+00","2026-07-15 00:00:00+00")' />
+          </Swatch>
+          <Swatch label="badge, range + time">
+            <TargetBadge target='["2026-07-01 09:00:00+00","2026-07-15 18:00:00+00")' />
+          </Swatch>
+          <Swatch label="input, simple">
             <TargetEditor value={targetSimple} onChange={setTargetSimple} hideClear />
           </Swatch>
-          <Swatch label="target, simple + time">
+          <Swatch label="input, simple + time">
             <TargetEditor
               value={targetSimpleTime}
               onChange={setTargetSimpleTime}
               hideClear
             />
           </Swatch>
-          <Swatch label="target, range">
+          <Swatch label="input, range">
             <TargetEditor value={targetRange} onChange={setTargetRange} hideClear />
           </Swatch>
-          <Swatch label="target, range + time">
+          <Swatch label="input, range + time">
             <TargetEditor
               value={targetRangeTime}
               onChange={setTargetRangeTime}
               hideClear
             />
           </Swatch>
-          <Swatch label="past target, suggested">
+          <Swatch label="input, past target suggested">
             {/* Same dashed-outline language as TagSuggestion -- proposes a
                 quick-pick value rather than an already-set one. A past
                 target reads as a stale/missed window, so it's offered as a
@@ -530,6 +531,42 @@ export default function SigilsPage() {
             <TagSuggestion onClick={() => setTargetRange('["2026-07-10 00:00:00+00","2026-07-17 00:00:00+00")')}>
               last week
             </TagSuggestion>
+          </Swatch>
+        </Section>
+
+        <Section title="Estimate" nowrap>
+          <Swatch label="badge, compact">
+            <TaskProgressBar
+              progress={{ loggedMinutes: 90, estimateMinutes: 120, pct: 75, level: 'ok' }}
+            />
+          </Swatch>
+          <Swatch label="badge, over">
+            <TaskProgressBar
+              progress={{ loggedMinutes: 150, estimateMinutes: 120, pct: 125, level: 'over' }}
+            />
+          </Swatch>
+          <Swatch label="badge, full">
+            <TaskProgressBar
+              progress={{ loggedMinutes: 90, estimateMinutes: 120, pct: 75, level: 'ok' }}
+              size="full"
+            />
+          </Swatch>
+          <Swatch label="input">
+            {/* Matches TaskDetailModal's estimate field exactly: logged
+                total (read-only) + a bare number input for the minutes,
+                no pill chrome -- the progress bar above already carries
+                the visual weight, this is just the raw editable value. */}
+            <div className="text-nyx-400 flex items-center gap-1 font-mono text-caption">
+              {minutesToHuman(90)} logged /
+              <input
+                type="number"
+                min="0"
+                value={estimateDraft}
+                onChange={(e) => setEstimateDraft(e.target.value)}
+                className="text-nyx-100 border-nyx-600 focus:border-eros-400 w-8 border-b bg-transparent text-center outline-none"
+              />
+              m
+            </div>
           </Swatch>
         </Section>
 
