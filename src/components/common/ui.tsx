@@ -170,12 +170,12 @@ export function StatusPicker({ value, onChange }: StatusPickerProps) {
                 }}
                 className={clsx(
                   'inline-flex items-center gap-px py-px pr-2.5 pl-1 transition-all',
-                  i === 0 && j === 0 && 'rounded-tl-full',
-                  i === 0 && j === row.length - 1 && 'rounded-tr-full',
-                  i === STATUS_ROWS.length - 1 && j === 0 && 'rounded-bl-full',
+                  i === 0 && j === 0 && 'rounded-tl-md',
+                  i === 0 && j === row.length - 1 && 'rounded-tr-md',
+                  i === STATUS_ROWS.length - 1 && j === 0 && 'rounded-bl-md',
                   i === STATUS_ROWS.length - 1 &&
                     j === row.length - 1 &&
-                    'rounded-br-full',
+                    'rounded-br-md',
                   active ? 'opacity-100' : 'opacity-45 hover:opacity-75'
                 )}
               >

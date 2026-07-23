@@ -411,6 +411,8 @@ export default function SigilsPage() {
               <StatusBadge status={s} />
             </Swatch>
           ))}
+        </Section>
+        <Section title="Status picker">
           <Swatch label="picker">
             <StatusPicker value={status} onChange={setStatus} />
           </Swatch>
