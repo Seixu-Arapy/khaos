@@ -36,14 +36,21 @@ export default function KhaosIcon({
           callers also pass animate-pulse via className on the outer div
           (the Vortex hero icon spins and pulses at once), and both would
           collide fighting over the same `animation` property on one
-          element. */}
+          element. This span is forced to exactly 1em x 1em (h-[1em]/
+          w-[1em] + lineHeight:0) -- without that, the fontSize class's
+          own line-height (e.g. text-2xl's default line-height is taller
+          than its 24px font-size) makes the span a non-square box, and
+          rotating a non-square box drifts the visible icon in a circle
+          instead of spinning it in place, confirmed via timelapse
+          screenshots even after the SVG glyph itself was centered. */}
       <span
         className={clsx(
-          'flex items-center justify-center',
+          'flex h-[1em] w-[1em] items-center justify-center',
           fontSize,
           color,
           spin ? 'animate-spin-slow' : ''
         )}
+        style={{ lineHeight: 0 }}
       >
         {/* Same "✷" glyph as ever, but drawn via SVG text with explicit
             anchor points instead of plain inline text. A font glyph's
@@ -53,7 +60,7 @@ export default function KhaosIcon({
             the SVG's own (50,50) coordinate, so rotating this 1em-square
             SVG (whose CSS transform-origin defaults to its true center)
             rotates around the glyph's real visual center. */}
-        <svg viewBox="0 0 100 100" className="h-[1em] w-[1em]" aria-hidden="true">
+        <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
           <text
             x="50"
             y="50"
