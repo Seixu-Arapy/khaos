@@ -200,14 +200,14 @@ export default function ForgePage() {
         </Swatch>
         <Swatch label="add (icon-only)">
           {/* IconAddButton, from TaskDetailModal's "Add previous/next
-              task" -- genuinely icon-only, no visible label (aria-label
-              only). This DOES exist, contradicting an earlier claim on
-              this page that no icon-only add pattern exists anywhere. */}
+              task" -- icon-only because the adjacent field label
+              ("Previous tasks") already says what's being added, with
+              no spare width for a second label. */}
           <button
             type="button"
             aria-label="Add previous task"
             title="Add previous task"
-            className="bg-hypnos-400 text-nyx-900 hover:bg-hypnos-300 active:bg-hypnos-500 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded transition-colors"
+            className="bg-nyx-700 text-nyx-300 hover:bg-nyx-600 active:bg-nyx-500 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded transition-colors"
           >
             <Plus size={10} />
           </button>
@@ -227,29 +227,24 @@ export default function ForgePage() {
         <p className="text-nyx-200 mb-3 font-semibold tracking-wide uppercase">
           Why add/remove stay this muted
         </p>
-        <p className="text-nyx-400 mb-1.5">
-          <em>Correction from an earlier pass:</em> icon-only add does
-          exist — <code className="text-eros-400">IconAddButton</code>{' '}
-          (Previous/Next tasks). It works there because the field label
-          right next to it (&ldquo;Previous tasks&rdquo;) already says what&rsquo;s
-          being added, and the row has no spare width for a second
-          label. The checklist and add-time patterns keep their own text
-          because they don&rsquo;t sit next to a labeled context the
-          same way.
-        </p>
         <p className="text-nyx-400">
-          Add stays Nyx-grey rather than Eros so Eros keeps meaning one
-          thing app-wide: <em>this needs you</em>. An always-visible add
-          control isn&rsquo;t a call to act, it&rsquo;s just always there —
-          coloring it would dilute the one signal Eros is supposed to carry.
-          Remove earns its danger hover because deleting is the one
-          add/remove action with real consequence.
+          Every add control — pill, inline, or icon-only — defaults to
+          neutral Nyx, so Eros keeps meaning one thing app-wide:{' '}
+          <em>this needs you</em>. Add isn&rsquo;t a call to act, it&rsquo;s
+          just always there — coloring it would dilute the one signal
+          Eros carries. The add-time pill is the one exception: it lights
+          up Eros only while actively toggled on, the same way any other
+          active-state control would. Remove earns its danger hover
+          because deleting is the one add/remove action with real
+          consequence.
         </p>
       </div>
 
       <Section title="Toggle">
+        {/* Switch (track + sliding thumb) from CalendarView's "show logged
+            time"; TimeToggle in Inputs above is the other on/off pattern,
+            button-shaped instead. */}
         <Swatch label="switch">
-          {/* From CalendarView's "show logged time" control. */}
           <button
             type="button"
             onClick={() => setToggled((v) => !v)}
@@ -257,7 +252,7 @@ export default function ForgePage() {
           >
             <span
               className={`relative inline-block h-[17px] w-[30px] shrink-0 rounded-full transition-colors ${
-                toggled ? 'bg-pontus-500' : 'bg-nyx-700'
+                toggled ? 'bg-gaia-500' : 'bg-nyx-700'
               }`}
             >
               <span
@@ -271,7 +266,7 @@ export default function ForgePage() {
         </Swatch>
         <Swatch label="switch, disabled">
           <button type="button" disabled className="text-nyx-300 flex items-center gap-2 text-caption disabled:cursor-not-allowed disabled:opacity-50">
-            <span className="bg-pontus-500 relative inline-block h-[17px] w-[30px] shrink-0 rounded-full">
+            <span className="bg-gaia-500 relative inline-block h-[17px] w-[30px] shrink-0 rounded-full">
               <span className="bg-nyx-100 absolute top-0.5 right-0.5 h-[13px] w-[13px] rounded-full" />
             </span>
             Show logged time
@@ -281,24 +276,13 @@ export default function ForgePage() {
 
       <div className="max-w-prose text-caption leading-relaxed">
         <p className="text-nyx-200 mb-3 font-semibold tracking-wide uppercase">
-          Why the toggle is Pontus
-        </p>
-        <p className="text-nyx-400 mb-1.5">
-          <em>Correction from an earlier pass:</em> &ldquo;only one toggle
-          in the app&rdquo; was too narrow — <code className="text-eros-400">TimeToggle</code>{' '}
-          (Due&rsquo;s and Target&rsquo;s add/remove-time control, shown in
-          Inputs above) is also a binary on/off toggle, just button-shaped
-          instead of switch-shaped. The claim below is specifically about
-          the <em>switch</em> (track + sliding thumb) pattern, which really
-          is still one-of-one.
+          Why the toggle is Gaia
         </p>
         <p className="text-nyx-400">
-          Not a deliberate REN choice — the switch inherited Pontus
-          mechanically from the pre-rename teal. It reads fine (Pontus
-          already means &ldquo;active/current&rdquo; elsewhere, e.g. the
-          in-review status), but it hasn&rsquo;t been tested against a
-          second switch yet. Worth revisiting once a second one exists to
-          confirm the pattern rather than one sample.
+          A switch is a state the user directly controls, not a status
+          value — so it stays out of the status/priority palette entirely.
+          Gaia reads as settled and enabled without colliding with any
+          existing meaning elsewhere in the app; off stays neutral Nyx.
         </p>
       </div>
     </Chamber>

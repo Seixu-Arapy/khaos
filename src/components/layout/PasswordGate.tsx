@@ -64,10 +64,11 @@ export function PasswordGate({ children }: PasswordGateProps) {
             animate-spin-slow class that didn't exist yet, so it never
             actually spun. Now the real KhaosIcon, with the fix. */}
         <KhaosIcon size="h-16 w-16" fontSize="text-6xl" color="text-eros-400" spin />
-        {/* text-4xl, not a Chorus token -- the scale tops out at
-            text-display-lg (24px). Same off-scale hero-size precedent as
-            the Vortex index's own "Khaos Vortex" title. */}
-        <KhaosTitle className="text-4xl" />
+        {/* text-6xl, not a Chorus token -- the scale tops out at
+            text-display-lg (24px). Off-scale hero size, same register as
+            the Vortex index's own "Khaos Vortex" title (text-4xl there;
+            bigger here since this is the only thing on the whole screen). */}
+        <KhaosTitle className="text-6xl" />
       </div>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-3">

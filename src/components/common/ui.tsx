@@ -262,7 +262,12 @@ export function IconAddButton({
       aria-label={label}
       title={label}
       className={clsx(
-        'bg-hypnos-400 text-nyx-900 hover:bg-hypnos-300 active:bg-hypnos-500 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded transition-colors',
+        // Was bg-hypnos-400 -- an arbitrary color with no established
+        // meaning here (Hypnos means "waiting" in STATUS_META; this
+        // isn't that). Add controls default to neutral Nyx everywhere
+        // else in the app, so this one now matches instead of standing
+        // out for no reason.
+        'bg-nyx-700 text-nyx-300 hover:bg-nyx-600 active:bg-nyx-500 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded transition-colors',
         className
       )}
       {...props}
