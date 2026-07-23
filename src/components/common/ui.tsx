@@ -169,7 +169,7 @@ export function StatusPicker({ value, onChange }: StatusPickerProps) {
                   border: `1.5px solid ${active ? meta.iconColor : 'transparent'}`,
                 }}
                 className={clsx(
-                  'inline-flex items-center gap-0.5 py-px pr-2 pl-px transition-all',
+                  'inline-flex items-center gap-px py-px pr-2.5 pl-1 transition-all',
                   i === 0 && j === 0 && 'rounded-tl-full',
                   i === 0 && j === row.length - 1 && 'rounded-tr-full',
                   i === STATUS_ROWS.length - 1 && j === 0 && 'rounded-bl-full',
