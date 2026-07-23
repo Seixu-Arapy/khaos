@@ -29,17 +29,15 @@ export default function App() {
         <Route path="/routines" element={<RoutinesPage />} />
         <Route path="/assistant" element={<AssistantPage />} />
       </Route>
-      {import.meta.env.DEV && (
-        <>
-          <Route path="/dev/vortex" element={<VaultIndexPage />} />
-          <Route path="/dev/vortex/pantheon" element={<PantheonPage />} />
-          <Route path="/dev/vortex/chorus" element={<ChorusPage />} />
-          <Route path="/dev/vortex/wellspring" element={<WellspringPage />} />
-          <Route path="/dev/vortex/sigils" element={<SigilsPage />} />
-          <Route path="/dev/vortex/forge" element={<ForgePage />} />
-          <Route path="/dev/vortex/threshold" element={<ThresholdPage />} />
-        </>
-      )}
+      {/* Not DEV-gated: the whole app sits behind PasswordGate, so the
+          Vortex can ship in Vercel previews for review. */}
+      <Route path="/dev/vortex" element={<VaultIndexPage />} />
+      <Route path="/dev/vortex/pantheon" element={<PantheonPage />} />
+      <Route path="/dev/vortex/chorus" element={<ChorusPage />} />
+      <Route path="/dev/vortex/wellspring" element={<WellspringPage />} />
+      <Route path="/dev/vortex/sigils" element={<SigilsPage />} />
+      <Route path="/dev/vortex/forge" element={<ForgePage />} />
+      <Route path="/dev/vortex/threshold" element={<ThresholdPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
