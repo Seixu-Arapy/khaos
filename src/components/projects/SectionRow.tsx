@@ -41,7 +41,7 @@ export default function SectionRow({
       <span className="flex min-w-0 items-center gap-1.5 md:flex-1">
         <FieldBadge fieldName={fieldName} size="xs" />
         <StatusBadge status={section.status} />
-        <span className="text-nyx-500 shrink-0 truncate text-body">
+        <span className="text-nyx-500 shrink-0 truncate text-body font-bold">
           {projectName}
         </span>
         <ChevronRight size={12} className="text-nyx-700 shrink-0" />

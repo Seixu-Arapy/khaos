@@ -744,7 +744,7 @@ export function ProjectChip({ name, fieldName, className }: ProjectChipProps) {
       )}
     >
       <FieldBadge fieldName={fieldName} size="xs" />
-      <span className="truncate">{name}</span>
+      <span className="truncate font-bold">{name}</span>
     </span>
   );
 }

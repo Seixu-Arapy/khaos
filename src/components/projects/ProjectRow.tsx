@@ -43,7 +43,7 @@ export default function ProjectRow({
       <span className="flex min-w-0 items-center gap-1.5 md:flex-1">
         <FieldBadge fieldName={fieldName} size="xs" />
         <StatusBadge status={project.status} />
-        <span className="text-nyx-100 min-w-0 flex-1 truncate text-body">
+        <span className="text-nyx-100 min-w-0 flex-1 truncate text-body font-bold">
           {project.name}
         </span>
       </span>
