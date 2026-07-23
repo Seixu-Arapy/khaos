@@ -54,11 +54,13 @@ export default function DueEditor({
     onChange(localDate.toISOString());
   }
 
+  const overdue = isOverdue(value, status);
+
   return (
     <div
       className={clsx(
         'inline-flex h-8.5 w-fit items-center gap-1.5 rounded-md border px-2.5 font-mono text-caption',
-        isOverdue(value, status)
+        overdue
           ? 'border-tartarus-500 bg-tartarus-500/10 text-tartarus-400'
           : 'border-eros-500 bg-eros-500/10 text-eros-400'
       )}
@@ -69,7 +71,13 @@ export default function DueEditor({
         value={values.date}
         disabled={disabled}
         onChange={(e) => commit(e.target.value, values.time, showTime)}
-        className="due-input w-[10ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+        // Date is the primary value here, time is secondary detail --
+        // sized (text-body vs. the pill's own text-caption) to read as
+        // the more important of the two, not just wider.
+        className={clsx(
+          'due-input w-[11ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
+          overdue ? 'text-tartarus-400!' : 'text-eros-400!'
+        )}
       />
       {showTime && values.date && (
         <>
@@ -79,7 +87,10 @@ export default function DueEditor({
             value={values.time || '12:00'}
             disabled={disabled}
             onChange={(e) => commit(values.date, e.target.value, true)}
-            className="due-input w-14! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+            className={clsx(
+              'due-input w-12! shrink-0 border-0! bg-transparent! p-0! text-center text-label!',
+              overdue ? 'text-tartarus-400!' : 'text-eros-400!'
+            )}
           />
         </>
       )}

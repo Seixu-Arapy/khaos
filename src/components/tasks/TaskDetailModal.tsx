@@ -748,7 +748,12 @@ export default function TaskDetailModal({
                 onChange={(e) => {
                   handleDueChange(e.target.value, dueValues.time);
                 }}
-                className="due-input w-[10ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+                className={clsx(
+                  'due-input w-[11ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
+                  isOverdue(task.due, task.status)
+                    ? 'text-tartarus-400!'
+                    : 'text-eros-400!'
+                )}
               />
               {showDueTime && dueValues.date && (
                 <>
@@ -759,7 +764,12 @@ export default function TaskDetailModal({
                     onChange={(e) => {
                       handleDueChange(dueValues.date, e.target.value, true);
                     }}
-                    className="due-input w-14! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+                    className={clsx(
+                      'due-input w-12! shrink-0 border-0! bg-transparent! p-0! text-center text-label!',
+                      isOverdue(task.due, task.status)
+                        ? 'text-tartarus-400!'
+                        : 'text-eros-400!'
+                    )}
                   />
                 </>
               )}

@@ -695,6 +695,9 @@ export default function SigilsPage() {
           <Swatch label="input">
             <DueEditor value={dueDraft} status="todo" onChange={setDueDraft} />
           </Swatch>
+          <Swatch label="input, overdue">
+            <DueEditor value="2026-01-01" status="todo" onChange={() => {}} />
+          </Swatch>
           <Swatch label="scheduled marker">
             {/* Added to TaskRow in the recent redesign -- a small marker
                 for "already has a calendar event", not a full badge. */}
