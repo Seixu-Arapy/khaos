@@ -47,6 +47,42 @@ export default function SigilsPage() {
         </Swatch>
       </Section>
 
+      <div className="border-nyx-700 mb-10 max-w-prose border-t pt-6 text-caption leading-relaxed">
+        <p className="text-nyx-200 mb-3 font-semibold tracking-wide uppercase">
+          How status color reads
+        </p>
+        <p className="text-nyx-300 mb-3">
+          Grouped by what each status asks of <em>you</em>, not by a flat
+          per-status color — the dot answers &ldquo;does this need
+          me?&rdquo; before the label does.
+        </p>
+        <p className="text-nyx-400 mb-1.5">
+          <span className="text-eros-400 font-semibold">Calls you to act</span>{' '}
+          — planning, todo, in progress share Eros, heat rising with
+          proximity (600 → 500 → 400).
+        </p>
+        <p className="text-nyx-400 mb-1.5">
+          <span className="text-pontus-400 font-semibold">Waiting, soft</span>{' '}
+          — in review is Pontus: someone else is still moving.
+        </p>
+        <p className="text-nyx-400 mb-1.5">
+          <span className="text-hypnos-400 font-semibold">Waiting, softer</span>{' '}
+          — waiting-on-previous is Hypnos: asleep until its turn.
+        </p>
+        <p className="text-nyx-400 mb-1.5">
+          <span className="text-nyx-300 font-semibold">Waiting, hard</span> —
+          paused is Nyx 500: a stop you chose, drained of color.
+        </p>
+        <p className="text-nyx-400">
+          <span className="text-gaia-500 font-semibold">Closed, well</span> —
+          done is Gaia.{' '}
+          <span className="text-nyx-600 font-semibold">Closed, dead</span> —
+          cancelled is the deepest Nyx, <em>more</em> muted than paused —
+          it&rsquo;s not dangerous, it&rsquo;s just gone. Tartarus/danger
+          stays reserved for things still actively going wrong.
+        </p>
+      </div>
+
       <Section title="Priority">
         {PRIORITIES.map((p) => (
           <Swatch key={p} label={p}>
