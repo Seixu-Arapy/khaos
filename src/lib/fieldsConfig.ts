@@ -10,14 +10,19 @@
 // circle, anchored on Staging Academy's existing brand blue (#3772ff,
 // hue ~222°) rather than an arbitrary starting point. The other 10 are
 // spaced evenly around it (360°/11 ≈ 32.7° apart) in the order below,
-// so adjacent fields in that list are adjacent in hue too. Saturation
-// stays pinned at 100% and lightness at Staging Academy's own ~61% for
-// every field except where that failed WCAG AA against nyx-900 (Som,
-// landing in the blue-violet range where the same lightness reads
-// darker to the eye) -- lightened just enough there to clear 4.5:1,
-// nowhere else. Staging Academy itself sits at 4.13:1, under AA, but
-// it's the fixed anchor (an existing brand color, not open to change
-// here) rather than a new value to tune.
+// so adjacent fields in that list are adjacent in hue too.
+//
+// Saturation/lightness revised (still Round 2): the original pass pinned
+// saturation at 100%, which read as neon/off-brand next to the rest of
+// the app -- every deity accent color (Eros, Pontus, Gaia, Tartarus,
+// Hypnos) sits around S 50-60%, nothing else in the palette is fully
+// saturated. Rebuilt at S 55% / L 58% (same hues, unchanged spacing) to
+// match that register. Lightness bumped further on the two hues that
+// then failed WCAG AA against nyx-900 (Pessoal, Som) -- same "clear
+// 4.5:1, nowhere else" rule as before. Staging Academy itself is
+// unchanged and stays the one exception: it's a fixed existing brand
+// color, not a value this system gets to tune, so it's also the one
+// field still under AA (4.13:1) and still fully saturated.
 import {
   Sparkles,
   Box,
@@ -52,74 +57,74 @@ export interface FieldMeta {
 export const FIELDS_CONFIG: Record<string, FieldMeta> = {
   Pessoal: {
     icon: User,
-    color: '#ff374e',
+    color: '#d15f6c',
     classes: {
-      border: 'border-[#ff374e]/20',
-      bg: 'bg-[#ff374e]/10',
-      text: 'text-[#ff374e]',
-      muted: 'text-[#ff374e]/60',
+      border: 'border-[#d15f6c]/20',
+      bg: 'bg-[#d15f6c]/10',
+      text: 'text-[#d15f6c]',
+      muted: 'text-[#d15f6c]/60',
     },
   },
   Pesquisa: {
     icon: GraduationCap,
-    color: '#ff8d37',
+    color: '#cf8c59',
     classes: {
-      border: 'border-[#ff8d37]/20',
-      bg: 'bg-[#ff8d37]/10',
-      text: 'text-[#ff8d37]',
-      muted: 'text-[#ff8d37]/60',
+      border: 'border-[#cf8c59]/20',
+      bg: 'bg-[#cf8c59]/10',
+      text: 'text-[#cf8c59]',
+      muted: 'text-[#cf8c59]/60',
     },
   },
   // Was missing from the old 10-field list entirely -- the app has 11
   // real fields, this one just never got an entry.
   Textos: {
     icon: FileText,
-    color: '#fffb37',
+    color: '#cfcd59',
     classes: {
-      border: 'border-[#fffb37]/20',
-      bg: 'bg-[#fffb37]/10',
-      text: 'text-[#fffb37]',
-      muted: 'text-[#fffb37]/60',
+      border: 'border-[#cfcd59]/20',
+      bg: 'bg-[#cfcd59]/10',
+      text: 'text-[#cfcd59]',
+      muted: 'text-[#cfcd59]/60',
     },
   },
   Caligrafia: {
     icon: Brush,
-    color: '#96ff37',
+    color: '#90cf59',
     classes: {
-      border: 'border-[#96ff37]/20',
-      bg: 'bg-[#96ff37]/10',
-      text: 'text-[#96ff37]',
-      muted: 'text-[#96ff37]/60',
+      border: 'border-[#90cf59]/20',
+      bg: 'bg-[#90cf59]/10',
+      text: 'text-[#90cf59]',
+      muted: 'text-[#90cf59]/60',
     },
   },
   Artes: {
     icon: Sparkles,
-    color: '#37ff45',
+    color: '#59cf61',
     classes: {
-      border: 'border-[#37ff45]/20',
-      bg: 'bg-[#37ff45]/10',
-      text: 'text-[#37ff45]',
-      muted: 'text-[#37ff45]/60',
+      border: 'border-[#59cf61]/20',
+      bg: 'bg-[#59cf61]/10',
+      text: 'text-[#59cf61]',
+      muted: 'text-[#59cf61]/60',
     },
   },
   Design: {
     icon: Box,
-    color: '#37ffb2',
+    color: '#59cfa2',
     classes: {
-      border: 'border-[#37ffb2]/20',
-      bg: 'bg-[#37ffb2]/10',
-      text: 'text-[#37ffb2]',
-      muted: 'text-[#37ffb2]/60',
+      border: 'border-[#59cfa2]/20',
+      bg: 'bg-[#59cfa2]/10',
+      text: 'text-[#59cfa2]',
+      muted: 'text-[#59cfa2]/60',
     },
   },
   Costura: {
     icon: Scissors,
-    color: '#37dfff',
+    color: '#59bbcf',
     classes: {
-      border: 'border-[#37dfff]/20',
-      bg: 'bg-[#37dfff]/10',
-      text: 'text-[#37dfff]',
-      muted: 'text-[#37dfff]/60',
+      border: 'border-[#59bbcf]/20',
+      bg: 'bg-[#59bbcf]/10',
+      text: 'text-[#59bbcf]',
+      muted: 'text-[#59bbcf]/60',
     },
   },
   'Staging Academy': {
@@ -134,32 +139,32 @@ export const FIELDS_CONFIG: Record<string, FieldMeta> = {
   },
   Som: {
     icon: Radio,
-    color: '#8c66ff',
+    color: '#8c73d6',
     classes: {
-      border: 'border-[#8c66ff]/20',
-      bg: 'bg-[#8c66ff]/10',
-      text: 'text-[#8c66ff]',
-      muted: 'text-[#8c66ff]/60',
+      border: 'border-[#8c73d6]/20',
+      bg: 'bg-[#8c73d6]/10',
+      text: 'text-[#8c73d6]',
+      muted: 'text-[#8c73d6]/60',
     },
   },
   Imagem: {
     icon: Layers,
-    color: '#d637ff',
+    color: '#b759cf',
     classes: {
-      border: 'border-[#d637ff]/20',
-      bg: 'bg-[#d637ff]/10',
-      text: 'text-[#d637ff]',
-      muted: 'text-[#d637ff]/60',
+      border: 'border-[#b759cf]/20',
+      bg: 'bg-[#b759cf]/10',
+      text: 'text-[#b759cf]',
+      muted: 'text-[#b759cf]/60',
     },
   },
   Programação: {
     icon: Code2,
-    color: '#ff37bb',
+    color: '#cf59a8',
     classes: {
-      border: 'border-[#ff37bb]/20',
-      bg: 'bg-[#ff37bb]/10',
-      text: 'text-[#ff37bb]',
-      muted: 'text-[#ff37bb]/60',
+      border: 'border-[#cf59a8]/20',
+      bg: 'bg-[#cf59a8]/10',
+      text: 'text-[#cf59a8]',
+      muted: 'text-[#cf59a8]/60',
     },
   },
 };
