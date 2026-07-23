@@ -65,17 +65,19 @@ export default function DueEditor({
           : 'border-eros-500 bg-eros-500/10 text-eros-400'
       )}
     >
-      <Flag size={11} className="shrink-0" />
+      {/* text-body matches the default input's own size (TextInput,
+          Forge) -- both date and time read at that same size, only
+          their box widths differ (date wider, time narrower). Icon
+          bumped to 15px to match that size, same as the search input's
+          icon in Forge. */}
+      <Flag size={15} className="shrink-0" />
       <TextInput
         type="date"
         value={values.date}
         disabled={disabled}
         onChange={(e) => commit(e.target.value, values.time, showTime)}
-        // Date is the primary value here, time is secondary detail --
-        // sized (text-body vs. the pill's own text-caption) to read as
-        // the more important of the two, not just wider.
         className={clsx(
-          'due-input w-[11ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
+          'due-input w-[12ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
           overdue ? 'text-tartarus-400!' : 'text-eros-400!'
         )}
       />
@@ -88,7 +90,7 @@ export default function DueEditor({
             disabled={disabled}
             onChange={(e) => commit(values.date, e.target.value, true)}
             className={clsx(
-              'due-input w-12! shrink-0 border-0! bg-transparent! p-0! text-center text-label!',
+              'due-input w-13! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
               overdue ? 'text-tartarus-400!' : 'text-eros-400!'
             )}
           />

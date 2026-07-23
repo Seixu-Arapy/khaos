@@ -741,7 +741,7 @@ export default function TaskDetailModal({
                   : 'border-eros-500 bg-eros-500/10 text-eros-400'
               )}
             >
-              <Flag size={11} className="shrink-0" />
+              <Flag size={15} className="shrink-0" />
               <TextInput
                 type="date"
                 value={dueValues.date}
@@ -749,7 +749,7 @@ export default function TaskDetailModal({
                   handleDueChange(e.target.value, dueValues.time);
                 }}
                 className={clsx(
-                  'due-input w-[11ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
+                  'due-input w-[12ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
                   isOverdue(task.due, task.status)
                     ? 'text-tartarus-400!'
                     : 'text-eros-400!'
@@ -765,7 +765,7 @@ export default function TaskDetailModal({
                       handleDueChange(dueValues.date, e.target.value, true);
                     }}
                     className={clsx(
-                      'due-input w-12! shrink-0 border-0! bg-transparent! p-0! text-center text-label!',
+                      'due-input w-13! shrink-0 border-0! bg-transparent! p-0! text-center text-body!',
                       isOverdue(task.due, task.status)
                         ? 'text-tartarus-400!'
                         : 'text-eros-400!'
