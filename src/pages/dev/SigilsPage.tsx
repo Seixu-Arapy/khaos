@@ -15,7 +15,7 @@ import {
 } from '../../components/common/ui';
 import { ChangeBadge } from '../../components/assistant/ChangeBadge';
 import { STATUSES, PRIORITIES } from '../../lib/constants';
-import { FIELDS_CONFIG } from '../../lib/fieldsConfig';
+import { FIELDS_CONFIG, FIELD_EMOJI } from '../../lib/fieldsConfig';
 import type { Status, Priority } from '../../lib/types';
 
 const SAMPLE_CHANGES = [
@@ -170,26 +170,28 @@ export default function SigilsPage() {
                 <thead>
                   <tr className="border-nyx-700 border-b">
                     <th className="text-nyx-500 px-2 py-1 text-left font-semibold tracking-wide uppercase">
-                      Surface
+                      Field
                     </th>
                     <th className="text-nyx-500 px-2 py-1 text-left font-semibold tracking-wide uppercase">
-                      Renders as
+                      App / chat
+                    </th>
+                    <th className="text-nyx-500 px-2 py-1 text-left font-semibold tracking-wide uppercase">
+                      Telegram
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-nyx-700 border-b">
-                    <td className="text-nyx-400 px-2 py-1.5">App / chat</td>
-                    <td className="px-2 py-1.5">
-                      <FieldBadge fieldName="Design" size="md" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="text-nyx-400 px-2 py-1.5">Telegram</td>
-                    <td className="text-nyx-300 px-2 py-1.5 font-mono">
-                      📦 DESIGN
-                    </td>
-                  </tr>
+                  {fieldNames.map((name) => (
+                    <tr key={name} className="border-nyx-700 border-b last:border-b-0">
+                      <td className="text-nyx-500 px-2 py-1.5">{name}</td>
+                      <td className="px-2 py-1.5">
+                        <FieldBadge fieldName={name} size="md" />
+                      </td>
+                      <td className="text-nyx-300 px-2 py-1.5 font-mono">
+                        {FIELD_EMOJI[name]} {name.toUpperCase()}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -418,82 +420,8 @@ export default function SigilsPage() {
         </p>
         <p className="text-nyx-400 max-w-prose text-caption leading-relaxed">
           Reading the rest of Part I against that lens: Section&rsquo;s
-          header row and Routine&rsquo;s list row are arguably their own
-          expanded chips too, same reasoning as the task row. Event has
-          neither a compact nor an expanded standalone mark yet — only the
-          chat preview card and the full modal. <em>Open question:</em>{' '}
-          does <code className="text-eros-400">ENT</code> need to design
-          new expanded forms, or mainly recognize and consolidate the ones
-          that already exist (TaskRow, section header, routine row) onto
-          shared building blocks?
-        </p>
-
-        <p className="text-nyx-200 mb-3 mt-8 text-caption font-semibold tracking-wide uppercase">
-          Proposal: a Project card, row form
-        </p>
-        <p className="text-nyx-400 mb-6 max-w-prose text-caption leading-relaxed">
-          The existing <code className="text-eros-400">ProjectCard</code> is a
-          grid tile, and today only shows status/priority/due plus a
-          section/task count line; <code className="text-eros-400">
-            target
-          </code>{' '}
-          exists on the real <code className="text-eros-400">projects</code>{' '}
-          table but isn&rsquo;t shown anywhere yet. A row-shaped sibling,
-          TaskRow-shaped, would carry: status, priority, due, target,
-          section count, task count — for contexts a grid tile doesn&rsquo;t
-          fit (e.g. a projects list view).
-        </p>
-
-        <Section title="Option A — one line">
-          <Swatch label="everything inline, TaskRow-shaped">
-            <div className="border-nyx-700 flex w-[420px] items-center gap-1.5 rounded-md border border-transparent px-2 py-1.5 hover:border-current">
-              <StatusBadge status="in_progress" />
-              <span className="text-nyx-100 min-w-0 flex-1 truncate text-body">
-                Roadmap Q3
-              </span>
-              <PriorityBadge priority="high" />
-              <TargetBadge target='["2026-07-01 00:00:00+00","2026-09-30 00:00:00+00")' />
-              <DueBadge due="2026-09-30" status="in_progress" />
-              <span className="text-nyx-600 shrink-0 text-caption">
-                3 sections · 12 tasks
-              </span>
-            </div>
-          </Swatch>
-        </Section>
-
-        <Section title="Option B — two lines">
-          <Swatch label="identity on top, badges below">
-            <div className="border-nyx-700 flex w-[420px] flex-col gap-0.5 rounded-md border border-transparent px-2 py-1.5 hover:border-current">
-              <div className="flex items-center gap-1.5">
-                <StatusBadge status="in_progress" />
-                <span className="text-nyx-100 min-w-0 flex-1 truncate text-body">
-                  Roadmap Q3
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 pl-0.5">
-                <PriorityBadge priority="high" />
-                <TargetBadge target='["2026-07-01 00:00:00+00","2026-09-30 00:00:00+00")' />
-                <DueBadge due="2026-09-30" status="in_progress" />
-                <span className="text-nyx-600 text-caption">
-                  3 sections · 12 tasks
-                </span>
-              </div>
-            </div>
-          </Swatch>
-        </Section>
-
-        <p className="text-nyx-400 max-w-prose text-caption leading-relaxed">
-          <b className="text-nyx-200">My take:</b> Option A. TaskRow already
-          established the one-line pattern (status + name + badges, wrapping
-          to two lines only on narrow viewports via its own responsive
-          classes) — a Project card splitting into two lines <em>by
-          default</em> would read as a different, heavier kind of row next
-          to task rows in the same list context (e.g. a combined
-          projects-and-tasks view), when a project row realistically has
-          the same or less information density than a task row does. Two
-          lines only makes sense if projects end up needing more fields
-          than tasks show, which target/section-count/task-count don&rsquo;t
-          push past.
+          header row and Routine&rsquo;s list row are their own expanded
+          chips too, same reasoning as the task row.
         </p>
       </div>
     </Chamber>

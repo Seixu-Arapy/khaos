@@ -671,7 +671,7 @@ export function FieldBadge({ fieldName, size = 'sm' }: FieldBadgeProps) {
     <span
       title={fieldName}
       className={clsx(
-        'inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-caption font-medium tracking-wide uppercase',
+        'inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-label font-bold tracking-wide uppercase',
         meta.classes.border,
         meta.classes.bg,
         meta.classes.text

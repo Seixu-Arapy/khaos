@@ -164,6 +164,24 @@ export const FIELDS_CONFIG: Record<string, FieldMeta> = {
   },
 };
 
+// Telegram has no color or icons -- plain text/markdown only. One emoji
+// per field, chosen to mirror the lucide icon above it, plus the name in
+// caps (e.g. "📦 DESIGN"). Not yet wired into the telegram-bot/
+// telegram-notify functions.
+export const FIELD_EMOJI: Record<string, string> = {
+  Pessoal: '🧑',
+  Pesquisa: '🎓',
+  Textos: '📄',
+  Caligrafia: '🖌️',
+  Artes: '✨',
+  Design: '📦',
+  Costura: '✂️',
+  'Staging Academy': '🏫',
+  Som: '🎧',
+  Imagem: '🖼️',
+  Programação: '💻',
+};
+
 // Used for any field name not present in FIELDS_CONFIG above (new fields
 // created via the "New field" button aren't guaranteed to match this list).
 export const DEFAULT_FIELD_META: FieldMeta = {

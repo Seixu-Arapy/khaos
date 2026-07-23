@@ -29,9 +29,7 @@ export default function EmblemPage() {
           <KhaosIcon size="h-7 w-7" fontSize="text-2xl" color="text-nyx-400" spin />
         </Swatch>
         <Swatch label="hero (password gate)">
-          <span className="animate-spin-slow text-eros-400 select-none text-5xl">
-            ✷
-          </span>
+          <KhaosIcon size="h-20 w-20" fontSize="text-7xl" color="text-eros-400" spin />
         </Swatch>
         <Swatch label="favicon">
           <img src="/favicon.svg" alt="" className="h-7 w-7" />
@@ -48,7 +46,7 @@ export default function EmblemPage() {
           <KhaosTitle className="text-xl" />
         </Swatch>
         <Swatch label="wordmark, large (password gate)">
-          <KhaosTitle className="text-2xl" />
+          <KhaosTitle className="text-6xl" />
         </Swatch>
       </Section>
 

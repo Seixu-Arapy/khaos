@@ -60,15 +60,13 @@ export function PasswordGate({ children }: PasswordGateProps) {
   return (
     <div className="bg-nyx-900 flex h-dvh flex-col items-center justify-center px-4">
       <div className="mb-8 flex flex-col items-center gap-2 select-none">
-        {/* Was a bare unicode span, hand-styled -- and referenced an
-            animate-spin-slow class that didn't exist yet, so it never
-            actually spun. Now the real KhaosIcon, with the fix. */}
-        <KhaosIcon size="h-16 w-16" fontSize="text-6xl" color="text-eros-400" spin />
+        <KhaosIcon size="h-20 w-20" fontSize="text-7xl" color="text-eros-400" spin />
         {/* text-6xl, not a Chorus token -- the scale tops out at
             text-display-lg (24px). Off-scale hero size, same register as
             the Vortex index's own "Khaos Vortex" title (text-4xl there;
             bigger here since this is the only thing on the whole screen). */}
         <KhaosTitle className="text-6xl" />
+        <p className="text-nyx-600 mt-4 text-body">Ordo ab chao</p>
       </div>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-3">
@@ -100,8 +98,6 @@ export function PasswordGate({ children }: PasswordGateProps) {
           {checking ? 'Checking…' : 'Enter'}
         </button>
       </form>
-
-      <p className="text-nyx-600 mt-8 text-caption">Ordo ab chao</p>
     </div>
   );
 }

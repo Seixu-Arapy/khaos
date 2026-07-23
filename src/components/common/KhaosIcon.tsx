@@ -31,7 +31,6 @@ export default function KhaosIcon({
         bgColor,
         className
       )}
-      style={{ lineHeight: 0 }} // Neutralizes line height to ensure perfect geometric centering
     >
       {/* Spin lives on this inner wrapper, not the outer div -- some
           callers also pass animate-pulse via className on the outer div
@@ -40,13 +39,32 @@ export default function KhaosIcon({
           element. */}
       <span
         className={clsx(
-          'flex h-full w-full items-center justify-center',
+          'flex items-center justify-center',
           fontSize,
           color,
           spin ? 'animate-spin-slow' : ''
         )}
       >
-        ✷
+        {/* Same "✷" glyph as ever, but drawn via SVG text with explicit
+            anchor points instead of plain inline text. A font glyph's
+            baseline-based box (how CSS/flex centers text) isn't the same
+            as its visual ink center -- textAnchor="middle" +
+            dominantBaseline="central" pin the actual rendered shape to
+            the SVG's own (50,50) coordinate, so rotating this 1em-square
+            SVG (whose CSS transform-origin defaults to its true center)
+            rotates around the glyph's real visual center. */}
+        <svg viewBox="0 0 100 100" className="h-[1em] w-[1em]" aria-hidden="true">
+          <text
+            x="50"
+            y="50"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="90"
+            fill="currentColor"
+          >
+            ✷
+          </text>
+        </svg>
       </span>
     </div>
   );
