@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Target, X } from 'lucide-react';
+import { Plus, Target, X } from 'lucide-react';
 import clsx from 'clsx';
 import { TextInput, TimeToggle } from './ui';
-import { parseRange, formatRange } from '../../lib/range';
+import { parseRange, formatRange, endOfLocalDay } from '../../lib/range';
 
 interface TargetEditorProps {
   value?: string | null;
@@ -21,7 +21,15 @@ function validate(start: Date | null, end: Date | null, due?: string | null) {
   if (due) {
     const dueDate = new Date(due);
     if (start >= dueDate) return 'Start must be before the due date.';
-    if (end && end > dueDate) return 'End must be on or before the due date.';
+    // Compare the effective end target: an untimed end date lands at the end
+    // of its day (23:59), not midnight, so that's what must fit before the due.
+    if (end) {
+      const endTarget =
+        end.getHours() === 0 && end.getMinutes() === 0
+          ? endOfLocalDay(end)
+          : end;
+      if (endTarget > dueDate) return 'End must be on or before the due date.';
+    }
   }
   return null;
 }
@@ -116,21 +124,26 @@ export default function TargetEditor({
     onChange(formatRange(nextStart, nextEnd || null));
   }
 
-  function handleNoEndToggle(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.checked) {
-      setForceShowEnd(false);
-      const nextStart = buildLocalDate(
-        startValues.date,
-        startValues.time,
-        showStartTime
-      );
-      const problem = validate(nextStart, null, due);
-      setError(problem);
-      if (problem) return;
-      onChange(formatRange(nextStart, null));
-    } else {
-      setForceShowEnd(true);
-    }
+  // Reveals the end-date field so the target can span more than its start day.
+  // The end target itself is only committed once the user picks an end date;
+  // until then the target stays a single day.
+  function handleAddEnd() {
+    setForceShowEnd(true);
+  }
+
+  // Drops the end date, turning the target back into a single day (whose end
+  // target is 23:59 of that day).
+  function handleRemoveEnd() {
+    setForceShowEnd(false);
+    const nextStart = buildLocalDate(
+      startValues.date,
+      startValues.time,
+      showStartTime
+    );
+    const problem = validate(nextStart, null, due);
+    setError(problem);
+    if (problem) return;
+    onChange(formatRange(nextStart, null));
   }
 
   function handleClear() {
@@ -210,35 +223,18 @@ export default function TargetEditor({
           )}
         </span>
 
-        <span className="text-ink-600 shrink-0 max-[350px]:col-start-2 max-[350px]:row-start-2 max-[350px]:justify-self-center max-[350px]:rotate-90">
-          →
-        </span>
+        {/* The arrow (and second date) only appear once the target spans more
+            than its start day. A target with just a start date is a single day
+            whose end target is 23:59 of that day — there is no open-ended
+            target, so no ∞ glyph. */}
+        {showEndInput && (
+          <span className="text-ink-600 shrink-0 max-[350px]:col-start-2 max-[350px]:row-start-2 max-[350px]:justify-self-center max-[350px]:rotate-90">
+            →
+          </span>
+        )}
 
         <span className="inline-flex shrink-0 items-center gap-1 max-[350px]:col-start-2 max-[350px]:row-start-3">
-          {/* checkbox always renders once a start date exists, so the user
-              can toggle back to open-ended even after setting an end date —
-              it just shows the ∞ glyph instead of the date fields when
-              unchecked */}
-          {startValues.date && (
-            <label
-              className="flex shrink-0 items-center gap-1 select-none"
-              title={
-                showEndInput
-                  ? 'Check to make open-ended'
-                  : 'Uncheck to set an end date'
-              }
-            >
-              <input
-                type="checkbox"
-                checked={!showEndInput}
-                disabled={disabled}
-                onChange={handleNoEndToggle}
-                className="accent-violet-400 h-3.5 w-3.5 shrink-0"
-              />
-              {!showEndInput && <span className="text-lg">∞</span>}
-            </label>
-          )}
-          {showEndInput && (
+          {showEndInput ? (
             <>
               {/* toggle bookends the pill on the single-line (desktop)
                   layout — order-2 pushes it after the date — but goes back
@@ -294,7 +290,29 @@ export default function TargetEditor({
                   className="text-ink-400! w-20! shrink-0 border-0! bg-transparent! p-0! text-center text-xs!"
                 />
               )}
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={handleRemoveEnd}
+                title="Remove end date (single day)"
+                className="text-ink-500 hover:text-rust-500 order-3 flex shrink-0 items-center max-[350px]:order-none"
+              >
+                <X size={12} />
+              </button>
             </>
+          ) : (
+            startValues.date && (
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={handleAddEnd}
+                title="Add end date"
+                className="text-ink-500 hover:text-ink-300 flex shrink-0 items-center gap-0.5"
+              >
+                <Plus size={12} />
+                <span>end</span>
+              </button>
+            )
           )}
         </span>
 
