@@ -252,3 +252,14 @@
     }
   }
 }
+
+/* DueEditor / TaskDetailModal's Due field: date/time inputs sit inside an
+   already-iconed pill (Flag), so the browser's own calendar/clock glyph
+   is a redundant second icon. Plain CSS, not a Tailwind arbitrary variant
+   -- `[&::-webkit-calendar-picker-indicator]:hidden` never made it into
+   the generated stylesheet (untested combination of arbitrary variant +
+   vendor pseudo-element + important-suffix), so this is the reliable
+   fallback. */
+.due-input::-webkit-calendar-picker-indicator {
+  display: none;
+}

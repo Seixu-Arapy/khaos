@@ -741,14 +741,14 @@ export default function TaskDetailModal({
                   : 'border-eros-500 bg-eros-500/10 text-eros-400'
               )}
             >
-              <Flag size={14} className="shrink-0" />
+              <Flag size={11} className="shrink-0" />
               <TextInput
                 type="date"
                 value={dueValues.date}
                 onChange={(e) => {
                   handleDueChange(e.target.value, dueValues.time);
                 }}
-                className="w-[10ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+                className="due-input w-[10ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
               />
               {showDueTime && dueValues.date && (
                 <>
@@ -759,7 +759,7 @@ export default function TaskDetailModal({
                     onChange={(e) => {
                       handleDueChange(dueValues.date, e.target.value, true);
                     }}
-                    className="w-14! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+                    className="due-input w-14! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
                   />
                 </>
               )}

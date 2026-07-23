@@ -63,13 +63,13 @@ export default function DueEditor({
           : 'border-eros-500 bg-eros-500/10 text-eros-400'
       )}
     >
-      <Flag size={14} className="shrink-0" />
+      <Flag size={11} className="shrink-0" />
       <TextInput
         type="date"
         value={values.date}
         disabled={disabled}
         onChange={(e) => commit(e.target.value, values.time, showTime)}
-        className="w-[10ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+        className="due-input w-[10ch]! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
       />
       {showTime && values.date && (
         <>
@@ -79,7 +79,7 @@ export default function DueEditor({
             value={values.time || '12:00'}
             disabled={disabled}
             onChange={(e) => commit(values.date, e.target.value, true)}
-            className="w-14! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
+            className="due-input w-14! shrink-0 border-0! bg-transparent! p-0! text-center text-caption! text-inherit!"
           />
         </>
       )}
