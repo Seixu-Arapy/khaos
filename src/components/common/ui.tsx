@@ -569,11 +569,11 @@ export function DueBadge({ due, status }: DueBadgeProps) {
     <span
       className={clsx(
         'inline-flex items-center gap-1 font-mono text-caption tracking-tight',
-        overdue ? 'text-tartarus-500 animate-pulse' : 'text-eros-400'
+        overdue ? 'text-tartarus-500' : 'text-eros-400'
       )}
     >
       <Flag size={11} className="shrink-0" />
-      <span>
+      <span className={overdue ? 'animate-pulse' : undefined}>
         <span className="font-bold">{parts.day}</span>
         <span>{parts.month}</span>
       </span>

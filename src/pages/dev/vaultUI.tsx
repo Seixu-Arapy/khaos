@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
+import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import KhaosIcon from '../../components/common/KhaosIcon';
 import KhaoticText from '../../components/common/KhaoticText';
@@ -89,16 +90,28 @@ export function MuseumFrame({
 export function Section({
   title,
   children,
+  nowrap = false,
 }: {
   title: string;
   children: ReactNode;
+  // Some sections read better as one continuous row (e.g. every status
+  // or priority value together) than wrapped across lines -- opt in
+  // per-section rather than changing the shared default.
+  nowrap?: boolean;
 }) {
   return (
     <section className="border-nyx-700 mb-10 border-t pt-6">
       <h2 className="text-nyx-400 mb-5 font-mono text-[10px] tracking-[0.25em] uppercase">
         {title}
       </h2>
-      <div className="flex flex-wrap items-center gap-5">{children}</div>
+      <div
+        className={clsx(
+          'flex items-center gap-5',
+          nowrap ? 'flex-nowrap overflow-x-auto' : 'flex-wrap'
+        )}
+      >
+        {children}
+      </div>
     </section>
   );
 }
@@ -111,7 +124,7 @@ export function Swatch({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div className="flex shrink-0 flex-col items-start gap-2">
       <span className="text-nyx-400 font-mono text-[10px]">{label}</span>
       {children}
     </div>

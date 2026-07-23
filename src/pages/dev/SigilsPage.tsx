@@ -12,11 +12,14 @@ import {
   ScheduledBadge,
   TaskProgressBar,
   Tag,
+  TagSuggestion,
 } from '../../components/common/ui';
 import { ChangeBadge } from '../../components/assistant/ChangeBadge';
 import ProjectRow from '../../components/projects/ProjectRow';
 import SectionChip from '../../components/projects/SectionChip';
 import SectionRow from '../../components/projects/SectionRow';
+import DueEditor from '../../components/common/DueEditor';
+import TargetEditor from '../../components/common/TargetEditor';
 import { STATUSES, PRIORITIES } from '../../lib/constants';
 import { FIELDS_CONFIG, FIELD_EMOJI } from '../../lib/fieldsConfig';
 import type { Status, Priority, Project, Section as SectionRecord } from '../../lib/types';
@@ -55,6 +58,19 @@ const SAMPLE_SECTION: SectionRecord = {
 export default function SigilsPage() {
   const [status, setStatus] = useState<Status>('in_progress');
   const [priority, setPriority] = useState<Priority>('medium');
+  const [dueDraft, setDueDraft] = useState<string | null>('2026-08-01');
+  const [targetSimple, setTargetSimple] = useState<string | null>(
+    '["2026-08-01 00:00:00+00",)'
+  );
+  const [targetSimpleTime, setTargetSimpleTime] = useState<string | null>(
+    '["2026-08-01 09:00:00+00",)'
+  );
+  const [targetRange, setTargetRange] = useState<string | null>(
+    '["2026-08-01 00:00:00+00","2026-08-15 00:00:00+00")'
+  );
+  const [targetRangeTime, setTargetRangeTime] = useState<string | null>(
+    '["2026-08-01 09:00:00+00","2026-08-15 18:00:00+00")'
+  );
   const fieldNames = Object.keys(FIELDS_CONFIG);
   const sampleField = fieldNames[0];
 
@@ -359,7 +375,7 @@ export default function SigilsPage() {
           one column, pulled from a fixed vocabulary.
         </p>
 
-        <Section title="Status">
+        <Section title="Status" nowrap>
           {STATUSES.map((s) => (
             <Swatch key={s} label={s}>
               <StatusBadge status={s} />
@@ -412,7 +428,7 @@ export default function SigilsPage() {
           </p>
         </div>
 
-        <Section title="Priority">
+        <Section title="Priority" nowrap>
           {PRIORITIES.map((p) => (
             <Swatch key={p} label={p}>
               <PriorityBadge priority={p} />
@@ -423,7 +439,7 @@ export default function SigilsPage() {
           </Swatch>
         </Section>
 
-        <Section title="Dates, estimate &amp; progress">
+        <Section title="Dates, estimate &amp; progress" nowrap>
           <Swatch label="due (upcoming)">
             <DueBadge due="2026-08-01" status="todo" />
           </Swatch>
@@ -450,13 +466,48 @@ export default function SigilsPage() {
           </Swatch>
         </Section>
 
-        <Section title="Tags">
+        <Section title="Due &amp; target inputs" nowrap>
+          <Swatch label="due, editable">
+            <DueEditor value={dueDraft} status="todo" onChange={setDueDraft} />
+          </Swatch>
+          <Swatch label="target, simple">
+            <TargetEditor value={targetSimple} onChange={setTargetSimple} hideClear />
+          </Swatch>
+          <Swatch label="target, simple + time">
+            <TargetEditor
+              value={targetSimpleTime}
+              onChange={setTargetSimpleTime}
+              hideClear
+            />
+          </Swatch>
+          <Swatch label="target, range">
+            <TargetEditor value={targetRange} onChange={setTargetRange} hideClear />
+          </Swatch>
+          <Swatch label="target, range + time">
+            <TargetEditor
+              value={targetRangeTime}
+              onChange={setTargetRangeTime}
+              hideClear
+            />
+          </Swatch>
+          <Swatch label="past target, suggested">
+            {/* Same dashed-outline language as TagSuggestion -- proposes a
+                quick-pick value rather than an already-set one. A past
+                target reads as a stale/missed window, so it's offered as a
+                one-click "catch up" suggestion rather than auto-applied. */}
+            <TagSuggestion onClick={() => setTargetRange('["2026-07-10 00:00:00+00","2026-07-17 00:00:00+00")')}>
+              last week
+            </TagSuggestion>
+          </Swatch>
+        </Section>
+
+        <Section title="Tags" nowrap>
           <Swatch label="tag">
             <Tag onRemove={() => {}}>design</Tag>
           </Swatch>
         </Section>
 
-        <Section title="Change badges">
+        <Section title="Change badges" nowrap>
           {SAMPLE_CHANGES.map((c) => (
             <Swatch key={c.field} label={c.field}>
               <ChangeBadge change={c} />
