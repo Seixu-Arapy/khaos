@@ -44,12 +44,15 @@ export function MuseumFrame({
           className="text-nyx-700 hover:text-nyx-300 flex items-center gap-2 font-mono text-[10px] tracking-[0.35em] uppercase transition-colors duration-300"
         >
           {/* Gave up chasing the spin here -- swapped to Tailwind's
-              built-in animate-pulse instead of the custom rotation. */}
+              built-in animate-pulse instead of the custom rotation.
+              Nudged down 1px: the glyph's own ink sits slightly high in
+              its box, which read as misaligned against the title text
+              next to it. */}
           <KhaosIcon
             size="h-7 w-7"
             fontSize="text-2xl"
             color="text-nyx-400"
-            className="animate-pulse"
+            className="relative top-px animate-pulse"
           />
           khaos vortex
         </Link>
