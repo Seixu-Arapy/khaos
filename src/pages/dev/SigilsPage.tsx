@@ -18,11 +18,12 @@ import { ChangeBadge } from '../../components/assistant/ChangeBadge';
 import ProjectRow from '../../components/projects/ProjectRow';
 import SectionChip from '../../components/projects/SectionChip';
 import SectionRow from '../../components/projects/SectionRow';
+import TaskRow from '../../components/tasks/TaskRow';
 import DueEditor from '../../components/common/DueEditor';
 import TargetEditor from '../../components/common/TargetEditor';
 import { STATUSES, PRIORITIES } from '../../lib/constants';
 import { FIELDS_CONFIG, FIELD_EMOJI } from '../../lib/fieldsConfig';
-import type { Status, Priority, Project, Section as SectionRecord } from '../../lib/types';
+import type { Status, Priority, Project, Section as SectionRecord, Task } from '../../lib/types';
 
 const SAMPLE_CHANGES = [
   { field: 'status' as const, label: 'Status', from: 'todo', to: 'in_progress' },
@@ -52,6 +53,18 @@ const SAMPLE_SECTION: SectionRecord = {
   target: null,
   project_id: null,
   doc_reference: null,
+  deleted_at: null,
+};
+
+const SAMPLE_TASK: Task = {
+  id: 'sample',
+  name: 'Redesign the empty states',
+  status: 'in_progress',
+  priority: 'high',
+  due: '2026-08-10',
+  estimate: 90,
+  target: null,
+  section_id: null,
   deleted_at: null,
 };
 
@@ -124,6 +137,11 @@ export default function SigilsPage() {
               projectField={sampleField}
             />
           </Swatch>
+          <Swatch label="task — row only">
+            <span className="text-nyx-500 text-caption italic">
+              see Task row, below
+            </span>
+          </Swatch>
           <Swatch label="tag (work_tags) — chip">
             <Tag onRemove={() => {}}>design</Tag>
           </Swatch>
@@ -140,11 +158,6 @@ export default function SigilsPage() {
           reusable mark:
         </p>
         <Section title="Entities without one yet">
-          <Swatch label="task">
-            <span className="text-nyx-600 border-nyx-700 rounded border border-dashed px-2 py-1 text-caption italic">
-              full row only (TaskRow) / rich card in chat
-            </span>
-          </Swatch>
           <Swatch label="event">
             <span className="text-nyx-600 border-nyx-700 rounded border border-dashed px-2 py-1 text-caption italic">
               rich card in chat only (InlineEventPreview)
@@ -265,26 +278,6 @@ export default function SigilsPage() {
             </Section>
           </div>
           <div>
-            <dt className="text-nyx-200 font-semibold">Tag (work_tags)</dt>
-            <dd className="text-nyx-400">
-              A freeform label a task can carry, many-to-many. Every tag
-              renders in the same single Pontus tone regardless of what
-              the tag says — text is what differentiates them, not color.
-              Reasonable inference: this avoids needing to store or
-              assign a color per tag (there could be dozens), unlike
-              Field&rsquo;s fixed, small, curated set.
-            </dd>
-          </div>
-          <div>
-            <dt className="text-nyx-200 font-semibold">Task</dt>
-            <dd className="text-nyx-400">
-              The atomic unit of work — the entity everything else in
-              this app ultimately organizes around. See &ldquo;Compact vs.
-              expanded chips&rdquo; below for why it doesn&rsquo;t have a
-              small pill form of its own.
-            </dd>
-          </div>
-          <div>
             <dt className="text-nyx-200 font-semibold">Section</dt>
             <dd className="text-nyx-400 mb-3">
               A named grouping of tasks inside one project (kanban-column
@@ -320,6 +313,43 @@ export default function SigilsPage() {
                 </div>
               </Swatch>
             </Section>
+          </div>
+          <div>
+            <dt className="text-nyx-200 font-semibold">Task</dt>
+            <dd className="text-nyx-400 mb-3">
+              The atomic unit of work — the entity everything else in
+              this app ultimately organizes around. Already has a real
+              row (<code className="text-eros-400">TaskRow</code>), just
+              no separate small chip — see &ldquo;Compact vs. expanded
+              chips&rdquo; below for why. Column order almost matches
+              Project/Section&rsquo;s rows (status, name, priority,
+              target, due) but not quite: <code className="text-eros-400">
+                TaskRow
+              </code>{' '}
+              has no field badge inline — the project it belongs to
+              renders as a second line (<code className="text-eros-400">
+                ProjectChip
+              </code>
+              ) below the row instead of a leading icon on the same line.
+            </dd>
+            <Section title="Task row">
+              <Swatch label="status + name + priority/target/due, project on its own line">
+                <div className="w-[560px]">
+                  <TaskRow task={SAMPLE_TASK} onOpen={() => {}} projectName="Roadmap Q3" projectField="Design" />
+                </div>
+              </Swatch>
+            </Section>
+          </div>
+          <div>
+            <dt className="text-nyx-200 font-semibold">Tag (work_tags)</dt>
+            <dd className="text-nyx-400">
+              A freeform label a task can carry, many-to-many. Every tag
+              renders in the same single Pontus tone regardless of what
+              the tag says — text is what differentiates them, not color.
+              Reasonable inference: this avoids needing to store or
+              assign a color per tag (there could be dozens), unlike
+              Field&rsquo;s fixed, small, curated set.
+            </dd>
           </div>
           <div>
             <dt className="text-nyx-200 font-semibold">Event</dt>
