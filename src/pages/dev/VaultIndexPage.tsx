@@ -18,7 +18,20 @@ interface ChamberEntry {
   name: string;
   tagline: string;
   contains: string;
+  // Which of the two Vortex parts this chamber opens (see PARTS below).
+  // Set only on the first chamber of each part -- it marks where the
+  // part heading renders, not a per-chamber label.
+  partOpener?: keyof typeof PARTS;
 }
+
+// The Vortex in two parts: I-III raise the tokens from nothing (color,
+// type, space), IV-VI are the gods' working of those tokens into real
+// marks and tools. Named to match the chambers' own Greek-primordial
+// register, not generic "Part I / Part II".
+const PARTS = {
+  cosmogony: { name: 'Cosmogony', tagline: 'Where the tokens are born' },
+  theurgy: { name: 'Theurgy', tagline: "The gods' working of them" },
+} as const;
 
 const CHAMBERS: ChamberEntry[] = [
   {
@@ -27,6 +40,7 @@ const CHAMBERS: ChamberEntry[] = [
     name: 'The Pantheon',
     tagline: 'Every color, named for what it descends from',
     contains: 'Nyx · Aether · Eros · Pontus · Gaia · Tartarus · Hypnos',
+    partOpener: 'cosmogony',
   },
   {
     to: '/dev/vortex/chorus',
@@ -48,6 +62,7 @@ const CHAMBERS: ChamberEntry[] = [
     name: 'The Forge',
     tagline: 'Tools built for the hand',
     contains: 'Buttons · Inputs · Selects',
+    partOpener: 'theurgy',
   },
   {
     to: '/dev/vortex/sigils',
@@ -96,24 +111,37 @@ export default function VaultIndexPage() {
 
         <div className="flex flex-col">
           {CHAMBERS.map((c) => (
-            <Link
-              key={c.to}
-              to={c.to}
-              className="group border-nyx-700 hover:border-nyx-600 flex items-start gap-6 border-t py-8 transition-colors duration-300 last:border-b"
-            >
-              <span className="text-nyx-700 group-hover:text-nyx-400 w-20 shrink-0 font-serif text-right text-6xl leading-none transition-colors duration-300">
-                {c.index}
-              </span>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-serif text-nyx-100 text-2xl">
-                  {c.name}
-                </h2>
-                <p className="text-nyx-600 mt-1 text-sm">{c.tagline}</p>
-                <p className="text-nyx-700 mt-2 font-mono text-[10px] tracking-wide">
-                  {c.contains}
-                </p>
-              </div>
-            </Link>
+            <div key={c.to}>
+              {c.partOpener && (
+                <div
+                  className={`flex items-baseline gap-3 ${c.index === 'I' ? '' : 'mt-4'}`}
+                >
+                  <span className="text-nyx-500 font-serif text-lg tracking-wide">
+                    {PARTS[c.partOpener].name}
+                  </span>
+                  <span className="text-nyx-700 font-mono text-[10px] tracking-widest uppercase">
+                    {PARTS[c.partOpener].tagline}
+                  </span>
+                </div>
+              )}
+              <Link
+                to={c.to}
+                className="group border-nyx-700 hover:border-nyx-600 flex items-start gap-6 border-t py-8 transition-colors duration-300 last:border-b"
+              >
+                <span className="text-nyx-700 group-hover:text-nyx-400 w-20 shrink-0 font-serif text-right text-6xl leading-none transition-colors duration-300">
+                  {c.index}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-serif text-nyx-100 text-2xl">
+                    {c.name}
+                  </h2>
+                  <p className="text-nyx-600 mt-1 text-sm">{c.tagline}</p>
+                  <p className="text-nyx-700 mt-2 font-mono text-[10px] tracking-wide">
+                    {c.contains}
+                  </p>
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       </div>
