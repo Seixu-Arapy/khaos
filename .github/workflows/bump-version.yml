@@ -1,0 +1,45 @@
+name: Bump version on merge
+
+# Fires once a PR into main actually merges (not on every push to main, so a
+# manual push or a re-run never double-bumps). Bumps package.json's patch
+# version, commits straight to main as "chore: release vX.Y.Z", and tags it.
+#
+# That commit is itself a push to main, which is what Vercel's own GitHub
+# integration deploys — no separate deploy step here. Once that build goes
+# live, Vercel's deployment webhook (see
+# supabase/functions/vercel-deploy-notify) reads the version back out of this
+# same commit message and sends the Telegram notification.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          npm --no-git-tag-version version patch
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: release v${{ steps.bump.outputs.version }}"
+          git tag "v${{ steps.bump.outputs.version }}"
+          git push origin main
+          git push origin "v${{ steps.bump.outputs.version }}"

@@ -5,12 +5,14 @@ same intelligence as the in-app chat — same persona, same database tools, same
 conversational memory — and it also reaches out to you proactively: a morning
 digest and reminders before scheduled work starts.
 
-Two Edge Functions, one shared brain:
+Two Edge Functions, one shared brain, plus a third that only sends a release
+notice and doesn't touch the agent at all:
 
 | Function | Trigger | Does |
 | --- | --- | --- |
 | `telegram-bot` | Telegram webhook | Answers your messages (the reactive chat) |
 | `telegram-notify` | cron | Morning digest + upcoming-task reminders (proactive) |
+| `vercel-deploy-notify` | Vercel deployment webhook | "Deployed vX.Y.Z" once a production deploy finishes |
 
 Both import their agent brain, Telegram helpers, and tools from
 `supabase/functions/_shared`, which in turn reuses the app's own
@@ -133,6 +135,59 @@ SQL.) To change the times later: `select cron.unschedule('khaos-digest');` then
 re-schedule. To harden the secret out of the job definition, store it in
 Supabase Vault and read it via `vault.decrypted_secrets` instead of inlining.
 
+## Release notifications (`vercel-deploy-notify`)
+
+Every PR merged into `main` bumps `package.json`'s patch version and commits
+it straight to `main` as `chore: release vX.Y.Z` (`.github/workflows/bump-version.yml`).
+That commit is a push to `main`, which Vercel's own GitHub integration
+already auto-deploys — nothing here drives the deploy itself. This function
+just watches for that deploy to finish and tells you.
+
+1. **Set the function secret:**
+
+   ```bash
+   supabase secrets set VERCEL_WEBHOOK_SECRET=<will be generated in the next step>
+   ```
+
+   (You can't know the value ahead of time — Vercel generates it when you
+   create the webhook below. Set it after step 2, or once now with a
+   placeholder and update it after.)
+
+2. **Deploy the function:**
+
+   ```bash
+   supabase functions deploy vercel-deploy-notify
+   ```
+
+3. **Create the webhook** in the Vercel dashboard: Project → Settings →
+   Webhooks (or Account Settings → Webhooks for a team-wide one) →
+   **Create Webhook**.
+   - URL: `https://<project-ref>.supabase.co/functions/v1/vercel-deploy-notify`
+   - Events: `deployment.succeeded` (that's the only one this function acts
+     on; others are safely ignored, no need to also select them)
+   - Project: scope it to this project only, not every project on the account
+   - Copy the **signing secret** Vercel shows you — that's the real value for
+     `VERCEL_WEBHOOK_SECRET`:
+
+     ```bash
+     supabase secrets set VERCEL_WEBHOOK_SECRET=<the secret Vercel showed you>
+     ```
+
+4. **Redeploy** so the function picks up the real secret:
+
+   ```bash
+   supabase functions deploy vercel-deploy-notify
+   ```
+
+Preview deployments (every branch push, every PR) also fire this webhook —
+the function ignores anything where `target !== "production"`, so you only
+hear about it once, when `main` actually ships.
+
+If `main` has branch protection requiring PRs (no direct pushes), the bump
+workflow's push will be rejected — either allow the `github-actions[bot]`
+actor to bypass that rule for `main`, or the workflow needs to open a PR
+instead of pushing directly (not what's implemented here).
+
 ## Commands
 
 | Command | Effect |
@@ -148,11 +203,14 @@ Supabase Vault and read it via `vault.decrypted_secrets` instead of inlining.
   checked before the body is read.
 - **Cron secret** — every `telegram-notify` request must carry
   `X-Khaos-Cron-Secret` matching `KHAOS_CRON_SECRET`.
+- **Webhook signature** — every `vercel-deploy-notify` request must carry an
+  `x-vercel-signature` header that HMAC-SHA1-verifies against
+  `VERCEL_WEBHOOK_SECRET`, checked before the body is parsed.
 - **Allowlist** — only chat ids in `TELEGRAM_ALLOWED_CHAT_IDS` reach the agent
   or receive notifications. An empty allowlist denies everyone and just echoes
   the caller's chat id.
-- `verify_jwt` is off for both functions (neither caller can present a Supabase
-  JWT); the secrets above are the trust boundary.
+- `verify_jwt` is off for all three functions (none of these callers can
+  present a Supabase JWT); the secrets/signature above are the trust boundary.
 - **Service-role key** stays server-side. `telegram_chats` and
   `telegram_notifications` have RLS on with no policies, so nothing but the
   service role can read them.
@@ -165,6 +223,7 @@ Supabase Vault and read it via `vault.decrypted_secrets` instead of inlining.
 | `TELEGRAM_WEBHOOK_SECRET` | yes | — | Webhook auth; also passed to setWebhook |
 | `TELEGRAM_ALLOWED_CHAT_IDS` | yes | — | Comma-separated chat ids allowed |
 | `KHAOS_CRON_SECRET` | for notify | — | Auth for the cron-triggered notifier |
+| `VERCEL_WEBHOOK_SECRET` | for deploy-notify | — | Verifies Vercel's deployment webhook signature |
 | `ANTHROPIC_API_KEY` | yes | — | Shared with anthropic-proxy; set once |
 | `LLM_MODEL` | no | `claude-sonnet-5` | Model the bot uses |
 | `TELEGRAM_TIMEZONE` | no | `America/Sao_Paulo` | IANA tz for times & digest date |
