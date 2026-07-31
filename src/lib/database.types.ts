@@ -460,16 +460,19 @@ export type Database = {
         Row: {
           duration: unknown
           id: string
+          note: string | null
           task_id: string | null
         }
         Insert: {
           duration?: unknown
           id?: string
+          note?: string | null
           task_id?: string | null
         }
         Update: {
           duration?: unknown
           id?: string
+          note?: string | null
           task_id?: string | null
         }
         Relationships: [

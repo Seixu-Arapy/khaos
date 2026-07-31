@@ -33,16 +33,17 @@ export default function ActiveTimerWidget() {
   // timeTrackingApi.getActive / isOpenRange), which guarantees a start.
   if (!start) return null;
   const task = tasks.find((t) => t.id === activeLog.task_id);
+  const label = task?.name || activeLog.note || 'Untitled log';
 
   return (
     <button
       onClick={() => task && navigate(`/tasks?taskId=${task.id}`)}
       className="group border-eros-500/40 bg-eros-500/10 hover:bg-eros-500/15 flex items-center gap-2 rounded-full border py-1.5 pr-1.5 pl-3 text-caption transition-colors"
-      title="Go to running task"
+      title={task ? 'Go to running task' : label}
     >
       <span className="bg-eros-500 h-1.5 w-1.5 animate-pulse rounded-full" />
       <span className="text-nyx-100 max-w-56 truncate font-medium">
-        {task?.name || 'Untitled task'}
+        {label}
       </span>
       <span className="tabular text-eros-400 font-mono">
         {liveStopwatch(start)}

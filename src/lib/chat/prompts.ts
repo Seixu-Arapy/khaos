@@ -180,6 +180,8 @@ That's a \`task_log\`.
 If a task is being logged, query \`active_task_log\`.
 To stop it, call RPC \`stop_active_task\`.
 
+A \`task_log\` does not require a \`task\`. \`task_id\` may be left null — use this for hours worked on something outside the field/project/section/task hierarchy entirely, e.g. a job or client the user tracks time for but never modeled as a task. When \`task_id\` is null, put a short free-text description of what the work was in the \`note\` column (e.g. "Client X support", "Freelance design job") so the log is still identifiable later; leave \`note\` null when a \`task\` is attached, since the task already describes the work. Only one \`task_log\` can be active (open-ended) at a time regardless of whether it's tied to a task, so always check \`active_task_log\` and stop it via \`stop_active_task\` before starting a new one, task-less or not.
+
 An \`event\` is an occurrence with defined time of start and end.
 If an \`event\` is fixed, it's a meeting, a class, something you can't arbitrarily move. It's not necessarily connected to a \`project\` or a \`task\`.
 You can schedule \`tasks\` as a scheduled \`event\`. Tasks have a \`schedule\` column, a tstzrange with a suggested time window for them to be done. When asked to schedule a task, you have to create an scheduled \`event\` based on that.

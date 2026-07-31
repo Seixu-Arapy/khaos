@@ -285,7 +285,8 @@ SET default_table_access_method = "heap";
 CREATE TABLE IF NOT EXISTS "public"."task_logs" (
     "duration" "tstzrange" DEFAULT "tstzrange"("now"(), NULL::timestamp with time zone, '[)'::"text"),
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "task_id" "uuid"
+    "task_id" "uuid",
+    "note" "text"
 );
 
 
@@ -297,6 +298,10 @@ COMMENT ON TABLE "public"."task_logs" IS 'Log of task execution';
 
 
 COMMENT ON COLUMN "public"."task_logs"."duration" IS 'Start and end time';
+
+
+
+COMMENT ON COLUMN "public"."task_logs"."note" IS 'Free-text description of the work, for a log not tied to a task (e.g. hours worked on a job or client outside the task hierarchy). Leave null when task_id is set — the task already describes the work.';
 
 
 
