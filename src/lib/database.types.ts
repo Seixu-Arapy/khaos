@@ -461,18 +461,21 @@ export type Database = {
           duration: unknown
           id: string
           note: string | null
+          project_id: string | null
           task_id: string | null
         }
         Insert: {
           duration?: unknown
           id?: string
           note?: string | null
+          project_id?: string | null
           task_id?: string | null
         }
         Update: {
           duration?: unknown
           id?: string
           note?: string | null
+          project_id?: string | null
           task_id?: string | null
         }
         Relationships: [
@@ -481,6 +484,13 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

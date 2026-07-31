@@ -33,8 +33,9 @@ export function useTimerMutations() {
   };
   return {
     start: useMutation({
-      mutationFn: ({ taskId, note }: { taskId?: Id; note?: string } = {}) =>
-        timeTrackingApi.start(taskId, note),
+      mutationFn: (
+        { taskId, note, projectId }: { taskId?: Id; note?: string; projectId?: Id } = {}
+      ) => timeTrackingApi.start(taskId, note, projectId),
       onSuccess: invalidateAll,
     }),
     stop: useMutation({

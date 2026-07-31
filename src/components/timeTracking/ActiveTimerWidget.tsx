@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { Square } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useActiveTimer, useTimerMutations } from '../../hooks/useTimeTracking';
-import { useTasks } from '../../hooks/useHierarchy';
+import { useTasks, useProjects } from '../../hooks/useHierarchy';
 import { parseRange } from '../../lib/range';
 import { liveStopwatch } from '../../lib/dateUtils';
 
 export default function ActiveTimerWidget() {
   const { data: activeLog } = useActiveTimer();
   const { data: tasks = [] } = useTasks();
+  const { data: projects = [] } = useProjects();
   const { stop } = useTimerMutations();
   const [, forceTick] = useState(0);
   const navigate = useNavigate();
@@ -33,7 +34,8 @@ export default function ActiveTimerWidget() {
   // timeTrackingApi.getActive / isOpenRange), which guarantees a start.
   if (!start) return null;
   const task = tasks.find((t) => t.id === activeLog.task_id);
-  const label = task?.name || activeLog.note || 'Untitled log';
+  const project = projects.find((p) => p.id === activeLog.project_id);
+  const label = task?.name || activeLog.note || project?.name || 'Untitled log';
 
   return (
     <button

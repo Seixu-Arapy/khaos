@@ -286,7 +286,8 @@ CREATE TABLE IF NOT EXISTS "public"."task_logs" (
     "duration" "tstzrange" DEFAULT "tstzrange"("now"(), NULL::timestamp with time zone, '[)'::"text"),
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "task_id" "uuid",
-    "note" "text"
+    "note" "text",
+    "project_id" "uuid"
 );
 
 
@@ -302,6 +303,10 @@ COMMENT ON COLUMN "public"."task_logs"."duration" IS 'Start and end time';
 
 
 COMMENT ON COLUMN "public"."task_logs"."note" IS 'Free-text description of the work, for a log not tied to a task (e.g. hours worked on a job or client outside the task hierarchy). Leave null when task_id is set — the task already describes the work.';
+
+
+
+COMMENT ON COLUMN "public"."task_logs"."project_id" IS 'Optional project this log belongs to, for a log not tied to a task. Leave null when task_id is set — the task''s project already applies.';
 
 
 
@@ -2201,6 +2206,11 @@ ALTER TABLE ONLY "public"."tasks_sequence"
 
 ALTER TABLE ONLY "public"."task_logs"
     ADD CONSTRAINT "time_entries_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id");
+
+
+
+ALTER TABLE ONLY "public"."task_logs"
+    ADD CONSTRAINT "task_logs_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id");
 
 
 

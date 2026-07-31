@@ -12,10 +12,14 @@ export interface ListAllOptions {
 }
 
 export const timeTrackingApi = {
-  start: async (taskId?: Id, note?: string): Promise<TaskLog> => {
+  start: async (taskId?: Id, note?: string, projectId?: Id): Promise<TaskLog> => {
     const response = await supabase
       .from('task_logs')
-      .insert({ task_id: taskId ?? null, note: note ?? null })
+      .insert({
+        task_id: taskId ?? null,
+        note: note ?? null,
+        project_id: projectId ?? null,
+      })
       .select()
       .single();
     return unwrap(response);
