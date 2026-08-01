@@ -1055,7 +1055,7 @@ export default function TaskDetailModal({
                       ? 'Stop the other running timer first'
                       : undefined
                   }
-                  onClick={() => timer.start.mutate(task.id)}
+                  onClick={() => timer.start.mutate({ taskId: task.id })}
                 >
                   <Play size={12} fill="currentColor" /> Start
                 </Button>
