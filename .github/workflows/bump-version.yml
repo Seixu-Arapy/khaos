@@ -58,6 +58,17 @@ jobs:
           VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
           SHA: ${{ steps.release.outputs.sha }}
         run: |
+          # Secrets can carry a trailing newline depending on how they were
+          # pasted into GitHub; an embedded newline in the URL makes curl
+          # fail with "URL rejected: Malformed input to a URL function".
+          VERCEL_PROJECT_ID=$(printf '%s' "$VERCEL_PROJECT_ID" | tr -d '\n\r')
+          VERCEL_TEAM_ID=$(printf '%s' "$VERCEL_TEAM_ID" | tr -d '\n\r')
+
+          if [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "VERCEL_PROJECT_ID secret is not set"
+            exit 1
+          fi
+
           team_query=""
           if [ -n "$VERCEL_TEAM_ID" ]; then
             team_query="&teamId=$VERCEL_TEAM_ID"
