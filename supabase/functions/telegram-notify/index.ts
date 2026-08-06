@@ -50,9 +50,11 @@ const DIGEST_INSTRUCTION = `[Morning Digest job — automated, around 08:00 loca
 Query the database for the current state and report only what matters. Cover, when present:
 - overdue: tasks whose due date is in the past and whose status is not done or cancelled
 - due today
+- target today: tasks whose target window (tasks.target, a tstzrange) falls today, status not done or cancelled — same treatment as "due today", not an afterthought
+- target starting soon: tasks whose target window starts within the next few days, status not done or cancelled — worth a heads-up before it's actually today
 - today's scheduled tasks: events with event_type = 'scheduled' whose duration window falls today. Each such event links a task via task_id, and the event's duration (a tstzrange) IS the scheduled window — tasks themselves have no schedule column
 - scheduled windows that already ended (today or earlier) while the linked task is still not done
-- tasks whose target window (tasks.target, a tstzrange) has already elapsed while the task is not done or cancelled
+- tasks whose target window has already elapsed while the task is not done or cancelled
 - important open tasks that have no scheduled event yet (unscheduled)
 
 For the elapsed targets and the unscheduled tasks: list them and OFFER to roll the target forward or to create a schedule — but DO NOT modify anything in this turn. Make no write tool calls now; wait for me to reply confirming. If I later reply approving, act then.

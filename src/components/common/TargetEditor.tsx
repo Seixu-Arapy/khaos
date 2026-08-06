@@ -70,6 +70,19 @@ function buildLocalDate(
   return localDate;
 }
 
+// A target with no explicit end is meant to cover a single day, not run
+// open-ended forever — store that explicitly as 23:59 of the start day
+// (unless the start itself carries a specific time, which is honoured as-is)
+// so range-overlap queries elsewhere don't treat the target as still active
+// on every later day.
+function effectiveEnd(start: Date, end: Date | null): Date | null {
+  if (end) return end;
+  if (start.getHours() === 0 && start.getMinutes() === 0) {
+    return endOfLocalDay(start);
+  }
+  return null;
+}
+
 export default function TargetEditor({
   value,
   due,
@@ -121,7 +134,7 @@ export default function TargetEditor({
     setError(problem);
     if (problem) return;
 
-    onChange(formatRange(nextStart, nextEnd || null));
+    onChange(formatRange(nextStart, effectiveEnd(nextStart, nextEnd)));
   }
 
   // Reveals the end-date field so the target can span more than its start day.
@@ -143,7 +156,7 @@ export default function TargetEditor({
     const problem = validate(nextStart, null, due);
     setError(problem);
     if (problem) return;
-    onChange(formatRange(nextStart, null));
+    onChange(formatRange(nextStart, nextStart && effectiveEnd(nextStart, null)));
   }
 
   function handleClear() {
