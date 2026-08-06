@@ -5,12 +5,7 @@ import {
   SYSTEM_INSTRUCTION,
   TONE_INSTRUCTION,
 } from './client';
-import {
-  executeTool,
-  normalizeToolName,
-  WRITE_TOOLS,
-  TOOL_DEFINITIONS,
-} from './tools';
+import { executeTool, normalizeToolName, TOOL_DEFINITIONS } from './tools';
 
 const MAX_TOOL_ROUNDS = 6;
 const MAX_HISTORY_MESSAGES = 14;
@@ -43,13 +38,6 @@ const SYSTEM_BLOCKS: Anthropic.TextBlockParam[] = [
 // interface to keep in sync with the API. `isError` is the one UI-only
 // field layered on top.
 export type ChatMessage = Anthropic.MessageParam & { isError?: boolean };
-
-interface RunTurnOptions {
-  onPendingWrite: (
-    name: string,
-    args: Record<string, unknown>
-  ) => Promise<boolean>;
-}
 
 export function extractText(content: ChatMessage['content']): string {
   if (typeof content === 'string') return content;
@@ -86,8 +74,7 @@ function trimHistory(
 }
 
 export async function runTurn(
-  history: ChatMessage[],
-  { onPendingWrite }: RunTurnOptions
+  history: ChatMessage[]
 ): Promise<{ updatedHistory: ChatMessage[]; text: string }> {
   const currentMessages = trimHistory(history, MAX_HISTORY_MESSAGES);
   let rounds = 0;
@@ -135,22 +122,10 @@ export async function runTurn(
       let result: unknown;
       try {
         // Normalize aliased/mis-cased tool names (e.g. the model calling
-        // "update_row" instead of the declared "update_rows") before the
-        // write-confirmation check — otherwise an aliased write tool would
-        // skip user confirmation and execute straight away.
+        // "update_row" instead of the declared "update_rows").
         const toolName = normalizeToolName(toolUse.name);
         const args = toolUse.input as Record<string, unknown>;
-        if (WRITE_TOOLS.has(toolName)) {
-          const approved = await onPendingWrite(toolName, args);
-          result = approved
-            ? await executeTool(toolName, args)
-            : {
-                declined: true,
-                message: 'The person chose not to run this action.',
-              };
-        } else {
-          result = await executeTool(toolName, args);
-        }
+        result = await executeTool(toolName, args);
       } catch (err) {
         result = { error: (err as Error).message };
       }
