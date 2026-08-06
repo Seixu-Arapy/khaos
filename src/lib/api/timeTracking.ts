@@ -1,5 +1,4 @@
 import { supabase } from '../supabaseClient';
-import { isOpenRange } from '../range';
 import type { Id, TaskLog } from '../types';
 
 function unwrap<T>({ data, error }: { data: T | null; error: unknown }): T {
@@ -12,33 +11,43 @@ export interface ListAllOptions {
 }
 
 export const timeTrackingApi = {
-  start: async (taskId?: Id, note?: string, projectId?: Id): Promise<TaskLog> => {
+  start: async (
+    taskId?: Id,
+    note?: string,
+    projectId?: Id,
+    background?: boolean
+  ): Promise<TaskLog> => {
     const response = await supabase
       .from('task_logs')
       .insert({
         task_id: taskId ?? null,
         note: note ?? null,
         project_id: projectId ?? null,
+        background: background ?? false,
       })
       .select()
       .single();
     return unwrap(response);
   },
 
+  // Stops the single foreground (background = false) log, if one is open.
   stop: async (): Promise<unknown> => {
     const response = await supabase.rpc('stop_active_task');
     return unwrap(response);
   },
 
-  async getActive(): Promise<TaskLog | null> {
-    const response = await supabase
-      .from('task_logs')
-      .select('*')
-      .order('id', { ascending: false })
-      .limit(25);
+  // Stops one specific open log by id — used for background logs, since
+  // any number of those can be open at once.
+  stopLog: async (id: Id): Promise<unknown> => {
+    const response = await supabase.rpc('stop_task_log', { p_id: id });
+    return unwrap(response);
+  },
 
-    const rows = unwrap<TaskLog[]>(response);
-    return rows.find((row) => isOpenRange(row.duration)) || null;
+  // Returns every currently open log (at most one foreground, any number
+  // of background).
+  async getActive(): Promise<TaskLog[]> {
+    const response = await supabase.rpc('get_active_task_log');
+    return unwrap<TaskLog[]>(response);
   },
 
   listByTask: async (taskId: Id): Promise<TaskLog[]> => {

@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Square } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useActiveTimer, useTimerMutations } from '../../hooks/useTimeTracking';
+import {
+  useForegroundTimer,
+  useBackgroundTimers,
+  useTimerMutations,
+} from '../../hooks/useTimeTracking';
 import { useTasks, useProjects } from '../../hooks/useHierarchy';
 import { parseRange } from '../../lib/range';
 import { liveStopwatch } from '../../lib/dateUtils';
 
 export default function ActiveTimerWidget() {
-  const { data: activeLog } = useActiveTimer();
+  const { data: activeLog } = useForegroundTimer();
+  const { data: backgroundLogs = [] } = useBackgroundTimers();
   const { data: tasks = [] } = useTasks();
   const { data: projects = [] } = useProjects();
   const { stop } = useTimerMutations();
@@ -15,22 +20,32 @@ export default function ActiveTimerWidget() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!activeLog) return;
+    if (!activeLog && !backgroundLogs.length) return;
     const id = setInterval(() => forceTick((n) => n + 1), 1000);
     return () => clearInterval(id);
-  }, [activeLog]);
+  }, [activeLog, backgroundLogs.length]);
+
+  const backgroundBadge = backgroundLogs.length ? (
+    <span
+      className="border-nyx-700 text-nyx-400 flex h-5 min-w-5 items-center justify-center rounded-full border px-1 text-[10px] font-medium"
+      title={`${backgroundLogs.length} background ${backgroundLogs.length === 1 ? 'log' : 'logs'} running`}
+    >
+      {backgroundLogs.length}
+    </span>
+  ) : null;
 
   if (!activeLog) {
     return (
       <div className="border-nyx-700 text-nyx-500 flex items-center gap-2 rounded-full border px-3 py-1.5 text-caption">
         <span className="bg-nyx-600 h-1.5 w-1.5 shrink-0 rounded-full" />
         Not logging
+        {backgroundBadge}
       </div>
     );
   }
 
   const { start } = parseRange(activeLog.duration);
-  // getActive() only ever returns a row whose range is still open (see
+  // getActive() only ever returns rows whose range is still open (see
   // timeTrackingApi.getActive / isOpenRange), which guarantees a start.
   if (!start) return null;
   const task = tasks.find((t) => t.id === activeLog.task_id);
@@ -50,6 +65,7 @@ export default function ActiveTimerWidget() {
       <span className="tabular text-eros-400 font-mono">
         {liveStopwatch(start)}
       </span>
+      {backgroundBadge}
       <span
         role="button"
         tabIndex={0}

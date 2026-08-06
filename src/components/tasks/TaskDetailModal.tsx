@@ -54,7 +54,8 @@ import {
 } from '../../hooks/useHierarchy';
 import {
   useTaskLogs,
-  useActiveTimer,
+  useForegroundTimer,
+  useBackgroundTimers,
   useTimerMutations,
 } from '../../hooks/useTimeTracking';
 import { useTags, useTagLinks, useTagMutations } from '../../hooks/useTags';
@@ -451,7 +452,8 @@ export default function TaskDetailModal({
   const { data: items = [] } = useTaskItems(taskId);
   const itemMutations = useTaskItemMutations(taskId);
   const { data: logs = [] } = useTaskLogs(taskId);
-  const { data: activeLog } = useActiveTimer();
+  const { data: foregroundLog } = useForegroundTimer();
+  const { data: backgroundLogs = [] } = useBackgroundTimers();
   const timer = useTimerMutations();
   const { data: allTags = [] } = useTags();
   const { data: tagLinks = [] } = useTagLinks();
@@ -487,8 +489,9 @@ export default function TaskDetailModal({
   const currentFieldName = currentProject?.field_id
     ? (fieldsById.get(currentProject.field_id)?.name ?? null)
     : null;
-  const isActive = activeLog?.task_id === task.id;
-  const otherTimerRunning = activeLog && activeLog.task_id !== task.id;
+  const isActive = foregroundLog?.task_id === task.id;
+  const otherTimerRunning = foregroundLog && foregroundLog.task_id !== task.id;
+  const backgroundLog = backgroundLogs.find((log) => log.task_id === task.id);
 
   // Resolves a linked task's project — used so Sequence chips can mention
   // which project each previous/next task belongs to.
@@ -1037,29 +1040,50 @@ export default function TaskDetailModal({
                   {minutesToHuman(totalMinutes)}
                 </span>
               </h3>
-              {isActive ? (
-                <Button
-                  size="sm"
-                  variant="danger"
-                  onClick={() => timer.stop.mutate()}
-                >
-                  <Square size={12} fill="currentColor" /> Stop
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={Boolean(otherTimerRunning)}
-                  title={
-                    otherTimerRunning
-                      ? 'Stop the other running timer first'
-                      : undefined
-                  }
-                  onClick={() => timer.start.mutate({ taskId: task.id })}
-                >
-                  <Play size={12} fill="currentColor" /> Start
-                </Button>
-              )}
+              <div className="flex items-center gap-1.5">
+                {isActive ? (
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => timer.stop.mutate()}
+                  >
+                    <Square size={12} fill="currentColor" /> Stop
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={Boolean(otherTimerRunning)}
+                    title={
+                      otherTimerRunning
+                        ? 'Stop the other running timer first'
+                        : undefined
+                    }
+                    onClick={() => timer.start.mutate({ taskId: task.id })}
+                  >
+                    <Play size={12} fill="currentColor" /> Start
+                  </Button>
+                )}
+                {backgroundLog ? (
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => timer.stopLog.mutate(backgroundLog.id)}
+                  >
+                    <Square size={12} fill="currentColor" /> Stop background
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      timer.start.mutate({ taskId: task.id, background: true })
+                    }
+                  >
+                    <Play size={12} fill="currentColor" /> Start in background
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               {logs.slice(0, 8).map((log) => {
@@ -1072,6 +1096,7 @@ export default function TaskDetailModal({
                     <span>
                       {start ? formatDue(start) : '—'}{' '}
                       {end ? `→ ${formatDue(end)}` : '(running)'}
+                      {log.background && !end ? ' · background' : ''}
                     </span>
                     <span className="tabular font-mono text-[10px]">
                       {minutesToHuman(rangeDurationMinutes(log.duration))}

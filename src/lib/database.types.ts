@@ -458,6 +458,7 @@ export type Database = {
       }
       task_logs: {
         Row: {
+          background: boolean
           duration: unknown
           id: string
           note: string | null
@@ -465,6 +466,7 @@ export type Database = {
           task_id: string | null
         }
         Insert: {
+          background?: boolean
           duration?: unknown
           id?: string
           note?: string | null
@@ -472,6 +474,7 @@ export type Database = {
           task_id?: string | null
         }
         Update: {
+          background?: boolean
           duration?: unknown
           id?: string
           note?: string | null
@@ -654,18 +657,27 @@ export type Database = {
     Views: {
       active_task_log: {
         Row: {
+          background: boolean | null
           duration: unknown
           id: string | null
+          note: string | null
+          project_id: string | null
           task_id: string | null
         }
         Insert: {
+          background?: boolean | null
           duration?: unknown
           id?: string | null
+          note?: string | null
+          project_id?: string | null
           task_id?: string | null
         }
         Update: {
+          background?: boolean | null
           duration?: unknown
           id?: string | null
+          note?: string | null
+          project_id?: string | null
           task_id?: string | null
         }
         Relationships: [
@@ -711,11 +723,48 @@ export type Database = {
             Returns: undefined
           }
       moment_entity_column: { Args: { p_table: string }; Returns: string }
+      get_active_task_log: {
+        Args: never
+        Returns: {
+          background: boolean
+          duration: unknown
+          id: string
+          note: string | null
+          project_id: string | null
+          task_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "task_logs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       stop_active_task: {
         Args: never
         Returns: {
+          background: boolean
           duration: unknown
           id: string
+          note: string | null
+          project_id: string | null
+          task_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "task_logs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      stop_task_log: {
+        Args: { p_id: string }
+        Returns: {
+          background: boolean
+          duration: unknown
+          id: string
+          note: string | null
+          project_id: string | null
           task_id: string | null
         }[]
         SetofOptions: {
