@@ -95,6 +95,14 @@ function Sidebar({ onNavigate, onClose, spinning }: SidebarProps) {
   const { create } = useProjectMutations();
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  useEffect(() => {
+    function onOpenPalette() {
+      setPaletteOpen(true);
+    }
+    window.addEventListener('open-palette', onOpenPalette);
+    return () => window.removeEventListener('open-palette', onOpenPalette);
+  }, []);
+
   const fieldsById = new Map(fields.map((f) => [f.id, f]));
   const fieldOrder = new Map(fields.map((f, i) => [f.id, i]));
   const sortedProjects = [...projects].sort((a, b) => {
