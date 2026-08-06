@@ -4,10 +4,6 @@ import {
   extractText,
   type ChatMessage as AgentMessage,
 } from '../lib/chat/agent';
-import {
-  buildConfirmationPreview,
-  type ConfirmationPreview,
-} from '../lib/chat/confirmationPreview';
 import { useProcessingContext } from '../lib/processingContext';
 import { useActiveEntity } from '../lib/activeEntityContext';
 import { useChatActivity } from '../lib/chat/chatActivityContext';
@@ -34,13 +30,6 @@ export interface ChatMessage {
   isError?: boolean;
 }
 
-export interface PendingWrite {
-  name: string;
-  args: Record<string, unknown>;
-  preview: ConfirmationPreview;
-  resolve: (approved: boolean) => void;
-}
-
 // No loadHistory()/isWellFormedMessage() sanitization here — main added that
 // to harden localStorage-persisted history against malformed `content`
 // surviving a JSON round-trip, but this branch removes that persistence
@@ -50,31 +39,12 @@ export interface PendingWrite {
 // of where a malformed message came from, and is kept.
 export function useChatAgent() {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [pending, setPending] = useState<PendingWrite | null>(null);
   const [isSending, setIsSending] = useState(false);
   const { setAssistantProcessing } = useProcessingContext();
   const { activeEntity } = useActiveEntity();
   const { markOpenerUnseen } = useChatActivity();
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
-
-  const requestConfirmation = useCallback(
-    async (name: string, args: Record<string, unknown>) => {
-      const preview = await buildConfirmationPreview(name, args);
-      return new Promise<boolean>((resolve) =>
-        setPending({ name, args, preview, resolve })
-      );
-    },
-    []
-  );
-
-  const resolvePending = useCallback(
-    (approved: boolean) => {
-      pending?.resolve(approved);
-      setPending(null);
-    },
-    [pending]
-  );
 
   // Shared by sendMessage and the session-opening bootstrap turn below —
   // both are "push a user-role message, run the agent loop, record the
@@ -89,12 +59,10 @@ export function useChatAgent() {
       setMessages((prev) => [...prev, newUserAgentMessage]);
 
       try {
-        const { updatedHistory } = await runTurn(
-          [...messagesRef.current, newUserAgentMessage],
-          {
-            onPendingWrite: (name, args) => requestConfirmation(name, args),
-          }
-        );
+        const { updatedHistory } = await runTurn([
+          ...messagesRef.current,
+          newUserAgentMessage,
+        ]);
         setMessages(updatedHistory);
         return updatedHistory;
       } catch (err) {
@@ -113,7 +81,7 @@ export function useChatAgent() {
         if (!silent) setAssistantProcessing(false);
       }
     },
-    [requestConfirmation, setAssistantProcessing]
+    [setAssistantProcessing]
   );
 
   const sendMessage = useCallback(
@@ -179,8 +147,6 @@ export function useChatAgent() {
     messages: uiMessages,
     sendMessage,
     isSending,
-    pending,
-    resolvePending,
     clearHistory,
   };
 }

@@ -5,7 +5,6 @@ import { useChatAgent, type ChatMessage } from '../../hooks/useChatAgent';
 import { useActiveEntity } from '../../lib/activeEntityContext';
 import { parseMessageSegments } from '../../lib/chat/entityRefs';
 import { EntityChip } from './EntityChip';
-import ConfirmationCard from './ConfirmationCard';
 import KhaosIcon from '../common/KhaosIcon';
 import KhaoticText from '../common/KhaoticText';
 
@@ -91,14 +90,7 @@ export default function ChatPanel({
 }: {
   onRequestClose?: () => void;
 }) {
-  const {
-    messages,
-    sendMessage,
-    isSending,
-    pending,
-    resolvePending,
-    clearHistory,
-  } = useChatAgent();
+  const { messages, sendMessage, isSending, clearHistory } = useChatAgent();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -109,7 +101,7 @@ export default function ChatPanel({
       top: scrollRef.current.scrollHeight,
       behavior: 'smooth',
     });
-  }, [messages, pending]);
+  }, [messages]);
 
   // Grow/shrink the textarea as the person types, capped at MAX_TEXTAREA_LINES.
   useEffect(() => {
@@ -210,14 +202,7 @@ export default function ChatPanel({
           <MessageBubble key={m.id} message={m} />
         ))}
 
-        {pending && (
-          <ConfirmationCard
-            preview={pending.preview}
-            actionName={pending.name}
-            onResolve={resolvePending}
-          />
-        )}
-        {isSending && !pending && (
+        {isSending && (
           <div className="text-nyx-500 flex items-center gap-2 pl-9 text-caption">
             <Loader2 size={13} className="animate-spin" /> Thinking…
           </div>

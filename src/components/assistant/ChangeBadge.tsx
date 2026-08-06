@@ -1,10 +1,15 @@
 import { StatusBadge, PriorityBadge } from '../common/ui';
 import { formatDueCompact, minutesToHuman } from '../../lib/dateUtils';
-import type { FieldChange } from '../../lib/chat/confirmationPreview';
 import type { Status, Priority } from '../../lib/types';
 
-// Same visual language as MomentPrompt's ChangeChip, reused for the
-// assistant's write-confirmation card.
+export interface FieldChange {
+  field: string;
+  label: string;
+  from: unknown;
+  to: unknown;
+}
+
+// Same visual language as MomentPrompt's ChangeChip.
 export function ChangeBadge({ change }: { change: FieldChange }) {
   const { field, label, from, to } = change;
 
