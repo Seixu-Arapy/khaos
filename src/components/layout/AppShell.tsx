@@ -96,6 +96,12 @@ function Sidebar({ onNavigate, onClose, spinning }: SidebarProps) {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   const fieldsById = new Map(fields.map((f) => [f.id, f]));
+  const fieldOrder = new Map(fields.map((f, i) => [f.id, i]));
+  const sortedProjects = [...projects].sort((a, b) => {
+    const orderA = a.field_id ? (fieldOrder.get(a.field_id) ?? fields.length) : fields.length;
+    const orderB = b.field_id ? (fieldOrder.get(b.field_id) ?? fields.length) : fields.length;
+    return orderA - orderB;
+  });
 
   return (
     <>
@@ -145,7 +151,7 @@ function Sidebar({ onNavigate, onClose, spinning }: SidebarProps) {
       </div>
 
       <div className="mt-2 flex-1 space-y-0.5 overflow-y-auto px-3 pb-4">
-        {projects.map((p) => (
+        {sortedProjects.map((p) => (
           <NavLink
             key={p.id}
             to={`/projects/${p.id}`}
