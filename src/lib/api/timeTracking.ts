@@ -1,5 +1,4 @@
 import { supabase } from '../supabaseClient';
-import { isOpenRange } from '../range';
 import type { Id, TaskLog } from '../types';
 
 function unwrap<T>({ data, error }: { data: T | null; error: unknown }): T {
@@ -31,14 +30,9 @@ export const timeTrackingApi = {
   },
 
   async getActive(): Promise<TaskLog | null> {
-    const response = await supabase
-      .from('task_logs')
-      .select('*')
-      .order('id', { ascending: false })
-      .limit(25);
-
+    const response = await supabase.rpc('get_active_task_log');
     const rows = unwrap<TaskLog[]>(response);
-    return rows.find((row) => isOpenRange(row.duration)) || null;
+    return rows[0] ?? null;
   },
 
   listByTask: async (taskId: Id): Promise<TaskLog[]> => {

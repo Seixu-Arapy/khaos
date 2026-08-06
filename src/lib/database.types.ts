@@ -711,6 +711,22 @@ export type Database = {
             Returns: undefined
           }
       moment_entity_column: { Args: { p_table: string }; Returns: string }
+      get_active_task_log: {
+        Args: never
+        Returns: {
+          duration: unknown
+          id: string
+          note: string | null
+          project_id: string | null
+          task_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "task_logs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       stop_active_task: {
         Args: never
         Returns: {
