@@ -11,28 +11,43 @@ export interface ListAllOptions {
 }
 
 export const timeTrackingApi = {
-  start: async (taskId?: Id, note?: string, projectId?: Id): Promise<TaskLog> => {
+  start: async (
+    taskId?: Id,
+    note?: string,
+    projectId?: Id,
+    background?: boolean
+  ): Promise<TaskLog> => {
     const response = await supabase
       .from('task_logs')
       .insert({
         task_id: taskId ?? null,
         note: note ?? null,
         project_id: projectId ?? null,
+        background: background ?? false,
       })
       .select()
       .single();
     return unwrap(response);
   },
 
+  // Stops the single foreground (background = false) log, if one is open.
   stop: async (): Promise<unknown> => {
     const response = await supabase.rpc('stop_active_task');
     return unwrap(response);
   },
 
-  async getActive(): Promise<TaskLog | null> {
+  // Stops one specific open log by id — used for background logs, since
+  // any number of those can be open at once.
+  stopLog: async (id: Id): Promise<unknown> => {
+    const response = await supabase.rpc('stop_task_log', { p_id: id });
+    return unwrap(response);
+  },
+
+  // Returns every currently open log (at most one foreground, any number
+  // of background).
+  async getActive(): Promise<TaskLog[]> {
     const response = await supabase.rpc('get_active_task_log');
-    const rows = unwrap<TaskLog[]>(response);
-    return rows[0] ?? null;
+    return unwrap<TaskLog[]>(response);
   },
 
   listByTask: async (taskId: Id): Promise<TaskLog[]> => {

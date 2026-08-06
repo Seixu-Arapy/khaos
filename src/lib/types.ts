@@ -23,10 +23,6 @@ export type MomentTagEntity = Tables['moment_tag_entities']['Row'];
 export type SectionsSequence = Tables['sections_sequence']['Row'];
 export type TasksSequence = Tables['tasks_sequence']['Row'];
 
-// active_task_log is a VIEW that appears to replace the client-side "scan
-// the last 25 task_logs for an open range" logic in
-// timeTrackingApi.getActive() — worth querying directly when that file is
-// migrated, instead of the manual scan.
 export type ActiveTaskLog = Views['active_task_log']['Row'];
 
 // ---------- Insert / Update variants ----------
