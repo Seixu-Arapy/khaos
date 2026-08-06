@@ -138,7 +138,7 @@ begin
     FROM public.sections_sequence ss_check
     JOIN public.sections s_check ON s_check.id = ss_check.section_previous
     WHERE ss_check.section_next = r_next.section_next
-      AND s_check.status != 'done'
+      AND s_check.status NOT IN ('done', 'cancelled')
       AND s_check.deleted_at IS NULL;
       
     if v_pending_count = 0 then
@@ -178,7 +178,7 @@ begin
     FROM public.tasks_sequence ts_check
     JOIN public.tasks t_check ON t_check.id = ts_check.task_previous
     WHERE ts_check.task_next = r_next.task_next
-      AND t_check.status != 'done'
+      AND t_check.status NOT IN ('done', 'cancelled')
       AND t_check.deleted_at IS NULL;
       
     if v_pending_count = 0 then
