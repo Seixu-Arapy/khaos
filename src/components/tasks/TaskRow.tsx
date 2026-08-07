@@ -36,7 +36,7 @@ export default function TaskRow({
   const draggable = Boolean(dragHandleProps);
   const dimmed = DIMMED.includes(task.status);
   const seqCounts = useSequenceCounts().get(task.id);
-  const scheduled = useScheduledTaskIds().has(task.id);
+  const scheduledAt = useScheduledTaskIds().get(task.id);
 
   return (
     <div
@@ -94,8 +94,8 @@ export default function TaskRow({
               </span>
             )}
             <TargetBadge target={task.target as string | null} />
+            <ScheduledBadge scheduledAt={scheduledAt} />
             <DueBadge due={task.due} status={task.status} />
-            <ScheduledBadge scheduled={scheduled} />
           </span>
         </button>
 
