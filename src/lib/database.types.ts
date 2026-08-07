@@ -356,6 +356,7 @@ export type Database = {
           doc_reference: string | null
           due: string | null
           id: string
+          is_infinite: boolean
           name: string
           priority: Database["public"]["Enums"]["priority"] | null
           project_id: string | null
@@ -367,6 +368,7 @@ export type Database = {
           doc_reference?: string | null
           due?: string | null
           id?: string
+          is_infinite?: boolean
           name: string
           priority?: Database["public"]["Enums"]["priority"] | null
           project_id?: string | null
@@ -378,6 +380,7 @@ export type Database = {
           doc_reference?: string | null
           due?: string | null
           id?: string
+          is_infinite?: boolean
           name?: string
           priority?: Database["public"]["Enums"]["priority"] | null
           project_id?: string | null
