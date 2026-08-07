@@ -56,6 +56,13 @@ Query the database for the current state and report only what matters. Cover, wh
 - scheduled windows that already ended (today or earlier) while the linked task is still not done
 - tasks whose target window has already elapsed while the task is not done or cancelled
 - important open tasks that have no scheduled event yet (unscheduled)
+- stale in-review: tasks with status = 'in_review'. For each, find when it
+  entered that status from the moments table (moment_type = 'status', value =
+  'in_review', most recent such row per task — the row's created_at is the
+  entry time). Any task that's been sitting in in_review for 3+ days counts
+  as stale. List stale ones FIRST, ahead of every other section above, most
+  stale first — that's the point of this section, they've been left behind
+  and need to surface before anything else.
 
 For the elapsed targets and the unscheduled tasks: list them and OFFER to roll the target forward or to create a schedule — but DO NOT modify anything in this turn. Make no write tool calls now; wait for me to reply confirming. If I later reply approving, act then.
 
