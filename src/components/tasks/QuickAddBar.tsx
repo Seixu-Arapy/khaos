@@ -80,6 +80,7 @@ export default function QuickAddBar() {
       <Modal
         open={Boolean(draft)}
         onClose={() => setDraft(null)}
+        onSubmit={confirmCreate}
         title="New task"
         footer={
           <>

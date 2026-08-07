@@ -78,8 +78,8 @@ function RoutineModal({ initial, onClose, onSave, saving }: RoutineModalProps) {
   const set = <K extends keyof RoutineForm>(k: K, v: RoutineForm[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
     if (!form.name.trim()) return;
     onSave({
       ...form,
@@ -94,6 +94,7 @@ function RoutineModal({ initial, onClose, onSave, saving }: RoutineModalProps) {
     <Modal
       open
       onClose={onClose}
+      onSubmit={handleSubmit}
       title={initial ? 'Edit routine' : 'New routine'}
       footer={
         <>

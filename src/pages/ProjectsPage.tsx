@@ -58,8 +58,8 @@ export default function ProjectsPage() {
     return map;
   }, [projects, sections, tasks]);
 
-  function submitProject(e: React.FormEvent) {
-    e.preventDefault();
+  function submitProject(e?: React.FormEvent) {
+    e?.preventDefault();
     if (!draft.name.trim()) return;
     createProject.mutate(
       {
@@ -144,6 +144,7 @@ export default function ProjectsPage() {
       <Modal
         open={newProjectOpen}
         onClose={() => setNewProjectOpen(false)}
+        onSubmit={submitProject}
         title="New project"
         footer={
           <>
