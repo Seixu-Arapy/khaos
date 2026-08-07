@@ -698,11 +698,6 @@ export default function SigilsPage() {
           <Swatch label="input, overdue">
             <DueEditor value="2026-01-01" status="todo" onChange={() => {}} />
           </Swatch>
-          <Swatch label="scheduled marker">
-            {/* Added to TaskRow in the recent redesign -- a small marker
-                for "already has a calendar event", not a full badge. */}
-            <ScheduledBadge scheduled />
-          </Swatch>
         </Section>
 
         <Section title="Target" nowrap>
@@ -717,6 +712,16 @@ export default function SigilsPage() {
           </Swatch>
           <Swatch label="badge, range + time">
             <TargetBadge target='["2026-07-01 09:00:00+00","2026-07-15 18:00:00+00")' />
+          </Swatch>
+          <Swatch label="scheduled, upcoming">
+            {/* Moved from Due -- a scheduled calendar slot is the
+                target window actually being acted on, not the due
+                deadline. Now shows the real time, not just an icon,
+                and reads differently once the slot has passed. */}
+            <ScheduledBadge scheduledAt="2026-08-20T14:00:00" />
+          </Swatch>
+          <Swatch label="scheduled, past">
+            <ScheduledBadge scheduledAt="2026-07-20T14:00:00" />
           </Swatch>
         </Section>
 

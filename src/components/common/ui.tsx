@@ -381,7 +381,10 @@ export function TimeToggle({
       onClick={onClick}
       title={active ? 'Remove time' : 'Add time'}
       className={clsx(
-        'flex shrink-0 items-center gap-0.5 rounded border px-1 text-[10px] transition-colors',
+        // text-label, not the raw text-[10px] this used before -- same
+        // 10px value, but the named Chorus rung instead of an arbitrary
+        // one, matching how the rest of the app's small type is written.
+        'flex shrink-0 items-center gap-0.5 rounded border px-1 text-label transition-colors',
         active
           ? 'border-eros-500 text-eros-400 bg-eros-500/10'
           : 'border-nyx-700 text-nyx-500 hover:text-nyx-300',
@@ -667,17 +670,49 @@ export function TargetBadge({ target }: TargetBadgeProps) {
   );
 }
 
-// Indicates the task already has a future 'scheduled' event tied to it —
-// prevents scheduling it twice. Plain icon, no text, same chrome-less
-// convention as DueBadge so it doesn't compete visually with the pill badges.
-export function ScheduledBadge({ scheduled }: { scheduled?: boolean }) {
-  if (!scheduled) return null;
+// Plain helper, not inlined in the component -- calling Date.now()/`new
+// Date()` directly inside a component body trips the "impure function
+// during render" lint rule, same reason isOverdueInTz lives outside
+// DueBadge instead of inline.
+function isPastMoment(dateInput: string | Date): boolean {
+  return new Date(dateInput) < new Date();
+}
+
+interface ScheduledBadgeProps {
+  // The scheduled event's start time -- was a bare `scheduled?: boolean`,
+  // which could only ever render an icon. Accepting the real time lets
+  // the badge show it, and tell a still-upcoming slot from one that's
+  // already passed (still scheduled in the sense that it happened, but
+  // reads differently than "coming up").
+  scheduledAt?: string | Date | null;
+}
+
+// Indicates the task has a 'scheduled' calendar event tied to it — Gaia
+// (settled/upcoming) when the slot is still ahead, muted Nyx when it's
+// already passed. Chrome-less like DueBadge, but now carries the actual
+// time instead of being icon-only.
+export function ScheduledBadge({ scheduledAt }: ScheduledBadgeProps) {
+  if (!scheduledAt) return null;
+  const parts = formatDueCompact(scheduledAt);
+  if (!parts) return null;
+  const isPast = isPastMoment(scheduledAt);
+
   return (
     <span
-      title="Já agendada"
-      className="text-gaia-500 inline-flex shrink-0 items-center"
+      title={isPast ? 'Agendada (passada)' : 'Já agendada'}
+      className={clsx(
+        'inline-flex shrink-0 items-center gap-1 font-mono text-caption tracking-tight',
+        isPast ? 'text-nyx-500' : 'text-gaia-500'
+      )}
     >
-      <CalendarClock size={12} />
+      <CalendarClock size={12} className="shrink-0" />
+      <span>
+        <span className="font-bold">{parts.day}</span>
+        <span>{parts.month}</span>
+      </span>
+      {hasExplicitTime(scheduledAt) && (
+        <span className="opacity-70">{formatTimeOnly(scheduledAt)}</span>
+      )}
     </span>
   );
 }
