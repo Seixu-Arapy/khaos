@@ -55,7 +55,7 @@ export const timeTrackingApi = {
       .from('task_logs')
       .select('*')
       .eq('task_id', taskId)
-      .order('id', { ascending: false });
+      .order('duration', { ascending: false });
     return unwrap(response);
   },
 
@@ -63,7 +63,7 @@ export const timeTrackingApi = {
     let query = supabase
       .from('task_logs')
       .select('*, tasks(id, name, section_id)')
-      .order('id', { ascending: false });
+      .order('duration', { ascending: false });
     if (since) query = query.gte('duration', since);
 
     const response = await query;
