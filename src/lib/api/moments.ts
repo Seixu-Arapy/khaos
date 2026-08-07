@@ -31,6 +31,23 @@ export const momentsApi = {
     return unwrap(response);
   },
 
+  // Latest 'status' moment timestamp per task, used to fade/hide settled
+  // tasks in infinite sections based on how long ago they were done/cancelled.
+  latestTaskStatusChanges: async (): Promise<Map<Id, string>> => {
+    const response = await supabase
+      .from('moments')
+      .select('task_id, created_at')
+      .eq('moment_type', 'status')
+      .not('task_id', 'is', null)
+      .order('created_at', { ascending: false });
+    const rows = unwrap(response) as { task_id: Id; created_at: string }[];
+    const latest = new Map<Id, string>();
+    for (const row of rows) {
+      if (!latest.has(row.task_id)) latest.set(row.task_id, row.created_at);
+    }
+    return latest;
+  },
+
   remove: async (id: Id): Promise<Moment> => {
     const response = await supabase
       .from('moments')

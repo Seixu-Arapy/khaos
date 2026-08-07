@@ -22,6 +22,9 @@ interface TaskRowProps {
   dragRef?: React.Ref<HTMLDivElement>;
   dragStyle?: React.CSSProperties;
   dragHandleProps?: React.HTMLAttributes<HTMLSpanElement>;
+  // Overrides the default 0.38 dim for done/cancelled tasks — used by
+  // infinite sections to gradually fade settled tasks as they age.
+  fadeOpacity?: number;
 }
 
 export default function TaskRow({
@@ -32,16 +35,18 @@ export default function TaskRow({
   dragRef,
   dragStyle,
   dragHandleProps,
+  fadeOpacity,
 }: TaskRowProps) {
   const draggable = Boolean(dragHandleProps);
   const dimmed = DIMMED.includes(task.status);
   const seqCounts = useSequenceCounts().get(task.id);
   const scheduled = useScheduledTaskIds().has(task.id);
+  const opacity = dimmed ? (fadeOpacity ?? 0.38) : 1;
 
   return (
     <div
       ref={dragRef}
-      style={{ ...dragStyle, opacity: dimmed ? 0.38 : 1 }}
+      style={{ ...dragStyle, opacity }}
       className="group hover:border-nyx-700 hover:bg-nyx-900 flex items-start gap-1.5 rounded-md border border-transparent px-2 py-1.5"
     >
       {draggable && (

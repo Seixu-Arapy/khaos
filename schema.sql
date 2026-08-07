@@ -1404,6 +1404,7 @@ CREATE TABLE IF NOT EXISTS "public"."sections" (
     "project_id" "uuid",
     "deleted_at" timestamp with time zone,
     "target" "tstzrange",
+    "is_infinite" boolean DEFAULT false NOT NULL,
     CONSTRAINT "sections_schedule_valid" CHECK ((("target" IS NULL) OR ((NOT "isempty"("target")) AND (NOT "lower_inf"("target")) AND (("due" IS NULL) OR (("lower"("target") < "due") AND ("upper_inf"("target") OR ("upper"("target") <= "due")))))))
 );
 
@@ -1450,6 +1451,10 @@ COMMENT ON COLUMN "public"."sections"."deleted_at" IS 'Soft delete timestamptz. 
 
 
 COMMENT ON COLUMN "public"."sections"."target" IS 'The planned timeline horizon or date range allocated to develop this section (tstzrange). This range is arbitrary and must guide the scheduling of calendar events.';
+
+
+
+COMMENT ON COLUMN "public"."sections"."is_infinite" IS 'When true, this section represents an ongoing/never-ending list rather than a bounded chapter. Done/cancelled tasks within it are expected to fade and eventually hide client-side as they age, instead of accumulating indefinitely.';
 
 
 

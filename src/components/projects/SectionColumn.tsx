@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  Infinity as InfinityIcon,
 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -24,8 +25,10 @@ import {
   useTaskMutations,
   useSectionMutations,
   useTasksSequence,
+  useTaskStatusMoments,
 } from '../../hooks/useHierarchy';
 import { buildSequenceRail } from '../../lib/sequenceGraph';
+import { infiniteFadeOpacity, daysSince } from '../../lib/infiniteFade';
 import TaskRow from '../tasks/TaskRow';
 import SequenceRailCell from './SequenceRail';
 import {
@@ -65,13 +68,35 @@ export default function SectionColumn({
   const { update: updateSection, remove: removeSection } =
     useSectionMutations();
   const { data: seqEdges = [] } = useTasksSequence();
+  const { data: statusMoments } = useTaskStatusMoments();
+
+  // Infinite sections gradually fade, then hide, done/cancelled tasks based
+  // on how long ago they settled — keeps an ongoing/never-ending list from
+  // accumulating clutter forever. See src/lib/infiniteFade.ts.
+  const { visibleTasks, fadeByTaskId } = useMemo(() => {
+    if (!section.is_infinite || !statusMoments) {
+      return { visibleTasks: orderedTasks, fadeByTaskId: new Map<Id, number>() };
+    }
+    const fade = new Map<Id, number>();
+    const visible = orderedTasks.filter((task) => {
+      if (task.status !== 'done' && task.status !== 'cancelled') return true;
+      const changedAt = statusMoments.get(task.id);
+      if (!changedAt) return true;
+      const opacity = infiniteFadeOpacity(daysSince(changedAt));
+      if (opacity === null) return false;
+      fade.set(task.id, opacity);
+      return true;
+    });
+    return { visibleTasks: visible, fadeByTaskId: fade };
+  }, [orderedTasks, section.is_infinite, statusMoments]);
+
   const rail = useMemo(
     () =>
       buildSequenceRail(
-        orderedTasks.map((t) => t.id),
+        visibleTasks.map((t) => t.id),
         seqEdges
       ),
-    [orderedTasks, seqEdges]
+    [visibleTasks, seqEdges]
   );
   const [newTaskName, setNewTaskName] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -130,9 +155,17 @@ export default function SectionColumn({
             }
             className="text-nyx-100 min-w-0 flex-1 bg-transparent text-body font-medium focus:outline-none"
           />
+          {section.is_infinite && (
+            <span
+              className="text-nyx-600 shrink-0"
+              title="Infinite section — settled tasks fade and eventually hide"
+            >
+              <InfinityIcon size={13} />
+            </span>
+          )}
           {collapsed && (
             <span className="text-nyx-600 shrink-0 font-mono text-caption">
-              {orderedTasks.length}
+              {visibleTasks.length}
             </span>
           )}
           <div className="flex shrink-0 items-center">
@@ -161,7 +194,22 @@ export default function SectionColumn({
               <MoreVertical size={15} />
             </button>
             {menuOpen && (
-              <div className="border-nyx-700 bg-nyx-800 shadow-panel absolute right-0 z-10 mt-1 w-44 rounded-md border py-1">
+              <div className="border-nyx-700 bg-nyx-800 shadow-panel absolute right-0 z-10 mt-1 w-52 rounded-md border py-1">
+                <button
+                  onClick={() => {
+                    updateSection.mutate({
+                      id: section.id,
+                      patch: { is_infinite: !section.is_infinite },
+                    });
+                    setMenuOpen(false);
+                  }}
+                  className="text-nyx-400 hover:bg-nyx-700 flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-caption"
+                >
+                  <InfinityIcon size={12} />
+                  {section.is_infinite
+                    ? 'Turn off infinite mode'
+                    : 'Make infinite section'}
+                </button>
                 <button
                   onClick={() => {
                     removeSection.mutate(section.id);
@@ -230,7 +278,7 @@ export default function SectionColumn({
       {!collapsed && (
         <div className="p-2">
           <div className="space-y-0.5">
-            {orderedTasks.map((task, index) => (
+            {visibleTasks.map((task, index) => (
               <TaskDropTarget
                 key={task.id}
                 taskId={task.id}
@@ -244,7 +292,11 @@ export default function SectionColumn({
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <TaskRow task={task} onOpen={onOpenTask} />
+                    <TaskRow
+                      task={task}
+                      onOpen={onOpenTask}
+                      fadeOpacity={fadeByTaskId.get(task.id)}
+                    />
                   </div>
                   {onToggleLink && (
                     <SequenceLinkControls

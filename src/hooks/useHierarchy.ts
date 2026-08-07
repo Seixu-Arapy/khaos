@@ -8,6 +8,7 @@ import {
   tasksSequenceApi,
   sectionsSequenceApi,
 } from '../lib/api/hierarchy';
+import { momentsApi } from '../lib/api/moments';
 import { orderFromEdges } from '../lib/reorder';
 import type {
   Id,
@@ -56,6 +57,17 @@ export function useSectionsSequence() {
   return useQuery({
     queryKey: ['sectionsSequence'],
     queryFn: sectionsSequenceApi.list,
+  });
+}
+
+// Latest status-change timestamp per task — used to fade/hide settled tasks
+// in infinite sections (see src/lib/infiniteFade.ts). Refetches alongside
+// tasks since a status change writes a new moment.
+export function useTaskStatusMoments() {
+  return useQuery({
+    queryKey: ['taskStatusMoments'],
+    queryFn: momentsApi.latestTaskStatusChanges,
+    staleTime: 60_000,
   });
 }
 
@@ -156,6 +168,8 @@ export function useSectionMutations() {
 export function useTaskMutations() {
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: ['tasks'] });
+  const invalidateStatusMoments = () =>
+    qc.invalidateQueries({ queryKey: ['taskStatusMoments'] });
   return {
     create: useMutation({
       mutationFn: (payload: NewTask) => tasksApi.create(payload),
@@ -164,7 +178,10 @@ export function useTaskMutations() {
     update: useMutation({
       mutationFn: ({ id, patch }: { id: Id; patch: TaskPatch }) =>
         tasksApi.update(id, patch),
-      onSuccess: invalidate,
+      onSuccess: (_data, variables) => {
+        invalidate();
+        if ('status' in variables.patch) invalidateStatusMoments();
+      },
     }),
     remove: useMutation({
       mutationFn: (id: Id) => tasksApi.remove(id),
