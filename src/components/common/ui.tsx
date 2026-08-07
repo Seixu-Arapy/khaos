@@ -445,6 +445,7 @@ export function TextInput({ className, ...props }: TextInputProps) {
 interface ModalProps {
   open: boolean;
   onClose: () => void;
+  onSubmit?: () => void;
   title: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
@@ -454,6 +455,7 @@ interface ModalProps {
 export function Modal({
   open,
   onClose,
+  onSubmit,
   title,
   children,
   footer,
@@ -461,19 +463,29 @@ export function Modal({
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
+  const onSubmitRef = useRef(onSubmit);
   useEffect(() => {
     onCloseRef.current = onClose;
+    onSubmitRef.current = onSubmit;
   });
 
   useEffect(() => {
     if (!open) return;
     // Focus the dialog itself only on open — not on every render.
     dialogRef.current?.focus();
-    const onKey = (e: KeyboardEvent) =>
-      e.key === 'Escape' && onCloseRef.current();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        if (onSubmitRef.current) {
+          e.preventDefault();
+          onSubmitRef.current();
+        }
+      }
+    };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open]); // deliberately excludes onClose — handled via ref above
+  }, [open]); // deliberately excludes onClose/onSubmit — handled via refs above
 
   if (!open) return null;
 

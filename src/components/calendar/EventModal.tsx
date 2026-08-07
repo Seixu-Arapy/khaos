@@ -95,6 +95,11 @@ export default function EventModal({
     }
   }
 
+  function handleSubmitShortcut() {
+    if (!isTitleOptional && !form.name.trim()) return;
+    handleSubmit({ preventDefault: () => {} } as FormEvent);
+  }
+
   function handleDelete() {
     if (event && window.confirm('Delete this event?')) {
       remove.mutate(event.id, { onSuccess: onClose });
@@ -105,6 +110,7 @@ export default function EventModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={handleSubmitShortcut}
       title={event ? 'Edit event' : 'New event'}
       footer={
         <>

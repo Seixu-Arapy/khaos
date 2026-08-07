@@ -41,6 +41,7 @@ export default function TimezonePicker() {
   );
 
   function handleSave() {
+    if (selected === current) return;
     setTimezone(selected); // triggers a page reload
   }
 
@@ -62,6 +63,7 @@ export default function TimezonePicker() {
           setOpen(false);
           setSearch('');
         }}
+        onSubmit={handleSave}
         title="Timezone"
         footer={
           <>
