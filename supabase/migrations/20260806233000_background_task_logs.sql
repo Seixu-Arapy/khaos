@@ -3,7 +3,7 @@
 -- foreground logs on top of it. Only one foreground (background = false)
 -- log may be open at a time — background logs don't compete for that slot
 -- and any number of them may be open concurrently.
-alter table "public"."task_logs" add column "background" boolean not null default false;
+alter table "public"."task_logs" add column if not exists "background" boolean not null default false;
 
 comment on column "public"."task_logs"."background" is
     'False (default) for the single foreground log that Start/Stop track. True for a log that runs alongside others without being stopped when a new log starts — any number of background logs may be open at once.';
@@ -32,7 +32,8 @@ $$;
 -- active_task_log previously exposed only id/task_id/duration, from before
 -- note/project_id existed. Widen it to the full row so callers (including
 -- get_active_task_log below) see every open log, foreground or background.
-create or replace view "public"."active_task_log" with ("security_invoker"='on') as
+drop view if exists "public"."active_task_log";
+create view "public"."active_task_log" with ("security_invoker"='on') as
  select *
    from "public"."task_logs"
   where ("upper_inf"("duration") = true);
